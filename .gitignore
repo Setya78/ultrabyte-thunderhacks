@@ -1,0 +1,16 @@
+# secrets (HS2) - never commit
+.env
+*.env
+db.env
+!.env.example
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+# node
+node_modules/
+# os/editor
+.DS_Store
+Thumbs.db
+.vscode/
