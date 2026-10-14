@@ -16,3 +16,10 @@ Times are EDT (UTC-4) unless marked. VPS clock = WIB (UTC+7).
 | D-2026-10-14-08 | 18:14 | Primary demo = live URL; localhost = fallback (K0 §6 supersedes Runbook R5 "deploy = Could") |
 | D-2026-10-14-09 | 18:14 | VPS pulls the private repo with a read-only deploy key; revoked at teardown |
 | D-2026-10-14-10 | 18:14 | Schema as `db/migrations/001_init.sql`, gate pattern: dry-run BEGIN..ROLLBACK -> apply --single-transaction -> verify |
+
+## Build log (continued)
+
+| Time (EDT) | Item | Status | Note |
+|---|---|---|---|
+| 2026-10-14 18:20 | Commit 1 pushed | DONE | `chore(M0): repo init, README stub, BUILD-LOG` |
+| 2026-10-14 18:22 | M0 skeleton | DONE (local) | FastAPI + Jinja, `/health`, empty queue, `POST /reset`; `001_init.sql` (gate pattern passed on PG16); deterministic synthetic seed: 201 players, 16,430 txns, 3,350 sessions, 10 planted cases; audit_event DELETE rejected by trigger; smoke 3/3 OK. Naive V1 "$10k deposit" rule flags A (7x, false positive), B and cash-through, misses structuring. Live deploy pending |

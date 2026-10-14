@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Review queue - UltraByte{% endblock %}
+{% block content %}
+<section class="bar">
+  <h1>Review queue</h1>
+  <form method="post" action="/reset"><button type="submit">Reset demo data</button></form>
+</section>
+
+<p class="meta">
+  {% if status.db == "ok" %}{{ status.players }} players &middot; {{ status.txns }} transactions loaded{% else %}Database: {{ status.db }}{% endif %}
+</p>
+
+<table class="queue">
+  <thead>
+    <tr><th>Rank</th><th>Player</th><th>Score</th><th>Category</th><th>Top reason</th></tr>
+  </thead>
+  <tbody>
+    {% for r in rows %}
+    <tr><td>{{ loop.index }}</td><td>{{ r.player }}</td><td>{{ r.score }}</td><td>{{ r.category }}</td><td>{{ r.reason }}</td></tr>
+    {% else %}
+    <tr><td colspan="5" class="empty">No scored alerts yet. The explainable scorer arrives in M1.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

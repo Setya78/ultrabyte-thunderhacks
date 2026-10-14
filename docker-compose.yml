@@ -1,0 +1,13 @@
+# App container only. Postgres and n8n are managed separately on the VPS (Infra Runbook).
+services:
+  app:
+    build: .
+    container_name: ultrabyte-app
+    env_file: .env            # lives only on the VPS, chmod 600, never committed
+    ports:
+      - "127.0.0.1:3110:3110" # reachable only through Nginx (D-2026-10-14-07)
+    networks: [ultrabyte_net]
+    restart: unless-stopped
+networks:
+  ultrabyte_net:
+    external: true

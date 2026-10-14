@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}UltraByte{% endblock %}</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <div class="synthetic-banner" role="note">SYNTHETIC DATA &middot; no real players, transactions or sponsor data</div>
+  <header class="top">
+    <a class="brand" href="/">UltraByte</a>
+    <span class="tagline">Rules tell you what happened. UltraByte tells you why it matters.</span>
+  </header>
+  <main>{% block content %}{% endblock %}</main>
+  <footer class="foot">v{{ version }} &middot; LLM {{ "on" if llm_enabled else "off" }} &middot; built during ThunderHacks II</footer>
+</body>
+</html>
