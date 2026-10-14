@@ -10,12 +10,15 @@ Times are EDT (UTC-4) unless marked. VPS clock = WIB (UTC+7).
 
 ## Decisions (owner, sprint log)
 
+D-2026-10-14-07 = K0 v0.7 (team spec IN-07 adopted), logged in the project decision log at 19:12 EDT. Sprint IDs below were renumbered at 19:58 EDT to avoid a clash with it (they were first written as -07 to -10).
+
 | ID | Time (EDT) | Decision |
 |---|---|---|
-| D-2026-10-14-07 | 18:14 | App port 3110, bound to 127.0.0.1 only (reached via Nginx) |
-| D-2026-10-14-08 | 18:14 | Primary demo = live URL; localhost = fallback (K0 §6 supersedes Runbook R5 "deploy = Could") |
-| D-2026-10-14-09 | 18:14 | VPS pulls the private repo with a read-only deploy key; revoked at teardown |
-| D-2026-10-14-10 | 18:14 | Schema as `db/migrations/001_init.sql`, gate pattern: dry-run BEGIN..ROLLBACK -> apply --single-transaction -> verify |
+| D-2026-10-14-08 | 18:14 | App port 3110, bound to 127.0.0.1 only (reached via Nginx) |
+| D-2026-10-14-09 | 18:14 | Primary demo = live URL; localhost = fallback (K0 §6 supersedes Runbook R5 "deploy = Could") |
+| D-2026-10-14-10 | 18:14 | VPS pulls the private repo with a read-only deploy key; revoked at teardown |
+| D-2026-10-14-11 | 18:14 | Schema as `db/migrations/001_init.sql`, gate pattern: dry-run BEGIN..ROLLBACK -> apply --single-transaction -> verify |
+| D-2026-10-14-12 | 19:55 | Peer check scores only when the peer group has at least 20 other players (amendment to IN-07 formula). Measured: normal players at Medium or above 14/490 -> 6/490; all planted cases unchanged |
 
 ## Build log (continued)
 
@@ -23,3 +26,8 @@ Times are EDT (UTC-4) unless marked. VPS clock = WIB (UTC+7).
 |---|---|---|---|
 | 2026-10-14 18:20 | Commit 1 pushed | DONE | `chore(M0): repo init, README stub, BUILD-LOG` |
 | 2026-10-14 18:22 | M0 skeleton | DONE (local) | FastAPI + Jinja, `/health`, empty queue, `POST /reset`; `001_init.sql` (gate pattern passed on PG16); deterministic synthetic seed: 201 players, 16,430 txns, 3,350 sessions, 10 planted cases; audit_event DELETE rejected by trigger; smoke 3/3 OK. Naive V1 "$10k deposit" rule flags A (7x, false positive), B and cash-through, misses structuring. Live deploy pending |
+| 2026-10-14 18:31 | Migration 001 on VPS | DONE | Gate pattern: dry-run OK, apply, verify 5 tables (operator) |
+| 2026-10-14 18:3x | Commit 2 | NOTE | Commit message typed as `eat(M0): ...` (missing "f"). Left as is: fixing it needs a force-push (HS3) |
+| 2026-10-14 19:40 | M0 rework to K0 v0.7 | DONE (local) | `002_k0v07_spec.sql` (IN-07 bands, session location, payout account + holder-match flag, planted cases A-J); seed: 501 players (490 + 11 planted), 62,364 txns, 11,975 sessions, Ontario only. Age bands start at 19 (Ontario minimum age) instead of 18 |
+| 2026-10-14 19:58 | M1 explainable score | DONE (local) | 4 checks x 25 + labels STR / URGENT / Safer Gambling, every point with reason + source, scorer never reads planted_case. Planted: 9/9 risky caught, controls E and I cleared; V1 flags E and H only, misses G. Differences vs IN-07 table: A 40 (peer 15, G is in the same peer group), D 40 Medium + URGENT, P-6011 15 Low + STR. Normal population: 6/490 Medium, 0 High |
+| 2026-10-14 19:58 | M2 part 1 | DONE (local) | Ranked queue (URGENT, then STR, then score), 4-part bar with text labels, Version 1.0 / 2.0 switch. Player page next |

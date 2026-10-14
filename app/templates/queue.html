@@ -3,23 +3,53 @@
 {% block content %}
 <section class="bar">
   <h1>Review queue</h1>
+  <div class="switch" role="group" aria-label="Alerting version">
+    <a href="/?mode=v1" class="{{ 'on' if mode == 'v1' }}">Version 1.0 &middot; old rule</a>
+    <a href="/?mode=v2" class="{{ 'on' if mode == 'v2' }}">Version 2.0 &middot; UltraByte</a>
+  </div>
   <form method="post" action="/reset"><button type="submit">Reset demo data</button></form>
 </section>
 
 <p class="meta">
-  {% if status.db == "ok" %}{{ status.players }} players &middot; {{ status.txns }} transactions loaded{% else %}Database: {{ status.db }}{% endif %}
+  {% if status.db == "ok" %}{{ status.players }} players &middot; {{ status.txns }} transactions &middot; window 15 Sep - 14 Oct 2026{% else %}Database: {{ status.db }}{% endif %}
 </p>
 
+{% if mode == "v1" %}
+<p class="note">Version 1.0 is a simplified stand-in for a threshold rule (any single deposit of $10,000 or more), not OLG's actual rule.</p>
 <table class="queue">
-  <thead>
-    <tr><th>Rank</th><th>Player</th><th>Score</th><th>Category</th><th>Top reason</th></tr>
-  </thead>
+  <thead><tr><th>Player</th><th>Alert</th></tr></thead>
   <tbody>
     {% for r in rows %}
-    <tr><td>{{ loop.index }}</td><td>{{ r.player }}</td><td>{{ r.score }}</td><td>{{ r.category }}</td><td>{{ r.reason }}</td></tr>
+    <tr><td>{{ r.display_name }} <span class="pid">{{ r.player_id }}</span></td><td>{{ r.v1_reason }}</td></tr>
     {% else %}
-    <tr><td colspan="5" class="empty">No scored alerts yet. The explainable scorer arrives in M1.</td></tr>
+    <tr><td colspan="2" class="empty">No alerts.</td></tr>
     {% endfor %}
   </tbody>
 </table>
+{% else %}
+<table class="queue">
+  <thead>
+    <tr><th>#</th><th>Player</th><th>Score</th><th>Breakdown</th><th>Labels</th><th>Top reason</th></tr>
+  </thead>
+  <tbody>
+    {% for r in rows %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td>{{ r.display_name }} <span class="pid">{{ r.player_id }}</span></td>
+      <td><strong>{{ r.score }}</strong> <span class="band band-{{ r.band|lower }}">{{ r.band }} risk</span></td>
+      <td>
+        <div class="bar4" title="{% for c in r.checks %}{{ c.name }} {{ c.points }}/25; {% endfor %}">
+          {% for c in r.checks %}<span class="seg seg-{{ c.key }}" style="width: {{ c.points }}%"></span>{% endfor %}
+        </div>
+        <div class="legend">{% for c in r.checks %}{{ c.name }} {{ c.points }}{% if not loop.last %} &middot; {% endif %}{% endfor %}</div>
+      </td>
+      <td>{% for l in r.labels|unique(attribute='text') %}<span class="label label-{{ l.key }}">{{ l.text }}</span> {% endfor %}</td>
+      <td>{{ r.top_reason }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="empty">No scored alerts.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
 {% endblock %}
