@@ -28,7 +28,11 @@ def payload(r: dict) -> dict:
         "player_id": r["player_id"], "score": r["score"], "band": r["band"],
         "checks": [{"name": c["name"], "points": c["points"], "max": c["max"], "reason": c["reason"]} for c in r["checks"]],
         "labels": [{"text": l["text"], "reason": l["reason"]} for l in r["labels"]],
+        "safer_gambling": {"score": r.get("harm_score", 0), "band": r.get("harm_band", "Low"),
+                           "checks": [{"name": c["name"], "points": c["points"], "max": c["max"], "reason": c["reason"]}
+                                      for c in r.get("harm_checks", [])]},
         "suggestion": r["suggestion"], "suggestion_rule": r["suggestion_rule"],
+        "rule_version": r.get("rule_version", 1),
     }
 
 
@@ -40,7 +44,11 @@ def rule_text(r: dict) -> str:
     scored = sorted((c for c in r["checks"] if c["points"]), key=lambda c: -c["points"])
     s1 = f"Score {r['score']} ({r['band']})" + (": " + " ".join(c["reason"] for c in scored[:2]) if scored else ": no check scored.")
     labels = list(dict.fromkeys(f"{l['text']}: {l['reason']}" for l in r["labels"]))
-    s2 = " ".join(labels[:2]) if labels else "No labels."
+    sg = r.get("harm_band", "Low")
+    if sg != "Low":
+        top_sg = sorted((c for c in r.get("harm_checks", []) if c["points"]), key=lambda c: -c["points"])
+        labels.append(f"Safer Gambling {r.get('harm_score', 0)} ({sg}): " + " ".join(c["reason"] for c in top_sg[:2]))
+    s2 = " ".join(labels[:3]) if labels else "No labels."
     return f"{s1} {s2} Suggested: {r['suggestion']}."
 
 
