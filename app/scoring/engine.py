@@ -79,7 +79,7 @@ def suggest(band: str, labels: list[Label], checks: list[Check] | None = None, h
     keys = {l.key for l in labels}
     safer = " + Safer Gambling check-in" if harm_band != "Low" else ""
     if "urgent" in keys:
-        return ("Escalate - Fraud: lock account, verify identity" + safer,
+        return ("Escalate - Fraud: lock account, step up verification (two-factor or email check), verify identity" + safer,
                 "URGENT label: unusual locations with a new card or bank account")
     if "str" in keys:
         first = next(l for l in labels if l.key == "str")
