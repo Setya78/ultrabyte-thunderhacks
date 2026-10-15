@@ -40,3 +40,4 @@ D-2026-10-14-07 = K0 v0.7 (team spec IN-07 adopted), logged in the project decis
 | 2026-10-14 20:26 | S3 dashboard | DONE (local) | `/dashboard`: URGENT 1, STR 5, context risk 9, Safer Gambling 7 (players can be in several groups) |
 | 2026-10-14 20:28 | C1 network | DONE (local) | `/network`: 2 shared instruments (card ending 4417, one payout account), both only P-6011 + P-6012; no other links in the data |
 | 2026-10-14 20:30 | Commit messages | NOTE | Two commits landed as `eat(...)` (first letter dropped when typed in GitHub Desktop). History left as is (no force-push, HS3) |
+| 2026-10-14 20:25 | Live deploy S1-C1 | DONE | v0.6.0-c1 live; smoke 3/3; all pages 200; live /validation shows V2 9/9, 0/2, 6/490, 15/15 (matches local). **All Must + Should + Could built; app ready for team feedback (Thu 13:00 checkpoint met Wed evening)** |
