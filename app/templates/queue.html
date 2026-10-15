@@ -32,7 +32,7 @@
 <div class="panel">
 <h2><span class="vtag">{{ 'AFTER' if mode == 'split' else 'NOW' }}</span> Version 2.0 <small>{{ rows|length }} ranked</small> {{ help("Two scores, four checks each, every point with a reason: AML (anti-money laundering) and Safer Gambling (player protection). Labels pin a player near the top: URGENT = possible account takeover; STR candidate = pattern matches a FINTRAC indicator for a Suspicious Transaction Report.") }}</h2>
 <table class="t">
-  <thead><tr><th>#</th><th>Scores {{ help("Left: AML score (anti-money laundering: is money moving through the account rather than being played?). Right: Safer Gambling score (signs of harm to the player). Each arc is one check, up to 25 points.") }}</th><th>Player</th><th class="hide-s">Labels</th><th>Why</th>{% if mode != 'split' %}<th class="hide-m">Suggested</th>{% endif %}</tr></thead>
+  <thead><tr><th>#</th><th>Scores {{ help("Left: AML score (anti-money laundering: is money moving through the account rather than being played?). Right: Safer Gambling score (signs of harm to the player). Each arc is one check, up to 25 points.") }}</th><th>Player</th><th class="hide-s">Labels</th><th>Why</th>{% if mode != 'split' %}<th class="hide-m">Suggested <span class="tag-rule">rule-based</span></th>{% endif %}</tr></thead>
   <tbody>
     {% for r in rows %}
     <tr>

@@ -27,6 +27,7 @@
       {% if not auth_enabled() %}<span class="src" style="color:var(--medium)">Sign-in not configured</span>{% endif %}
       <span class="synthetic"><i></i>Synthetic data</span>
       <span>v{{ version }} &middot; AI summary {{ "on" if llm_enabled else "off" }}</span>
+      <span><a href="/about">About &amp; AI disclosure</a></span>
       <span>Built during ThunderHacks II</span>
     </div>
   </aside>

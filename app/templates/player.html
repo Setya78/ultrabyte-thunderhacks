@@ -12,13 +12,13 @@
     <div class="meta">{{ r.occupation }}, aged {{ r.age_band }}, income {{ r.income_band }}, home {{ r.region }}</div>
     <div class="tags"><span class="band band-{{ r.band|lower }}" title="{{ gloss['AML'] }}">AML {{ r.band }}</span> <span class="band band-{{ r.harm_band|lower }}" title="{{ gloss['SG'] }}">Safer Gambling {{ r.harm_band }}</span> {% for l in r.labels|unique(attribute='text') %}<span class="label label-{{ l.key }}" title="{{ gloss['URGENT'] if l.key == 'urgent' else gloss['STR'] }}">{{ l.text }}</span>{% endfor %}</div>
   </div>
-  <div class="act"><div class="src">Suggested {{ help("Rule: " ~ r.suggestion_rule.rstrip(".") ~ ". A suggestion only; the investigator decides.") }}</div><div style="font-weight:700;max-width:26ch">{{ r.suggestion }}</div></div>
+  <div class="act"><div class="src">Suggested <span class="tag-rule">rule-based, not AI</span> {{ help("Rule: " ~ r.suggestion_rule.rstrip(".") ~ ". Produced by fixed rules in the scoring engine, not by an AI model. A suggestion only; the investigator decides.") }}</div><div style="font-weight:700;max-width:26ch">{{ r.suggestion }}</div></div>
 </section>
 
 {% if llm_enabled %}
 <section class="panel" id="summary">
   <h2>Case summary
-    {% if summary and summary.source == 'ai' %}<span class="tag-ai">AI-generated</span> {{ help("Written by " ~ summary.model ~ " via n8n from the computed reasons above only. It does not set the score. Every number in it was checked against the reasons.") }}
+    {% if summary and summary.source == 'ai' %}<span class="tag-ai">AI-generated &middot; Anthropic Claude ({{ summary.model }}) via n8n</span> {{ help("Written by the Anthropic model " ~ summary.model ~ ", called through an n8n workflow, from the computed reasons above only (no raw transactions, no names). It does not set the score or the suggestion. Every number in it was checked against the reasons before display. See About for the full AI disclosure.") }}
     {% else %}{{ help("Rule text built from the computed reasons. Turn on the AI summary to have Claude reword it; the score never depends on it.") }}{% endif %}</h2>
   <div class="body">
     {% if summary %}<p class="aisum">{{ summary.text }}</p>{% if summary.note %}<p class="src">{{ summary.note }}</p>{% endif %}{% endif %}
@@ -104,7 +104,7 @@
 <section class="panel" id="audit">
   <h2>Decision</h2>
   <div class="body">
-    <div class="suggestbox"><strong>Suggested:</strong> {{ r.suggestion }} {{ help("Rule: " ~ r.suggestion_rule.rstrip(".") ~ ". A suggestion only; you decide.") }}</div>
+    <div class="suggestbox"><strong>Suggested:</strong> {{ r.suggestion }} <span class="tag-rule">rule-based, not AI</span> {{ help("Rule: " ~ r.suggestion_rule.rstrip(".") ~ ". A suggestion only; you decide.") }}</div>
     <form method="post" action="/player/{{ r.player_id }}/decision" class="decide"><input type="hidden" name="_tok" value="{{ form_token() }}">
       <textarea name="note" rows="2" placeholder="Why?"></textarea>
       <div class="btns">

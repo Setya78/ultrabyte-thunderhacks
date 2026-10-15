@@ -209,3 +209,7 @@ body.login { display: grid; place-items: center; min-height: 100vh; }
 .kv dt { color: var(--muted); } .kv dd { margin: 0; }
 .mock { opacity: .75; }
 @media (max-width: 960px) { .topbar { margin-top: 4px; } }
+
+.tag-rule { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .04em; padding: 1px 6px; border-radius: 4px; background: rgba(214,230,242,.14); color: var(--silver); vertical-align: middle; white-space: nowrap; }
+.about p, .about li { font-size: 14px; color: var(--ink); line-height: 1.6; }
+.about .body { max-width: 72ch; }

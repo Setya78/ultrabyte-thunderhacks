@@ -23,7 +23,7 @@
       {% for t, why in d.gone_labels %}<tr><td>{{ t }} cleared</td><td colspan="3" class="reason" style="max-width:none">{{ why }}</td></tr>{% endfor %}
     </tbody>
   </table>
-  <div class="body"><div class="suggestbox"><strong>Suggested:</strong> {{ a.suggestion }} {{ help("Rule: " ~ a.suggestion_rule.rstrip(".") ~ ". Saved to the audit trail as Manual entry.") }}</div>
+  <div class="body"><div class="suggestbox"><strong>Suggested:</strong> {{ a.suggestion }} <span class="tag-rule">rule-based, not AI</span> {{ help("Rule: " ~ a.suggestion_rule.rstrip(".") ~ ". Saved to the audit trail as Manual entry.") }}</div>
   <a class="btn" href="/player/{{ a.player_id }}">Open player page</a> <a class="btn" href="/enter?pid={{ a.player_id }}">Add another for {{ a.player_id }}</a></div>
 </section>
 {% endif %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}About and AI disclosure - UltraByte Solutions{% endblock %}
+{% block content %}
+<div class="head"><div><h1>About &amp; AI disclosure</h1><p class="sub">What in this app is computed by rules, what is written by an AI model, and what was built with AI help.</p></div></div>
+<div class="grid two about">
+<section class="panel">
+  <h2>Decided by rules, not by AI</h2>
+  <div class="body">
+    <ul style="padding-left:18px;margin:0">
+      <li><strong>Both scores</strong> (AML context score and Safer Gambling score): four checks each, fixed formulas, thresholds from the <a href="/rules">Rules</a> page (versioned, audited).</li>
+      <li><strong>Labels</strong> (STR candidate, URGENT): pattern rules traced to FINTRAC indicators and the OLG brief.</li>
+      <li><strong>Suggested next step</strong>: a lookup table over bands and labels. The rule is shown next to every suggestion.</li>
+      <li><strong>Version 1.0</strong> in the Before view: a single threshold rule.</li>
+    </ul>
+    <p class="src" style="margin-top:12px">No machine learning model is involved in any score, label, ranking or suggestion.</p>
+  </div>
+</section>
+<section class="panel">
+  <h2>Written by AI (optional, labelled)</h2>
+  <div class="body">
+    <p><strong>Case summary</strong> on a player page, only when AI summary is on and an operator clicks "Generate AI summary".</p>
+    <ul style="padding-left:18px;margin:0">
+      <li><strong>Model and provider:</strong> Anthropic Claude ({{ llm_model }}), called through an n8n workflow hosted by the team.</li>
+      <li><strong>What is sent:</strong> the computed reasons only: scores, bands, check reasons, labels, suggestion, rule version. No raw transactions, no names, no identifiers beyond the synthetic player ID.</li>
+      <li><strong>What it may do:</strong> reword those reasons into three sentences. It cannot change a score, label or suggestion.</li>
+      <li><strong>Safeguards:</strong> every number in the reply must appear in the input, otherwise the rule text is shown; the summary is cached per score snapshot and written to the audit trail with the model name and the requesting operator.</li>
+      <li><strong>Status now:</strong> AI summary is <strong>{{ 'on' if llm_enabled else 'off' }}</strong>.</li>
+    </ul>
+  </div>
+</section>
+</div>
+<section class="panel about">
+  <h2>How this app was built</h2>
+  <div class="body">
+    <p>Built during ThunderHacks II (14-16 October 2026) by team UltraByte Solutions. AI coding assistants (Anthropic Claude) helped write code, the synthetic data generator and documentation; design decisions were made by the team and every change is in the commit history and BUILD-LOG. The team logo is an AI-generated image (Google Gemini). All data is synthetic; no real players or transactions.</p>
+    <p class="src">Full disclosure per component is in the README of the repository.</p>
+  </div>
+</section>
+{% endblock %}

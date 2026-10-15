@@ -73,6 +73,11 @@ def login_post(request: Request, username: str = Form(""), password: str = Form(
     return resp
 
 
+@app.get("/about")
+def about(request: Request):
+    return templates.TemplateResponse(request, "about.html", {"llm_model": "claude-haiku-5-5"})
+
+
 @app.get("/profile")
 def profile(request: Request):
     if not request.state.user:
