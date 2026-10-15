@@ -7,7 +7,7 @@
   <dt>Rule</dt><dd>Single deposit of ${{ "{:,.0f}".format(threshold) }} or more</dd>
   <dt>Player ID</dt><dd>{{ a.player_id }}</dd>
   <dt>Amount</dt><dd>${{ "{:,.2f}".format(a.amount) }} CAD</dd>
-  <dt>Method</dt><dd>{{ a.method }}{% if a.method_last4 %}, ending {{ a.method_last4 }}{% endif %}</dd>
+  <dt>Method</dt><dd>{{ a.method.replace("_", " ") }}{% if a.method_last4 %}, ending {{ a.method_last4 }}{% endif %}</dd>
   <dt>Time (EDT)</dt><dd>{{ a.ts.astimezone(edt).strftime('%Y-%m-%d %H:%M') }}</dd>
   <dt>Location</dt><dd>{{ a.location_region }}</dd>
   <dt>Reason</dt><dd>Amount over limit.</dd>

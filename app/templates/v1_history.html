@@ -10,7 +10,7 @@
   <thead><tr><th>Time (EDT)</th><th>Type</th><th>Amount (CAD)</th><th>Method</th><th>Card ending</th><th>Card ref</th><th>Location</th><th>Payout to own account</th></tr></thead>
   <tbody>
   {% for t in money %}
-  <tr><td>{{ t.ts.astimezone(edt).strftime('%Y-%m-%d %H:%M') }}</td><td>{{ t.type }}</td><td class="num">{{ "{:,.2f}".format(t.amount) }}</td><td>{{ t.method }}</td><td>{{ t.method_last4 or '' }}</td><td>{{ (t.method_fingerprint or '')[-6:] }}</td><td>{{ t.location_region }}</td><td>{% if t.type == 'withdrawal' %}{{ 'Yes' if t.payout_holder_match else 'No' }}{% endif %}</td></tr>
+  <tr><td>{{ t.ts.astimezone(edt).strftime('%Y-%m-%d %H:%M') }}</td><td>{{ t.type }}</td><td class="num">{{ "{:,.2f}".format(t.amount) }}</td><td>{{ t.method.replace("_", " ") }}</td><td>{{ t.method_last4 or '' }}</td><td>{{ (t.method_fingerprint or '')[-6:] }}</td><td>{{ t.location_region }}</td><td>{% if t.type == 'withdrawal' %}{{ 'Yes' if t.payout_holder_match else 'No' }}{% endif %}</td></tr>
   {% else %}<tr><td colspan="8">No records for {{ pid }}.</td></tr>{% endfor %}
   </tbody>
 </table>
