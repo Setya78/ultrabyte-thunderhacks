@@ -12,17 +12,18 @@ from urllib.parse import quote
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app import auth, db, importer, judge, llm, validation
+from app import auth, db, importer, judge, llm, validation, v1 as legacy
 from app.audit import log as audit
 from app.scoring import config as C
 from app.scoring import engine
 from app.scoring import rules as RL
 
 BASE = Path(__file__).resolve().parent
-VERSION = "0.11.0-login"
+VERSION = "0.12.0-v1"
 
 app = FastAPI(title="UltraByte Solutions", version=VERSION)
 app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
+app.include_router(legacy.router)  # Version 1.0 reconstruction at /v1 (D-2026-10-15-22); not linked from Version 2.0 navigation
 
 
 @app.middleware("http")
@@ -131,7 +132,7 @@ GLOSSARY = {
     "FINTRAC": "Financial Transactions and Reports Analysis Centre of Canada: the federal agency that receives suspicious transaction reports.",
     "URGENT": "Possible account takeover: unusual locations together with a new card or bank account. Handled by the fraud team first.",
     "EDT": "Eastern Daylight Time (Ontario).",
-    "V1": "Version 1.0: the old rule. Any single deposit of $10,000 or more raises an alert, with no ranking and no reasons.",
+    "V1": "Version 1.0: today's routine. A threshold alarm (any single deposit of $10,000 or more) with no ranking and no reason; the investigator opens separate screens and keeps the decision outside the system.",
     "V2": "Version 2.0: this app. Two scores with reasons, labels with evidence, and an audit trail.",
     "ROLE_investigator": "Reviews the queue, records decisions, enters transactions, requests AI summaries. Sees rules read-only.",
     "ROLE_compliance": "Everything an investigator can do, plus changing the rule thresholds (each change is versioned and audited).",
@@ -155,15 +156,13 @@ def health():
 
 
 @app.get("/")
-def queue(request: Request, mode: str = "split"):
-    """Before | After: Version 1.0 (threshold rule) beside Version 2.0 (ranked, explained). Same data, same moment."""
+def queue(request: Request):
+    """Version 2.0 queue only. Version 1.0 is a separate console at /v1 (D-2026-10-15-22 supersedes the Before | After split)."""
     status = db.status()
-    rows, v1, mode = [], [], ("v2" if mode == "v2" else "split")
+    rows = []
     if status.get("db") == "ok" and status.get("players"):
-        all_rows = scores()
-        rows = [r for r in all_rows if r.caught]
-        v1 = [r for r in all_rows if r.v1_flagged]
-    return templates.TemplateResponse(request, "queue.html", {"rows": rows, "v1": v1, "mode": mode, "status": status})
+        rows = [r for r in scores() if r.caught]
+    return templates.TemplateResponse(request, "queue.html", {"rows": rows, "status": status})
 
 
 def _by_id(pid: str) -> engine.PlayerScore:
@@ -193,7 +192,7 @@ def _chart(r: engine.PlayerScore) -> dict:
 
 
 @app.get("/player/{pid}")
-def player(request: Request, pid: str, mode: str = "v2"):
+def player(request: Request, pid: str):
     r = _by_id(pid)
     with db.connect() as conn:
         txns = conn.execute(
@@ -207,7 +206,7 @@ def player(request: Request, pid: str, mode: str = "v2"):
         history = audit.for_player(conn, pid)
     return templates.TemplateResponse(request, "player.html", {
         "r": r, "txns": txns, "places": places, "history": history, "chart": _chart(r),
-        "evidence": set(r.evidence_txn_ids), "edt": C.EDT, "actions": audit.ACTIONS, "mode": mode,
+        "evidence": set(r.evidence_txn_ids), "edt": C.EDT, "actions": audit.ACTIONS,
         "summary": _summary_for(r)})
 
 

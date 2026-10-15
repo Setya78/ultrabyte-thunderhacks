@@ -3,7 +3,7 @@
 {% from "_ring.html" import ring %}
 {% block title %}{{ r.display_name }} ({{ r.player_id }}) - UltraByte Solutions{% endblock %}
 {% block content %}
-<p class="sub" style="margin:0 0 12px"><a href="/?mode={{ mode }}">&larr; Review queue</a></p>
+<p class="sub" style="margin:0 0 12px"><a href="/">&larr; Review queue</a></p>
 
 <section class="panel hero">
   <div class="two-rings"><div>{{ ring(r, large=True) }}<div class="ringlbl" title="{{ gloss['AML'] }}">AML</div></div><div>{{ ring(r, large=True, kind='sg') }}<div class="ringlbl" title="{{ gloss['SG'] }}">SAFER GAMBLING</div></div></div>
@@ -54,7 +54,6 @@
     </div>
     {% endfor %}
   </div>
-  {% if r.v1_flagged %}<p class="src" style="margin:12px 18px 16px">Version 1.0 also alerted {{ help("The old rule (" ~ r.v1_reason ~ ") alerted on this player too, with no reason or context.") }}</p>{% endif %}
 </section>
 
 <section class="panel">

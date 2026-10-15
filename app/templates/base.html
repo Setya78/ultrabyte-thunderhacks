@@ -5,10 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}UltraByte Solutions{% endblock %}</title>
   <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/steps.css">
   <link rel="icon" type="image/png" sizes="64x64" href="/static/brand/team/favicon-64.png">
   <link rel="apple-touch-icon" href="/static/brand/team/favicon-192.png">
 </head>
-<body{% block bodyattrs %}{% endblock %}>
+<body data-steps="v2"{% block bodyattrs %}{% endblock %}>
 <div class="shell">
   <aside class="side">
     <a class="brand" href="/"><img src="/static/brand/team/umark-256.png" alt="" width="112" height="112"><b>UltraByte</b><small>Solutions</small></a>
@@ -85,6 +86,7 @@ var f = document.querySelector('.flash'); if (f) setTimeout(function () { f.clas
   if (document.body.getAttribute('data-alert') === 'urgent') beep(); // manual entry that just produced URGENT
 })();
 </script>
+{% if request.state.user %}<script src="/static/steps.js"></script>{% endif %}
 </div>
 </body>
 </html>

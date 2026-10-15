@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Alert Console{% endblock %} - Version 1.0 (reconstruction)</title>
+  <link rel="stylesheet" href="/static/steps.css">
+  <style>
+    /* Deliberately plain: a generic back-office console, not the UltraByte look. */
+    body { margin: 0; font: 14px/1.45 Tahoma, Verdana, Arial, sans-serif; background: #E9EBEE; color: #1D232A; }
+    .bar { background: #3B4652; color: #fff; padding: 8px 16px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+    .bar b { font-size: 15px; letter-spacing: .02em; }
+    .bar a { color: #DCE3EA; text-decoration: none; padding: 4px 8px; border-radius: 3px; }
+    .bar a:hover, .bar a.on { background: #56626F; color: #fff; }
+    .banner { background: #FFF4C2; border-bottom: 1px solid #E2C95A; padding: 7px 16px; font-size: 13px; }
+    main { padding: 16px; max-width: 1100px; }
+    h1 { font-size: 18px; margin: 4px 0 12px; }
+    .box { background: #fff; border: 1px solid #C5CBD2; padding: 12px; margin-bottom: 14px; overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; font-size: 13px; }
+    th, td { border: 1px solid #D3D8DE; padding: 4px 8px; text-align: left; white-space: nowrap; }
+    th { background: #EEF1F4; font-weight: 600; }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    a { color: #1F4E8C; }
+    .btn { display: inline-block; padding: 5px 12px; border: 1px solid #8A949F; background: #F4F5F7; color: #1D232A; border-radius: 2px; font: inherit; cursor: pointer; text-decoration: none; margin: 0 6px 6px 0; }
+    .btn:hover { background: #E3E6EA; }
+    form.inline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+    input, select, textarea { font: inherit; padding: 4px 6px; border: 1px solid #8A949F; border-radius: 2px; }
+    textarea { width: 100%; max-width: 640px; min-height: 110px; }
+    dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 0; }
+    dt { color: #5A6470; }
+    dd { margin: 0; }
+    .muted { color: #5A6470; font-size: 12px; }
+    .msg { background: #FBE9E7; border: 1px solid #E0A49B; padding: 8px 10px; margin-top: 10px; display: none; }
+    .msg.show { display: block; }
+  </style>
+</head>
+<body data-steps="v1">
+<div class="bar">
+  <b>Alert Console</b>
+  {% set path = request.url.path %}
+  <a href="/v1" class="{{ 'on' if path in ('/v1', '/v1/') or path.startswith('/v1/alert') }}">Alerts</a>
+  <a href="/v1/history" class="{{ 'on' if path == '/v1/history' }}">Transaction history</a>
+  <a href="/v1/profile" class="{{ 'on' if path == '/v1/profile' }}">Customer profile</a>
+  <a href="/v1/lookup" class="{{ 'on' if path == '/v1/lookup' }}">Card lookup</a>
+  <a href="/v1/decision" class="{{ 'on' if path == '/v1/decision' }}">Case notes</a>
+</div>
+<div class="banner"><strong>Version 1.0, illustrative reconstruction</strong> of a typical threshold-alert routine, built by the team for comparison. Not OLG's system. Same synthetic data as Version 2.0.</div>
+<main>{% block content %}{% endblock %}</main>
+<script src="/static/steps.js"></script>
+</body>
+</html>

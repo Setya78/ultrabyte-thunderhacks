@@ -29,7 +29,7 @@ SPEC = [
     ("structuring_high", 9999.99, "Structuring: deposit at or below ($)", "STR labels", ""),
     ("structuring_min", 2, "Structuring: minimum such deposits in 30 days", "STR labels", ""),
     ("minimal_play_ratio", 0.10, "Minimal play: wagered below this share of deposits", "STR labels", "Deposit, little play, withdraw."),
-    ("v1_threshold", 10000, "Version 1.0: single deposit at or above ($)", "STR labels", "The old rule, kept for the Before | After view."),
+    ("v1_threshold", 10000, "Version 1.0: single deposit at or above ($)", "STR labels", "The old rule, used by the Version 1.0 console (/v1) and the Validation page."),
     # Safer Gambling score
     ("sg_escalating_months", 4, "Escalation: 25 points at months rising in a row", "Safer Gambling", "Deposits higher than the month before, N months running. One month fewer: 15 points."),
     ("sg_night_share", 0.60, "Night play: 25 points at share of sessions 00:00-04:00", "Safer Gambling", "Two thirds of this share: 15 points."),

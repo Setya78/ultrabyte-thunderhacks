@@ -1,0 +1,20 @@
+{% extends "v1_base.html" %}
+{% block title %}Customer profile{% endblock %}
+{% block content %}
+<h1>Customer profile{% if pid %}: {{ pid }}{% endif %}</h1>
+<form class="inline" method="get" action="/v1/profile"><label>Player ID <input name="pid" value="{{ pid }}" size="10"></label><button class="btn" type="submit">Search</button></form>
+{% if pid %}
+<div class="box">
+{% if p %}
+<dl>
+  <dt>Player ID</dt><dd>{{ p.id }}</dd>
+  <dt>Occupation</dt><dd>{{ p.occupation }}</dd>
+  <dt>Age band</dt><dd>{{ p.age_band }}</dd>
+  <dt>Income band</dt><dd>{{ p.income_band }}</dd>
+  <dt>Home region</dt><dd>{{ p.region }}</dd>
+  <dt>Account opened</dt><dd>{{ p.created_at.astimezone(edt).strftime('%Y-%m-%d') }}</dd>
+</dl>
+{% else %}No customer {{ pid }}.{% endif %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "v1_base.html" %}
+{% block title %}Card lookup{% endblock %}
+{% block content %}
+<h1>Card lookup</h1>
+<form class="inline" method="get" action="/v1/lookup"><label>Card last 4 digits <input name="last4" value="{{ last4 }}" size="5" maxlength="4" inputmode="numeric"></label><button class="btn" type="submit">Search</button></form>
+{% if last4 %}
+<div class="box">
+<p class="muted" style="margin-top:0">Players with a card ending {{ last4 }}. Different card refs mean different cards with the same last digits.</p>
+<table>
+  <thead><tr><th>Player ID</th><th>Card ref</th><th>Transactions</th><th>First used (EDT)</th><th>Last used (EDT)</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+  <tr><td>{{ r.player_id }}</td><td>{{ (r.method_fingerprint or '')[-6:] }}</td><td class="num">{{ r.n }}</td><td>{{ r.first.astimezone(edt).strftime('%Y-%m-%d') }}</td><td>{{ r.last.astimezone(edt).strftime('%Y-%m-%d') }}</td></tr>
+  {% else %}<tr><td colspan="5">No cards ending {{ last4 }}.</td></tr>{% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}

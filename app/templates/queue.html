@@ -5,48 +5,29 @@
 {% block bodyattrs %} data-urgent="{{ rows|selectattr("labels")|map(attribute="labels")|map("map", attribute="key")|map("select", "equalto", "urgent")|map("list")|map("length")|select("gt", 0)|list|length }}"{% endblock %}
 {% block content %}
 <div class="head">
-  <div><h1>Review queue {{ help("Same players, same 30 days, two ways of alerting. Left: the old threshold rule. Right: the explainable scores. A manual entry changes both sides at once. STR = Suspicious Transaction Report (filed with FINTRAC, Canada's financial intelligence agency); AML = anti-money laundering.") }}</h1>
+  <div><h1>Review queue {{ help("Players ranked by two explainable scores. Every point has a reason; every decision goes to the audit trail. STR = Suspicious Transaction Report (filed with FINTRAC, Canada's financial intelligence agency); AML = anti-money laundering.") }}</h1>
     <p class="sub">{% if status.db == "ok" %}{{ status.players }} players, {{ status.txns }} transactions, 15 Sep to 14 Oct 2026{% else %}Database: {{ status.db }}{% endif %}</p></div>
   <div class="tools">
-    <div class="switch" role="group" aria-label="View">
-      <a href="/?mode=split" class="{{ 'on' if mode == 'split' }}">Before | After</a>
-      <a href="/?mode=v2" class="{{ 'on' if mode == 'v2' }}">Version 2.0 only</a>
-    </div>
     <form method="post" action="/reset"><button class="btn" type="submit">Reset demo data</button></form>
   </div>
 </div>
 
-<div class="{{ 'split' if mode == 'split' }}">
-{% if mode == "split" %}
-<div class="panel old">
-  <h2><span class="vtag old">BEFORE</span> Version 1.0 <small>{{ v1|length }} alerts</small> {{ help("Any single deposit of $10,000 or more raises an alert. A simplified stand-in for a threshold rule, not OLG's actual rule. No ranking, no reasons.") }}</h2>
-  <table class="t">
-    <thead><tr><th>Player</th><th>Alert</th></tr></thead>
-    <tbody>
-      {% for r in v1 %}
-      <tr><td><a class="p" href="/player/{{ r.player_id }}?mode=v1">{{ r.display_name }}</a><span class="pid">{{ r.player_id }}</span>{% if not r.caught %}<span class="tag-fp">cleared by 2.0</span>{% endif %}</td><td class="reason">{{ r.v1_reason }}</td></tr>
-      {% else %}<tr><td colspan="2" class="empty">No alerts.</td></tr>{% endfor %}
-    </tbody>
-  </table>
-</div>
-{% endif %}
 <div class="panel">
-<h2><span class="vtag">{{ 'AFTER' if mode == 'split' else 'NOW' }}</span> Version 2.0 <small>{{ rows|length }} ranked</small> {{ help("Two scores, four checks each, every point with a reason: AML (anti-money laundering) and Safer Gambling (player protection). Labels pin a player near the top: URGENT = possible account takeover; STR candidate = pattern matches a FINTRAC indicator for a Suspicious Transaction Report.") }}</h2>
+<h2>Version 2.0 <small>{{ rows|length }} ranked</small> {{ help("Two scores, four checks each, every point with a reason: AML (anti-money laundering) and Safer Gambling (player protection). Labels pin a player near the top: URGENT = possible account takeover; STR candidate = pattern matches a FINTRAC indicator for a Suspicious Transaction Report.") }}</h2>
 <table class="t">
-  <thead><tr><th>#</th><th>Scores {{ help("Left: AML score (anti-money laundering: is money moving through the account rather than being played?). Right: Safer Gambling score (signs of harm to the player). Each arc is one check, up to 25 points.") }}</th><th>Player</th><th class="hide-s">Labels</th><th>Why</th>{% if mode != 'split' %}<th class="hide-m">Suggested <span class="tag-rule">rule-based</span></th>{% endif %}</tr></thead>
+  <thead><tr><th>#</th><th>Scores {{ help("Left: AML score (anti-money laundering: is money moving through the account rather than being played?). Right: Safer Gambling score (signs of harm to the player). Each arc is one check, up to 25 points.") }}</th><th>Player</th><th class="hide-s">Labels</th><th>Why</th><th class="hide-m">Suggested <span class="tag-rule">rule-based</span></th></tr></thead>
   <tbody>
     {% for r in rows %}
     <tr>
       <td class="pid" style="margin:0">{{ loop.index }}</td>
       <td><div class="two-rings"><div>{{ ring(r) }}<div class="ringlbl" title="{{ gloss['AML'] }}">AML</div></div><div>{{ ring(r, kind='sg') }}<div class="ringlbl" title="{{ gloss['SG'] }}">SAFER</div></div></div></td>
-      <td><a class="p" href="/player/{{ r.player_id }}?mode=v2" style="white-space:nowrap">{{ r.display_name }}</a><span class="pid">{{ r.player_id }}</span><div class="src">{{ r.occupation }}, {{ r.age_band }}, {{ r.income_band }}{% if mode == 'split' and not r.v1_flagged %}<span class="tag-new">missed by 1.0</span>{% endif %}</div></td>
+      <td><a class="p" href="/player/{{ r.player_id }}" style="white-space:nowrap">{{ r.display_name }}</a><span class="pid">{{ r.player_id }}</span><div class="src">{{ r.occupation }}, {{ r.age_band }}, {{ r.income_band }}</div></td>
       <td class="hide-s"><span class="band band-{{ r.band|lower }}">{{ r.band }}</span> {% if r.harm_band != 'Low' %}<span class="band band-{{ r.harm_band|lower }}">SG {{ r.harm_band }}</span>{% endif %}{% for l in r.labels|unique(attribute='text') %}<span class="label label-{{ l.key }}" title="{{ gloss['URGENT'] if l.key == 'urgent' else gloss['STR'] }}">{{ l.text }}</span>{% endfor %}</td>
       <td class="reason">{{ r.top_reason }}</td>
-      {% if mode != 'split' %}<td class="hide-m suggest">{{ r.suggestion }}</td>{% endif %}
+      <td class="hide-m suggest">{{ r.suggestion }}</td>
     </tr>
     {% else %}<tr><td colspan="6" class="empty">No scored alerts.</td></tr>{% endfor %}
   </tbody>
 </table>
-</div>
 </div>
 {% endblock %}

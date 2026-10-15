@@ -1,0 +1,23 @@
+{% extends "v1_base.html" %}
+{% block title %}Alert A-{{ a.id }}{% endblock %}
+{% block content %}
+<h1>Alert A-{{ a.id }}</h1>
+<div class="box">
+<dl>
+  <dt>Rule</dt><dd>Single deposit of ${{ "{:,.0f}".format(threshold) }} or more</dd>
+  <dt>Player ID</dt><dd>{{ a.player_id }}</dd>
+  <dt>Amount</dt><dd>${{ "{:,.2f}".format(a.amount) }} CAD</dd>
+  <dt>Method</dt><dd>{{ a.method }}{% if a.method_last4 %}, ending {{ a.method_last4 }}{% endif %}</dd>
+  <dt>Time (EDT)</dt><dd>{{ a.ts.astimezone(edt).strftime('%Y-%m-%d %H:%M') }}</dd>
+  <dt>Location</dt><dd>{{ a.location_region }}</dd>
+  <dt>Reason</dt><dd>Amount over limit.</dd>
+</dl>
+</div>
+<div class="box">
+  <p class="muted" style="margin-top:0">Open the other screens to investigate.</p>
+  <a class="btn" href="/v1/history?pid={{ a.player_id }}">Transaction history</a>
+  <a class="btn" href="/v1/profile?pid={{ a.player_id }}">Customer profile</a>
+  <a class="btn" href="/v1/lookup">Card lookup</a>
+  <a class="btn" href="/v1/decision?pid={{ a.player_id }}&alert=A-{{ a.id }}">Case notes</a>
+</div>
+{% endblock %}

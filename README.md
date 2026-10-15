@@ -15,7 +15,7 @@ UltraByte flags unusual player activity, compares it against each player's own h
 |---|---|---|
 | M0 | Skeleton, schema, synthetic seed, `/health`, `/reset` | done |
 | M1 | Context score: 4 checks x 25 points, each with a reason and a source; STR / URGENT / Safer Gambling labels | done |
-| M2 | Ranked queue with Version 1.0 / 2.0 switch; player page ("why 75?", reasons with sources, 6-month chart vs peer range, locations, highlighted evidence) | done |
+| M2 | Ranked queue; player page ("why 75?", reasons with sources, 6-month chart vs peer range, locations, highlighted evidence) | done |
 | M3 | Escalate / Monitor / Dismiss with a note, saved to the append-only audit trail with a full score snapshot | done |
 | S1 | Validation page: planted cases expected vs actual, Version 1.0 vs 2.0, false positives over the whole population | done |
 | S2 | Suggested next step per alert, rule-based, with the rule shown (advice only; the investigator decides) | done |
@@ -23,7 +23,8 @@ UltraByte flags unusual player activity, compares it against each player's own h
 | C1 | Network view: cards and payout bank accounts shared by more than one player | done |
 | Import | Bring your own synthetic data: Excel template (players, transactions, sessions) or CSV; every row validated; sensitive columns rejected; load replaces or adds; scores recomputed | done |
 | Manual entry | `/enter`: type one deposit or withdrawal (existing player or a new one, bands only, name generated); the player is rescored at once and the page shows each check before and after, new labels and the suggested step; every entry is an audit event (`manual_entry`); `/reset` removes manually entered rows | done |
-| Before / After | `/` shows Version 1.0 (threshold alerts) beside Version 2.0 (ranked, explained) on the same data; "cleared by 2.0" and "missed by 1.0" tags | done |
+| Version 1.0 console | `/v1`: illustrative reconstruction of today's routine (threshold alert with no reason, separate history / profile / card-lookup screens, notes copied to a spreadsheet, nothing stored). Same data, not linked from Version 2.0. Replaced the Before / After split queue (D-2026-10-15-22) | done |
+| Step counter | Badge on every page of both versions: one step = one click; typing not counted; separate counts for 1.0 and 2.0, kept in the browser only. Case H measured: 7 steps in 1.0, 2 in 2.0 | done |
 | Rules | `/rules`: every threshold the two scores use, editable by a compliance operator; each save is a new append-only `rule_version` row with a required reason and an audit event listing before/after values; all players are rescored; each score snapshot records its rule version. Version 1 = team spec defaults | done |
 | Safer Gambling score | Second score, 0-100, four checks x 25 (escalation of monthly deposits, night play, loss chasing, intensity), own band and ring, separate from the AML score; Safer Gambling band Medium or High puts the player in the queue and routes the suggestion to the Safer Gambling team | done |
 | Sign-in | Operator sign-in with two roles: `investigator` (queue, decisions, manual entry, AI summary, rules read-only) and `compliance` (all of that plus editing rules). Accounts and the cookie secret come from the environment; sign-in and sign-out are audit events; the audit actor is the signed-in user. User menu top-right with a Profile page (account, session, own recent activity); the change-password form is a labelled mock-up | done |
@@ -69,7 +70,9 @@ account), **Safer Gambling** (deposits rising 4+ months in a row, or most sessio
 Every threshold lives in `app/scoring/config.py`.
 
 **Version 1.0** in the demo is a simplified stand-in for a threshold rule (any single deposit of $10,000 or
-more). It is not OLG's actual rule.
+more). It is not OLG's actual rule. The routine built around it in the `/v1` console (separate look-up screens, notes kept in a
+spreadsheet) is the team's assumption of how an investigator works today; it has not been confirmed by a
+current user and is labelled as a reconstruction on every screen.
 
 ## Results on the synthetic data (honest reading)
 

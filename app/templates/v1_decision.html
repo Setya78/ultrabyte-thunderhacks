@@ -1,0 +1,22 @@
+{% extends "v1_base.html" %}
+{% block title %}Case notes{% endblock %}
+{% block content %}
+<h1>Case notes{% if alert %}: {{ alert }}{% endif %}</h1>
+<div class="box">
+  <form id="v1note" onsubmit="return false">
+    <p><label>Player ID <input id="n_pid" value="{{ pid }}" size="10"></label>
+       <label style="margin-left:12px">Outcome <select id="n_out"><option>Close, no action</option><option>Monitor</option><option>Escalate</option></select></label></p>
+    <p><textarea id="n_txt" placeholder="Write what you found and why you decided."></textarea></p>
+    <button class="btn" type="submit" id="n_copy">Copy for team spreadsheet</button>
+  </form>
+  <div class="msg" id="n_msg"><strong>Not stored in this system.</strong> The note was copied to your clipboard; paste it into the team spreadsheet. No record of who decided or why is kept here.</div>
+</div>
+<script>
+document.getElementById('v1note').addEventListener('submit', function () {
+  var t = [new Date().toISOString().slice(0, 16).replace('T', ' '), {{ alert|tojson }}, document.getElementById('n_pid').value,
+           document.getElementById('n_out').value, document.getElementById('n_txt').value].join('\t');
+  try { navigator.clipboard.writeText(t).catch(function () {}); } catch (e) {}
+  document.getElementById('n_msg').classList.add('show');
+});
+</script>
+{% endblock %}
