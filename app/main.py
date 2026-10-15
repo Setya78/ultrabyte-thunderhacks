@@ -4,23 +4,25 @@ from pathlib import Path
 
 import secrets
 
+from psycopg.types.json import Jsonb
+
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app import db, importer, validation
+from app import db, importer, judge, llm, validation
 from app.audit import log as audit
 from app.scoring import config as C
 from app.scoring import engine
 
 BASE = Path(__file__).resolve().parent
-VERSION = "0.8.1-brand"
+VERSION = "0.9.0-judge"
 
 app = FastAPI(title="UltraByte Solutions", version=VERSION)
 app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
 templates = Jinja2Templates(directory=BASE / "templates")
-templates.env.globals.update(version=VERSION, llm_enabled=os.environ.get("LLM_ENABLED", "false") == "true")
+templates.env.globals.update(version=VERSION, llm_enabled=llm.enabled(), labels=audit.LABELS)
 
 _cache: dict = {}
 
@@ -39,16 +41,15 @@ def health():
 
 
 @app.get("/")
-def queue(request: Request, mode: str = "v2"):
+def queue(request: Request, mode: str = "split"):
+    """Before | After: Version 1.0 (threshold rule) beside Version 2.0 (ranked, explained). Same data, same moment."""
     status = db.status()
-    rows, mode = [], ("v1" if mode == "v1" else "v2")
+    rows, v1, mode = [], [], ("v2" if mode == "v2" else "split")
     if status.get("db") == "ok" and status.get("players"):
         all_rows = scores()
-        if mode == "v1":
-            rows = [r for r in all_rows if r.v1_flagged]  # Version 1.0: alert list, no ranking, no reasons
-        else:
-            rows = [r for r in all_rows if r.caught]
-    return templates.TemplateResponse(request, "queue.html", {"rows": rows, "mode": mode, "status": status})
+        rows = [r for r in all_rows if r.caught]
+        v1 = [r for r in all_rows if r.v1_flagged]
+    return templates.TemplateResponse(request, "queue.html", {"rows": rows, "v1": v1, "mode": mode, "status": status})
 
 
 def _by_id(pid: str) -> engine.PlayerScore:
@@ -82,7 +83,7 @@ def player(request: Request, pid: str, mode: str = "v2"):
     r = _by_id(pid)
     with db.connect() as conn:
         txns = conn.execute(
-            "SELECT id, ts, type, amount, method_last4, location_region, payout_holder_match FROM txn"
+            "SELECT id, ts, type, amount, method_last4, location_region, payout_holder_match, entry_source FROM txn"
             " WHERE player_id = %s AND type IN ('deposit','withdrawal') AND ts >= %s AND ts < %s ORDER BY ts",
             (pid, C.WIN_START, C.WIN_END)).fetchall()
         places = conn.execute(
@@ -92,7 +93,33 @@ def player(request: Request, pid: str, mode: str = "v2"):
         history = audit.for_player(conn, pid)
     return templates.TemplateResponse(request, "player.html", {
         "r": r, "txns": txns, "places": places, "history": history, "chart": _chart(r),
-        "evidence": set(r.evidence_txn_ids), "edt": C.EDT, "actions": audit.ACTIONS, "mode": mode})
+        "evidence": set(r.evidence_txn_ids), "edt": C.EDT, "actions": audit.ACTIONS, "mode": mode,
+        "summary": _summary_for(r)})
+
+
+_summary_tries: dict[str, dict] = {}
+
+
+def _summary_for(r: engine.PlayerScore) -> dict | None:
+    """AI summary if one exists for this exact score; otherwise the last attempt's fallback; else rule text when LLM is off."""
+    d = r.to_dict()
+    k = llm.key(llm.payload(d))
+    return llm.cached(d) or _summary_tries.get(k)
+
+
+@app.post("/player/{pid}/summary")
+def summary(pid: str):
+    r = _by_id(pid)
+    d = r.to_dict()
+    res = llm.summarize(d)
+    _summary_tries[llm.key(llm.payload(d))] = res
+    if res["source"] == "ai":
+        with db.connect() as conn:
+            conn.execute(
+                "INSERT INTO audit_event (actor, player_id, action, note, score_snapshot) VALUES (%s, %s, 'ai_summary', %s, %s)",
+                (f"AI summary ({res['model']} via n8n)", pid, res["text"], Jsonb(d)))
+            conn.commit()
+    return RedirectResponse(f"/player/{pid}#summary", status_code=303)
 
 
 @app.post("/player/{pid}/decision")
@@ -101,6 +128,43 @@ def decision(pid: str, action: str = Form(...), note: str = Form("")):
     with db.connect() as conn:
         audit.record(conn, pid, action, note, r.to_dict())
     return RedirectResponse(f"/player/{pid}#audit", status_code=303)
+
+
+_entries: dict[str, dict] = {}
+
+
+@app.get("/enter")
+def enter_page(request: Request, r: str = "", pid: str = ""):
+    return templates.TemplateResponse(request, "enter.html", {
+        "res": _entries.get(r), "errors": [], "form": {"player_id": pid}, "cities": judge.CITIES,
+        "methods": judge.METHODS, "ages": importer.AGE_BANDS, "incomes": importer.INCOME_BANDS})
+
+
+@app.post("/enter")
+async def enter_post(request: Request):
+    form = {k: str(v) for k, v in (await request.form()).items()}
+    entry, errors = judge.parse(form)
+    before = None
+    if entry and entry.player_id:
+        try:
+            before = _by_id(entry.player_id).to_dict()
+        except HTTPException:
+            errors = [f"No player {entry.player_id}. Leave the field empty to create a new player."]
+    if errors:
+        return templates.TemplateResponse(request, "enter.html", {
+            "res": None, "errors": errors, "form": form, "cities": judge.CITIES, "methods": judge.METHODS,
+            "ages": importer.AGE_BANDS, "incomes": importer.INCOME_BANDS}, status_code=400)
+    with db.connect() as conn:
+        pid = judge.save(conn, entry)
+        _cache.clear()
+        after = _by_id(pid).to_dict()
+        judge.record(conn, pid, entry, before, after)
+    tok = secrets.token_urlsafe(8)
+    if len(_entries) > 50:
+        _entries.clear()
+    _entries[tok] = {"pid": pid, "before": before, "after": after, "diff": judge.diff(before, after),
+                     "entry": entry}
+    return RedirectResponse(f"/enter?r={tok}&pid={pid}", status_code=303)
 
 
 @app.get("/dashboard")

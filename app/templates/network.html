@@ -1,7 +1,8 @@
 {% extends "base.html" %}
+{% from "_help.html" import help %}
 {% block title %}Shared accounts - UltraByte Solutions{% endblock %}
 {% block content %}
-<div class="head"><div><h1>Shared cards and bank accounts</h1><p class="sub">Funding cards and payout accounts used by more than one player. Instruments are masked.</p></div></div>
+<div class="head"><div><h1>Shared cards and bank accounts {{ help('Funding cards and payout accounts used by more than one player. Instruments are masked.') }}</h1></div></div>
 {% for g in links %}
 <section class="panel">
   <h2>{{ g.kind }}{% if g.last4 %} ending {{ g.last4 }}{% endif %} <small>{{ g.players|length }} players, {{ g.uses }} transactions</small></h2>

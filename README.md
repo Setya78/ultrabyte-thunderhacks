@@ -22,8 +22,11 @@ UltraByte flags unusual player activity, compares it against each player's own h
 | S3 | Dashboard by category: URGENT, STR candidates, context risk, Safer Gambling | done |
 | C1 | Network view: cards and payout bank accounts shared by more than one player | done |
 | Import | Bring your own synthetic data: Excel template (players, transactions, sessions) or CSV; every row validated; sensitive columns rejected; load replaces or adds; scores recomputed | done |
+| Judge input | `/enter`: type one deposit or withdrawal (existing player or a new one, bands only, name generated); the player is rescored at once and the page shows each check before and after, new labels and the suggested step; every entry is an audit event (`manual_entry`); `/reset` removes judge rows | done |
+| Before / After | `/` shows Version 1.0 (threshold alerts) beside Version 2.0 (ranked, explained) on the same data; "cleared by 2.0" and "missed by 1.0" tags | done |
+| AI summary | Optional, behind `LLM_ENABLED`: a 3-sentence investigator summary written by Claude via an n8n webhook from the computed reasons only; checked before display; cached; written to the audit trail (`ai_summary`). The score never depends on it | done |
 
-Pages: `/` queue (switch `?mode=v1`), `/player/{id}`, `/dashboard`, `/network`, `/validation`, `/import`, `/audit`. Health: `/health`. Demo reset: `POST /reset`.
+Pages: `/` queue (`?mode=v2` for Version 2.0 alone), `/player/{id}`, `/enter`, `/dashboard`, `/network`, `/validation`, `/import`, `/audit`. Health: `/health`. Demo reset: `POST /reset`. Explanations sit behind the small "?" buttons so screens stay clean.
 
 ## Architecture
 
@@ -31,11 +34,19 @@ Pages: `/` queue (switch `?mode=v1`), `/player/{id}`, `/dashboard`, `/network`, 
 Browser -> Nginx (TLS) -> app container (FastAPI + Jinja, 127.0.0.1:3110)
                               |-- app/scoring/  explainable score (M1)
                               |-- app/audit/    append-only audit_event (M3)
-                              |-- app/llm/      optional, behind LLM_ENABLED (off by default)
+                              |-- app/judge.py  judge input (one transaction -> rescore)
+                              |-- app/llm/      optional AI summary, behind LLM_ENABLED (off by default)
+                              |      '-- n8n webhook (header key) -> Anthropic Claude -> 3-sentence summary
                               '-- Postgres 16 (self-hosted, synthetic data only)
 ```
 
-The core logic (scoring, audit) lives in this repo. The LLM is optional: scoring works with it switched off.
+The core logic (scoring, audit, judge input) lives in this repo and needs no LLM. The AI summary is optional and
+one-directional: the app sends only what the rules scorer already computed (score, band, check reasons, labels,
+suggestion; no names, no raw transactions) to an n8n workflow, which asks Claude to reword it for an investigator.
+Before display the app checks that every number in the reply appears in the input; otherwise, or if n8n or the
+model is unavailable, the rule text is shown instead. The summary is cached per score snapshot and recorded in the
+audit trail with the model name. n8n workflow: "UltraByte - AI case summary (THX)", 3 nodes (Webhook with header
+auth -> Anthropic -> Respond).
 
 ## How the score works
 
@@ -100,7 +111,12 @@ No CI and no secrets in the repo. `scripts/deploy.sh` calls a script on the serv
 - Estimated income is the midpoint of the income band, not a real income figure.
 - All locations are inside Ontario (assumption: online play requires being in Ontario).
 - No authentication: this is a single-user demo, so every decision is recorded as "investigator (demo)".
-- Suggested actions are fixed rules in `app/scoring/engine.py` (`suggest`); no LLM is used (`LLM_ENABLED=false`).
+- Suggested actions are fixed rules in `app/scoring/engine.py` (`suggest`); no LLM is involved in scoring, labels or suggestions.
+- The AI summary (when `LLM_ENABLED=true`) is prose only; it cannot change a score, label or suggestion. Its number check
+  is a safeguard against invented figures, not a guarantee of faithful wording; the computed reasons stay on screen beside it.
+- Judge input: a typed deposit also creates a 30-minute session at the same city and time (so the location check can see
+  it), and the same card "last 4" on two judge players counts as a shared card. Judge players get a generated name and
+  the id prefix `J-`. Judge rows are tagged `entry_source = 'judge'`.
 - Import "replace" mode clears the audit trail together with the data (same demo-only path as reset); "add" mode keeps it.
 - The demo date is fixed: "last 30 days" means 15 Sep - 14 Oct 2026, so the data never changes between resets.
 
@@ -113,4 +129,13 @@ No CI and no secrets in the repo. `scripts/deploy.sh` calls a script on the serv
 
 ## AI disclosure
 
-AI coding assistants (Claude, Anthropic) were used during the event to help write code, the synthetic data generator and documentation. All design decisions were made by the team; all output was reviewed and tested by the team. Details per component will be listed here before submission.
+AI coding assistants (Claude, Anthropic) were used during the event to help write code, the synthetic data generator and documentation. All design decisions were made by the team; all output was reviewed and tested by the team.
+
+| Component | AI involvement |
+|---|---|
+| Scoring rules, thresholds, labels (`app/scoring/`) | Rules and thresholds chosen by the team from the OLG brief and FINTRAC indicators; code written with Claude's help |
+| Synthetic data generator, planted cases | Scenarios designed by the team; code written with Claude's help |
+| UI, templates, CSS | Written with Claude's help; layout decisions by the team |
+| README, BUILD-LOG, docs | Drafted with Claude's help, edited by the team |
+| Team logo | AI-generated image (Google Gemini), see Assets |
+| AI case summary at runtime | Anthropic Claude via n8n, optional (`LLM_ENABLED`), prose only; labelled "AI-generated" on screen |

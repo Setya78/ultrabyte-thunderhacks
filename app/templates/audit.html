@@ -1,14 +1,15 @@
 {% extends "base.html" %}
+{% from "_help.html" import help %}
 {% block title %}Audit trail - UltraByte Solutions{% endblock %}
 {% block content %}
-<div class="head"><div><h1>Audit trail</h1><p class="sub">Every decision, newest first. Rows cannot be edited or deleted; each keeps the full score at the moment of the decision.</p></div></div>
+<div class="head"><div><h1>Audit trail {{ help('Every decision, judge entry and AI summary, newest first. Rows cannot be edited or deleted; each keeps the full score at that moment.') }}</h1></div></div>
 <div class="panel"><table class="t">
   <thead><tr><th>When (EDT)</th><th>Who</th><th>Player</th><th>Action</th><th>Score then</th><th>Note</th></tr></thead>
   <tbody>
     {% for h in rows %}
     <tr><td>{{ h.ts.astimezone(edt).strftime('%d %b %H:%M:%S') }}</td><td>{{ h.actor }}</td>
         <td>{% if h.player_id %}<a class="p" href="/player/{{ h.player_id }}">{{ h.player_id }}</a>{% endif %}</td>
-        <td>{{ h.action }}</td><td>{{ h.score or '' }}</td><td class="reason">{{ h.note or '' }}</td></tr>
+        <td>{{ labels.get(h.action, h.action) }}</td><td>{{ h.score or '' }}</td><td class="reason">{{ h.note or '' }}</td></tr>
     {% else %}<tr><td colspan="6" class="empty">No events yet.</td></tr>{% endfor %}
   </tbody>
 </table></div>

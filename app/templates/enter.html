@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% from "_help.html" import help %}
+{% block title %}Judge input - UltraByte Solutions{% endblock %}
+{% block content %}
+<div class="head">
+  <div><h1>Judge input {{ help('Type one deposit or withdrawal and watch the score change. Synthetic only: names are generated, every entry is in the audit trail, and Reset removes it.') }}</h1></div>
+</div>
+
+{% if errors %}<section class="panel"><h2>Fix these first</h2><div class="body"><ul class="reason" style="max-width:none;margin:0;padding-left:18px">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div></section>{% endif %}
+
+{% if res %}{% set a = res.after %}{% set d = res.diff %}
+<section class="panel" id="result">
+  <h2>{{ a.display_name }} <span class="pid">{{ a.player_id }}</span>
+    <small>score {{ d.score_before if d.score_before is not none else 'new' }} &rarr; <strong style="color:var(--ink)">{{ a.score }}</strong> &middot; <span class="band band-{{ a.band|lower }}">{{ a.band }} risk</span></small></h2>
+  <table class="t">
+    <thead><tr><th>Check</th><th>Before</th><th>After</th><th>Reason now</th></tr></thead>
+    <tbody>
+      {% for c in d.checks %}
+      <tr class="{{ 'evidence' if c.changed and c.before != c.after }}"><td><i class="dot {{ c.key }}"></i>{{ c.name }}</td>
+          <td>{{ c.before if c.before is not none else '-' }}</td><td><strong>{{ c.after }}</strong>/25</td><td class="reason" style="max-width:none">{{ c.reason }}</td></tr>
+      {% endfor %}
+      {% for t, why in d.new_labels %}<tr class="evidence"><td><span class="label label-{{ 'urgent' if t == 'URGENT' else 'str' if t == 'STR candidate' else 'safer' }}">{{ t }}</span> new</td><td colspan="3" class="reason" style="max-width:none">{{ why }}</td></tr>{% endfor %}
+      {% for t, why in d.gone_labels %}<tr><td>{{ t }} cleared</td><td colspan="3" class="reason" style="max-width:none">{{ why }}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  <div class="body"><div class="suggestbox"><strong>Suggested:</strong> {{ a.suggestion }} {{ help("Rule: " ~ a.suggestion_rule.rstrip(".") ~ ". Saved to the audit trail as Judge input.") }}</div>
+  <a class="btn" href="/player/{{ a.player_id }}">Open player page</a> <a class="btn" href="/enter?pid={{ a.player_id }}">Add another for {{ a.player_id }}</a></div>
+</section>
+{% endif %}
+
+<form method="post" action="/enter" class="decide">
+<div class="grid two">
+<section class="panel">
+  <h2>1. Player</h2>
+  <div class="body form">
+    <label>Player ID <small>empty = new player</small>
+      <input name="player_id" list="pids" value="{{ form.player_id or '' }}" placeholder="e.g. P-5120 or J-001" autocomplete="off"></label>
+    <fieldset id="newp">
+      <legend>New player</legend>
+      <div class="cols">
+        <label>Age band<select name="new_age">{% for x in ages %}<option {{ 'selected' if form.new_age == x }}>{{ x }}</option>{% endfor %}</select></label>
+        <label>Income band<select name="new_income">{% for x in incomes %}<option {{ 'selected' if form.new_income == x or (not form.new_income and x == '<20k') }}>{{ x }}</option>{% endfor %}</select></label>
+        <label>Home city<select name="new_city">{% for x in cities %}<option {{ 'selected' if form.new_city == x or (not form.new_city and x == 'Sault Ste. Marie') }}>{{ x }}</option>{% endfor %}</select></label>
+        <label>Occupation<input name="new_occupation" value="{{ form.new_occupation or 'student' }}" maxlength="40"></label>
+      </div>
+    </fieldset>
+  </div>
+</section>
+<section class="panel">
+  <h2>2. Transaction {{ help("Scored window: 15 Sep to 14 Oct 2026.") }}</h2>
+  <div class="body form">
+    <div class="cols">
+      <label>Type<select name="type" id="ttype"><option value="deposit" {{ 'selected' if form.type != 'withdrawal' }}>deposit</option><option value="withdrawal" {{ 'selected' if form.type == 'withdrawal' }}>withdrawal</option></select></label>
+      <label>Amount (CAD)<input name="amount" inputmode="decimal" required value="{{ form.amount or '9500' }}"></label>
+      <label>Date<input type="date" name="date" min="2026-09-15" max="2026-10-14" value="{{ form.date or '2026-10-14' }}" required></label>
+      <label>Time (EDT)<input type="time" name="time" value="{{ form.time or '14:00' }}"></label>
+      <label>Method<select name="method">{% for t, ms in methods.items() %}{% for m in ms %}<option value="{{ m }}" data-for="{{ t }}" {{ 'selected' if form.method == m }}>{{ m.replace('_', ' ') }}</option>{% endfor %}{% endfor %}</select></label>
+      <label>City<select name="city">{% for x in cities %}<option {{ 'selected' if form.city == x or (not form.city and x == 'Sault Ste. Marie') }}>{{ x }}</option>{% endfor %}</select></label>
+      <label class="dep">Card last 4<input name="card_last4" maxlength="4" inputmode="numeric" value="{{ form.card_last4 or '' }}"></label>
+      <label class="dep">Amount played<input name="wagered" inputmode="decimal" value="{{ form.wagered or '0' }}"></label>
+    </div>
+    <label class="wd chk"><input type="checkbox" name="third_party" value="yes" {{ 'checked' if form.third_party == 'yes' }}> Payout to a bank account in another person's name</label>
+    <div class="btns"><button class="btn act-escalate" type="submit">Save and rescore</button> {{ help("Try: two deposits of $9,500 for the same player (structuring), or deposits from three cities within a day with a new card (URGENT). The same card last 4 on two judge players counts as a shared card (demo simplification). A 30-minute session at the same city and time is recorded so the location check can see it.") }}</div>
+  </div>
+</section>
+</div>
+</form>
+<datalist id="pids"></datalist>
+<script>
+(function () {
+  var pid = document.querySelector('[name=player_id]'), newp = document.getElementById('newp'), tt = document.getElementById('ttype');
+  var method = document.querySelector('[name=method]');
+  function sync() {
+    newp.disabled = pid.value.trim() !== ''; newp.style.opacity = newp.disabled ? .45 : 1;
+    var t = tt.value;
+    document.querySelectorAll('.dep').forEach(function (e) { e.style.display = t === 'deposit' ? '' : 'none'; });
+    document.querySelectorAll('.wd').forEach(function (e) { e.style.display = t === 'withdrawal' ? '' : 'none'; });
+    var ok = false;
+    Array.prototype.forEach.call(method.options, function (o) { o.hidden = o.dataset.for !== t; if (o.selected && !o.hidden) ok = true; });
+    if (!ok) { var first = Array.prototype.find.call(method.options, function (o) { return !o.hidden; }); if (first) first.selected = true; }
+  }
+  pid.addEventListener('input', sync); tt.addEventListener('change', sync); sync();
+})();
+</script>
+{% endblock %}

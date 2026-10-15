@@ -18,12 +18,13 @@
       <a href="/dashboard" class="{{ 'on' if path == '/dashboard' }}"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="11" width="8" height="10" rx="1.5"/><rect x="3" y="14" width="8" height="7" rx="1.5"/></svg>Overview</a>
       <a href="/network" class="{{ 'on' if path == '/network' }}"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.5"/><circle cx="5" cy="19" r="2.5"/><circle cx="19" cy="19" r="2.5"/><path d="M10.5 7l-4 9.5M13.5 7l4 9.5"/></svg>Shared accounts</a>
       <a href="/validation" class="{{ 'on' if path == '/validation' }}"><svg viewBox="0 0 24 24"><path d="M4 13l5 5L20 7"/></svg>Validation</a>
+      <a href="/enter" class="{{ 'on' if path == '/enter' }}"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Judge input</a>
       <a href="/import" class="{{ 'on' if path.startswith('/import') }}"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M4 19h16"/></svg>Import data</a>
       <a href="/audit" class="{{ 'on' if path == '/audit' }}"><svg viewBox="0 0 24 24"><path d="M6 3h9l5 5v13H6z"/><path d="M14 3v6h6M9 13h7M9 17h7"/></svg>Audit trail</a>
     </nav>
     <div class="status">
       <span class="synthetic"><i></i>Synthetic data</span>
-      <span>v{{ version }} &middot; LLM {{ "on" if llm_enabled else "off" }}</span>
+      <span>v{{ version }} &middot; AI summary {{ "on" if llm_enabled else "off" }}</span>
       <span>Built during ThunderHacks II</span>
     </div>
   </aside>

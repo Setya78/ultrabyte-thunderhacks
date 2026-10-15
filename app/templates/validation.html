@@ -1,15 +1,16 @@
 {% extends "base.html" %}
+{% from "_help.html" import help %}
 {% block title %}Validation - UltraByte Solutions{% endblock %}
 {% block content %}
 {% set s = v.summary %}
-<div class="head"><div><h1>Version 1.0 vs 2.0</h1><p class="sub">Planted cases were designed by the team to exercise each check. This is a logic test, not evidence of real-world performance.</p></div></div>
+<div class="head"><div><h1>Version 1.0 vs 2.0 {{ help('Planted cases were designed by the team to exercise each check. This is a logic test, not evidence of real-world performance.') }}</h1></div></div>
 <div class="grid four">
   <div class="panel kpi"><div class="k">Risky players caught</div><div class="v">{{ s.v2_risky_caught }} of {{ s.risky_total }}</div><div class="cmp">Version 1.0: <b>{{ s.v1_risky_caught }} of {{ s.risky_total }}</b></div></div>
   <div class="panel kpi"><div class="k">Normal controls wrongly flagged</div><div class="v">{{ s.v2_controls_flagged }} of {{ s.controls_total }}</div><div class="cmp">Version 1.0: <b>{{ s.v1_controls_flagged }} of {{ s.controls_total }}</b></div></div>
   <div class="panel kpi"><div class="k">Background players in the queue</div><div class="v">{{ s.v2_normal_flagged }} of {{ s.normal_total }}</div><div class="cmp">{{ s.v2_normal_high }} High, rest Medium. Version 1.0: <b>{{ s.v1_normal_flagged }}</b></div></div>
   <div class="panel kpi"><div class="k">Alerts with a reason</div><div class="v">{{ s.v2_alerts_total }} of {{ s.v2_alerts_total }}</div><div class="cmp">Version 1.0: <b>0 of {{ s.v1_alerts_total }}</b></div></div>
 </div>
-<p class="note" style="margin-top:16px">Caught means: {{ v.caught_rule }}. Version 1.0 is a simplified stand-in (any single deposit of $10,000 or more), not OLG's actual rule.</p>
+<p class="src" style="margin-top:12px">Caught means: {{ v.caught_rule }}. {{ help("Version 1.0 is a simplified stand-in (any single deposit of $10,000 or more), not OLG's actual rule.") }}</p>
 
 <div class="panel"><table class="t">
   <thead><tr><th>Case</th><th>Player</th><th>What was planted</th><th>Expected</th><th>Version 1.0</th><th>Version 2.0</th><th>Queue #</th></tr></thead>

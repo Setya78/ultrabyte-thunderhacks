@@ -1,8 +1,9 @@
 {% extends "base.html" %}
+{% from "_help.html" import help %}
 {% from "_ring.html" import ring %}
 {% block title %}Overview - UltraByte Solutions{% endblock %}
 {% block content %}
-<div class="head"><div><h1>Overview</h1><p class="sub">Compliance and player protection in one view, last 30 days. A player can appear in more than one group.</p></div></div>
+<div class="head"><div><h1>Overview {{ help('Compliance and player protection in one view, last 30 days. A player can appear in more than one group.') }}</h1></div></div>
 <div class="grid four">
   {% for g in groups %}
   <a class="panel kpi" href="#{{ g.key }}"><div class="k">{{ g.title }}</div><div class="v">{{ g.players|length }}</div><div class="cmp">{{ g.desc }}</div></a>

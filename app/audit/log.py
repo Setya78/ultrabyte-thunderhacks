@@ -2,6 +2,7 @@
 from psycopg.types.json import Jsonb
 
 ACTIONS = {"escalate": "Escalate", "monitor": "Monitor", "dismiss": "Dismiss"}
+LABELS = {**ACTIONS, "manual_entry": "Judge input", "ai_summary": "AI summary", "reset": "Reset", "note": "Note"}
 ACTOR = "investigator (demo)"  # no authentication in the demo; disclosed in README
 
 

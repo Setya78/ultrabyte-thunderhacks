@@ -1,0 +1,4 @@
+{# "?" button: explanation stays one click away so the screen stays clean (owner 2026-10-14 21:53). #}
+{% macro help(text) -%}
+<details class="help"><summary aria-label="What does this mean?">?</summary><div class="pop">{{ text }}</div></details>
+{%- endmacro %}

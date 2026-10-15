@@ -1,22 +1,15 @@
 {% extends "base.html" %}
+{% from "_help.html" import help %}
 {% block title %}Import data - UltraByte Solutions{% endblock %}
 {% block content %}
 <div class="head">
-  <div><h1>Import data</h1><p class="sub">Bring your own synthetic players and transactions. Every row is checked first; a file with errors loads nothing.</p></div>
-  <div class="tools"><a class="btn" href="/import/template.xlsx">Download Excel template</a></div>
+  <div><h1>Import data {{ help('Bring your own synthetic players and transactions. Every row is checked first; a file with errors loads nothing.') }}</h1></div>
 </div>
 
 <div class="grid two">
 <section class="panel">
-  <h2>1. Fill the template</h2>
-  <div class="body">
-    <p class="reason" style="max-width:none">Three sheets: <strong>players</strong>, <strong>transactions</strong>, <strong>sessions</strong>. Example rows are included; replace them with your own. Any tool works, including asking an AI assistant to generate the rows.</p>
-    <ul class="reason" style="max-width:none;padding-left:18px">
-      <li>Bands only: income band and age band. Columns such as gender, ethnicity, exact age or account holder names are rejected.</li>
-      <li>Dates between 2026-04-15 and 2026-10-14. The last 30 days (from 15 Sep) are what gets scored.</li>
-      <li>Use the same <code>card_ref</code> or <code>payout_account_ref</code> on two players to simulate a shared card or account.</li>
-    </ul>
-  </div>
+  <h2>1. Fill the template {{ help("Three sheets: players, transactions, sessions. Bands only: income and age band; columns such as gender, ethnicity, exact age or account holder names are rejected. Dates 2026-04-15 to 2026-10-14; the last 30 days (from 15 Sep) are scored. Use the same card_ref or payout_account_ref on two players to simulate a shared card or account.") }}</h2>
+  <div class="body"><a class="btn" href="/import/template.xlsx">Download Excel template</a></div>
 </section>
 <section class="panel">
   <h2>2. Upload and check</h2>
@@ -27,7 +20,7 @@
         <label class="reason"><input type="radio" name="mode" value="replace" checked> Replace the current data</label>
         <label class="reason"><input type="radio" name="mode" value="append"> Add to the current data</label>
       </div>
-      <div class="src">Tip: "Add" keeps the 490 background players, so the peer check has enough comparable players. "Replace" scores only your file (peer check needs 20+ peers per band).</div>
+      <div class="src">Add or replace? {{ help("Add keeps the 490 background players, so the peer check has enough comparable players. Replace scores only your file (the peer check needs 20+ peers per band).") }}</div>
       <div class="btns"><button class="btn" type="submit" name="step" value="check">Check file</button></div>
     </form>
   </div>
