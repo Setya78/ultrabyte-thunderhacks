@@ -23,7 +23,35 @@ VERSION = "0.10.0-rules"
 app = FastAPI(title="UltraByte Solutions", version=VERSION)
 app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
 templates = Jinja2Templates(directory=BASE / "templates")
-templates.env.globals.update(version=VERSION, llm_enabled=llm.enabled(), labels=audit.LABELS)
+# One-time form tokens: a second click (or a browser retry) with the same token is not saved twice.
+from collections import deque
+_used_tokens: deque = deque(maxlen=2000)
+
+
+def _fresh_token() -> str:
+    return secrets.token_urlsafe(12)
+
+
+def _already_used(tok: str) -> bool:
+    if not tok:
+        return False
+    if tok in _used_tokens:
+        return True
+    _used_tokens.append(tok)
+    return False
+
+
+GLOSSARY = {
+    "STR": "Suspicious Transaction Report: a report a casino or online operator must file with FINTRAC when it suspects money laundering. 'STR candidate' means the pattern matches a FINTRAC indicator and an investigator should review it.",
+    "AML": "Anti-money laundering: the checks that look for money moving through the account rather than being played.",
+    "SG": "Safer Gambling: player-protection checks that look for signs of harm to the player (rising deposits, night play, chasing losses, playing most days).",
+    "FINTRAC": "Financial Transactions and Reports Analysis Centre of Canada: the federal agency that receives suspicious transaction reports.",
+    "URGENT": "Possible account takeover: unusual locations together with a new card or bank account. Handled by the fraud team first.",
+    "EDT": "Eastern Daylight Time (Ontario).",
+    "V1": "Version 1.0: the old rule. Any single deposit of $10,000 or more raises an alert, with no ranking and no reasons.",
+    "V2": "Version 2.0: this app. Two scores with reasons, labels with evidence, and an audit trail.",
+}
+templates.env.globals.update(version=VERSION, llm_enabled=llm.enabled(), labels=audit.LABELS, gloss=GLOSSARY, form_token=_fresh_token)
 
 _cache: dict = {}
 
@@ -109,7 +137,9 @@ def _summary_for(r: engine.PlayerScore) -> dict | None:
 
 
 @app.post("/player/{pid}/summary")
-def summary(pid: str):
+def summary(pid: str, tok: str = Form("", alias="_tok")):
+    if _already_used(tok):
+        return RedirectResponse(f"/player/{pid}?ok=Already+requested#summary", status_code=303)
     r = _by_id(pid)
     d = r.to_dict()
     res = llm.summarize(d)
@@ -120,15 +150,17 @@ def summary(pid: str):
                 "INSERT INTO audit_event (actor, player_id, action, note, score_snapshot) VALUES (%s, %s, 'ai_summary', %s, %s)",
                 (f"AI summary ({res['model']} via n8n)", pid, res["text"], Jsonb(d)))
             conn.commit()
-    return RedirectResponse(f"/player/{pid}#summary", status_code=303)
+    return RedirectResponse(f"/player/{pid}?ok=Summary+{'generated' if res['source'] == 'ai' else 'unavailable,+rule+text+shown'}#summary", status_code=303)
 
 
 @app.post("/player/{pid}/decision")
-def decision(pid: str, action: str = Form(...), note: str = Form("")):
+def decision(pid: str, action: str = Form(...), note: str = Form(""), tok: str = Form("", alias="_tok")):
+    if _already_used(tok):
+        return RedirectResponse(f"/player/{pid}?ok=Already+saved+(duplicate+click+ignored)#audit", status_code=303)
     r = _by_id(pid)
     with db.connect() as conn:
         audit.record(conn, pid, action, note, r.to_dict())
-    return RedirectResponse(f"/player/{pid}#audit", status_code=303)
+    return RedirectResponse(f"/player/{pid}?ok=Decision+saved+to+the+audit+trail#audit", status_code=303)
 
 
 _entries: dict[str, dict] = {}
@@ -144,13 +176,15 @@ def enter_page(request: Request, r: str = "", pid: str = ""):
 @app.post("/enter")
 async def enter_post(request: Request):
     form = {k: str(v) for k, v in (await request.form()).items()}
+    if _already_used(form.get("_tok", "")):
+        return RedirectResponse(f"/enter?pid={form.get('player_id', '')}&ok=Already+saved+(duplicate+click+ignored)", status_code=303)
     entry, errors = judge.parse(form)
     before = None
     if entry and entry.player_id:
         try:
             before = _by_id(entry.player_id).to_dict()
         except HTTPException:
-            errors = [f"No player {entry.player_id}. Leave the field empty to create a new player."]
+            errors = [f"No player with ID {entry.player_id}. To add a new player, leave Player ID empty; an ID is assigned automatically."]
     if errors:
         return templates.TemplateResponse(request, "enter.html", {
             "res": None, "errors": errors, "form": form, "cities": judge.CITIES, "methods": judge.METHODS,
@@ -165,7 +199,7 @@ async def enter_post(request: Request):
         _entries.clear()
     _entries[tok] = {"pid": pid, "before": before, "after": after, "diff": judge.diff(before, after),
                      "entry": entry}
-    return RedirectResponse(f"/enter?r={tok}&pid={pid}", status_code=303)
+    return RedirectResponse(f"/enter?r={tok}&pid={pid}&ok=Saved.+{pid}+rescored.", status_code=303)
 
 
 @app.get("/rules")
@@ -181,6 +215,8 @@ def rules_page(request: Request, saved: int = 0):
 @app.post("/rules")
 async def rules_post(request: Request):
     form = {k: str(v) for k, v in (await request.form()).items()}
+    if _already_used(form.get("_tok", "")):
+        return RedirectResponse("/rules?ok=Already+saved+(duplicate+click+ignored)", status_code=303)
     if form.get("step") == "defaults":
         values, errors = dict(RL.DEFAULTS), []
         note = "Reset to defaults (version 1)"
@@ -202,7 +238,7 @@ async def rules_post(request: Request):
         vid = RL.save(conn, values, "compliance operator (demo)", note, prev)
     _cache.clear()
     llm.clear()
-    return RedirectResponse(f"/rules?saved={vid}", status_code=303)
+    return RedirectResponse(f"/rules?saved={vid}&ok=Saved+as+rules+version+{vid}.+All+players+rescored.", status_code=303)
 
 
 @app.get("/dashboard")
@@ -217,11 +253,11 @@ def dashboard(request: Request):
         return lambda r: next((l.reason for l in r.labels if l.key == key), None)
 
     groups = [
-        group("urgent", "URGENT: possible account takeover", "Unusual locations + new card or bank account",
+        group("urgent", "URGENT: possible account takeover", "Unusual locations together with a new card or bank account",
               "Fraud", label_reason("urgent")),
-        group("str", "STR candidates", "FINTRAC indicators: structuring, minimal play, shared or third-party accounts",
+        group("str", "STR candidates (Suspicious Transaction Report)", "FINTRAC indicators: deposits just under $10,000, little play before withdrawal, shared or third-party accounts",
               "AML", label_reason("str")),
-        group("aml", "Context risk (no label)", "Medium or High score from the four checks, no STR / URGENT label",
+        group("aml", "AML context risk (no label)", "Medium or High anti-money-laundering score from the four checks, no label",
               "AML", lambda r: r.top_reason if r.band != "Low" and not any(l.key in ("str", "urgent") for l in r.labels) else None),
         group("safer", "Safer Gambling", "Safer Gambling score Medium or High: escalation, night play, loss chasing, intensity",
               "Safer Gambling", lambda r: next((c.reason for c in sorted(r.harm_checks, key=lambda c: -c.points) if c.points), None)
@@ -329,5 +365,5 @@ def reset(request: Request):
         conn.commit()
     _cache.clear()
     if "text/html" in request.headers.get("accept", ""):
-        return RedirectResponse("/", status_code=303)
+        return RedirectResponse("/?ok=Demo+data+reset+to+the+synthetic+seed", status_code=303)
     return {"reset": "ok", **counts}

@@ -22,13 +22,13 @@ UltraByte flags unusual player activity, compares it against each player's own h
 | S3 | Dashboard by category: URGENT, STR candidates, context risk, Safer Gambling | done |
 | C1 | Network view: cards and payout bank accounts shared by more than one player | done |
 | Import | Bring your own synthetic data: Excel template (players, transactions, sessions) or CSV; every row validated; sensitive columns rejected; load replaces or adds; scores recomputed | done |
-| Judge input | `/enter`: type one deposit or withdrawal (existing player or a new one, bands only, name generated); the player is rescored at once and the page shows each check before and after, new labels and the suggested step; every entry is an audit event (`manual_entry`); `/reset` removes judge rows | done |
+| Manual entry | `/enter`: type one deposit or withdrawal (existing player or a new one, bands only, name generated); the player is rescored at once and the page shows each check before and after, new labels and the suggested step; every entry is an audit event (`manual_entry`); `/reset` removes manually entered rows | done |
 | Before / After | `/` shows Version 1.0 (threshold alerts) beside Version 2.0 (ranked, explained) on the same data; "cleared by 2.0" and "missed by 1.0" tags | done |
 | Rules | `/rules`: every threshold the two scores use, editable by a compliance operator; each save is a new append-only `rule_version` row with a required reason and an audit event listing before/after values; all players are rescored; each score snapshot records its rule version. Version 1 = team spec defaults | done |
 | Safer Gambling score | Second score, 0-100, four checks x 25 (escalation of monthly deposits, night play, loss chasing, intensity), own band and ring, separate from the AML score; Safer Gambling band Medium or High puts the player in the queue and routes the suggestion to the Safer Gambling team | done |
 | AI summary | Optional, behind `LLM_ENABLED`: a 3-sentence investigator summary written by Claude via an n8n webhook from the computed reasons only; checked before display; cached; written to the audit trail (`ai_summary`). The score never depends on it | done |
 
-Pages: `/` queue (`?mode=v2` for Version 2.0 alone), `/player/{id}`, `/enter`, `/rules`, `/dashboard`, `/network`, `/validation`, `/import`, `/audit`. Health: `/health`. Demo reset: `POST /reset`. Explanations sit behind the small "?" buttons so screens stay clean.
+Pages: `/` queue (`?mode=v2` for Version 2.0 alone), `/player/{id}`, `/enter`, `/rules`, `/dashboard`, `/network`, `/validation`, `/import`, `/audit`. Health: `/health`. Demo reset: `POST /reset`. Explanations sit behind the small "?" buttons so screens stay clean; abbreviations (STR, AML, FINTRAC) show their meaning on hover. Every form shows "Saving...", confirms with a green message, and carries a one-time token so a double click is never saved twice.
 
 ## Architecture
 
@@ -123,9 +123,9 @@ No CI and no secrets in the repo. `scripts/deploy.sh` calls a script on the serv
   player-protection theme and commonly cited behavioural harm markers; the primary references are listed as a to-do for
   the team (lane d) and marked ASSUMED until verified.
 - No operator authentication: rule changes are recorded as "compliance operator (demo)".
-- Judge input: a typed deposit also creates a 30-minute session at the same city and time (so the location check can see
-  it), and the same card "last 4" on two judge players counts as a shared card. Judge players get a generated name and
-  the id prefix `J-`. Judge rows are tagged `entry_source = 'judge'`.
+- Manual entry: a typed deposit also creates a 30-minute session at the same city and time (so the location check can see
+  it), and the same card "last 4" on two manually entered players counts as a shared card. New players get a generated name and
+  the id prefix `M-`. Manually entered rows are tagged `entry_source = 'manual'`.
 - Import "replace" mode clears the audit trail together with the data (same demo-only path as reset); "add" mode keeps it.
 - The demo date is fixed: "last 30 days" means 15 Sep - 14 Oct 2026, so the data never changes between resets.
 

@@ -4,16 +4,15 @@
 {% block content %}
 <div class="head">
   <div><h1>Rules <span class="pid">version {{ rule_version }}</span> {{ help("Every threshold the score uses, owned by compliance, not by developers. Saving creates a new version; old versions are never changed. Each score snapshot records the version that produced it.") }}</h1></div>
-  <form method="post" action="/rules" class="tools"><button class="btn" name="step" value="defaults" type="submit">Reset to defaults</button></form>
+  <form method="post" action="/rules" class="tools"><input type="hidden" name="_tok" value="{{ form_token() }}"><button class="btn" name="step" value="defaults" type="submit">Reset to defaults</button></form>
 </div>
 
-{% if saved %}<p class="src" style="margin:0 0 12px;color:var(--low)">Saved as version {{ saved }}. All players rescored.</p>{% endif %}
-{% if errors %}<section class="panel"><h2>Fix these first</h2><div class="body"><ul class="reason" style="max-width:none;margin:0;padding-left:18px">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div></section>{% endif %}
+{% if errors %}<section class="panel errbox"><h2>Not saved. Fix these first</h2><div class="body"><ul class="reason" style="max-width:none;margin:0;padding-left:18px">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div></section>{% endif %}
 
-<form method="post" action="/rules" class="decide">
+<form method="post" action="/rules" class="decide"><input type="hidden" name="_tok" value="{{ form_token() }}">
 <div class="grid three">
 {% for grp in ['Context score', 'STR labels', 'Safer Gambling'] %}
-<section class="panel"><h2>{{ grp }}</h2>
+<section class="panel"><h2>{{ {'Context score': 'AML context score', 'STR labels': 'STR labels (Suspicious Transaction Report)', 'Safer Gambling': 'Safer Gambling score'}[grp] }}</h2>
   <div class="body form">
   {% for k, d, label, g, hlp in spec if g == grp %}
     <label><span class="lt">{{ label }}{% if hlp %} {{ help(hlp) }}{% endif %}</span>

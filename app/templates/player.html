@@ -6,11 +6,11 @@
 <p class="sub" style="margin:0 0 12px"><a href="/?mode={{ mode }}">&larr; Review queue</a></p>
 
 <section class="panel hero">
-  <div class="two-rings"><div>{{ ring(r, large=True) }}<div class="ringlbl">AML</div></div><div>{{ ring(r, large=True, kind='sg') }}<div class="ringlbl">SAFER GAMBLING</div></div></div>
+  <div class="two-rings"><div>{{ ring(r, large=True) }}<div class="ringlbl" title="{{ gloss['AML'] }}">AML</div></div><div>{{ ring(r, large=True, kind='sg') }}<div class="ringlbl" title="{{ gloss['SG'] }}">SAFER GAMBLING</div></div></div>
   <div class="who">
     <h1>{{ r.display_name }} <span class="pid">{{ r.player_id }}</span></h1>
     <div class="meta">{{ r.occupation }}, aged {{ r.age_band }}, income {{ r.income_band }}, home {{ r.region }}</div>
-    <div class="tags"><span class="band band-{{ r.band|lower }}">AML {{ r.band }}</span> <span class="band band-{{ r.harm_band|lower }}">Safer Gambling {{ r.harm_band }}</span> {% for l in r.labels|unique(attribute='text') %}<span class="label label-{{ l.key }}">{{ l.text }}</span>{% endfor %}</div>
+    <div class="tags"><span class="band band-{{ r.band|lower }}" title="{{ gloss['AML'] }}">AML {{ r.band }}</span> <span class="band band-{{ r.harm_band|lower }}" title="{{ gloss['SG'] }}">Safer Gambling {{ r.harm_band }}</span> {% for l in r.labels|unique(attribute='text') %}<span class="label label-{{ l.key }}" title="{{ gloss['URGENT'] if l.key == 'urgent' else gloss['STR'] }}">{{ l.text }}</span>{% endfor %}</div>
   </div>
   <div class="act"><div class="src">Suggested {{ help("Rule: " ~ r.suggestion_rule.rstrip(".") ~ ". A suggestion only; the investigator decides.") }}</div><div style="font-weight:700;max-width:26ch">{{ r.suggestion }}</div></div>
 </section>
@@ -23,14 +23,14 @@
   <div class="body">
     {% if summary %}<p class="aisum">{{ summary.text }}</p>{% if summary.note %}<p class="src">{{ summary.note }}</p>{% endif %}{% endif %}
     {% if llm_enabled and not (summary and summary.source == 'ai') %}
-    <form method="post" action="/player/{{ r.player_id }}/summary"><button class="btn" type="submit">Generate AI summary</button></form>{% endif %}
+    <form method="post" action="/player/{{ r.player_id }}/summary"><input type="hidden" name="_tok" value="{{ form_token() }}"><button class="btn" type="submit">Generate AI summary</button></form>{% endif %}
   </div>
 </section>
 {% endif %}
 
 <div class="grid two">
 <section class="panel">
-  <h2>Why {{ r.score }}? <small>rules v{{ r.rule_version }}</small></h2>
+  <h2>Why {{ r.score }}? <small>AML score, rules v{{ r.rule_version }}</small> {{ help(gloss['AML'] ~ " Labels below: " ~ gloss['STR']) }}</h2>
   <div class="why">
     {% for c in r.checks %}
     <div class="row {{ 'zero' if not c.points }}">
@@ -40,7 +40,7 @@
     {% endfor %}
     {% for l in r.labels %}
     <div class="row">
-      <div><span class="label label-{{ l.key }}">{{ l.text }}</span></div>
+      <div><span class="label label-{{ l.key }}" title="{{ gloss['URGENT'] if l.key == 'urgent' else gloss['STR'] }}">{{ l.text }}</span></div>
       <div><div class="t2" style="color:var(--ink)">{{ l.reason }} {{ help("Source: " ~ l.source) }}</div></div>
     </div>
     {% endfor %}
@@ -93,7 +93,7 @@
         <td>{{ t.ts.astimezone(edt).strftime('%d %b %H:%M') }}</td>
         <td>{{ t.type.replace('_', ' ') }}</td>
         <td>${{ '{:,.2f}'.format(t.amount) }}</td>
-        <td>{{ t.location_region }}{% if t.entry_source == "judge" %}<span class="tag-judge">judge input</span>{% endif %}</td>
+        <td>{{ t.location_region }}{% if t.entry_source in ("judge", "manual") %}<span class="tag-judge">manual entry</span>{% endif %}</td>
         <td>{% if t.method_last4 %}card {{ t.method_last4 }}{% endif %}{% if t.payout_holder_match == false %}<strong>payout to another person's account</strong>{% endif %}{% if t.id in evidence %}<span class="ev">evidence</span>{% endif %}</td>
       </tr>
       {% else %}<tr><td colspan="5" class="empty">No deposits or withdrawals in the last 30 days.</td></tr>{% endfor %}
@@ -105,7 +105,7 @@
   <h2>Decision</h2>
   <div class="body">
     <div class="suggestbox"><strong>Suggested:</strong> {{ r.suggestion }} {{ help("Rule: " ~ r.suggestion_rule.rstrip(".") ~ ". A suggestion only; you decide.") }}</div>
-    <form method="post" action="/player/{{ r.player_id }}/decision" class="decide">
+    <form method="post" action="/player/{{ r.player_id }}/decision" class="decide"><input type="hidden" name="_tok" value="{{ form_token() }}">
       <textarea name="note" rows="2" placeholder="Why?"></textarea>
       <div class="btns">
         {% for key, name in actions.items() %}<button type="submit" name="action" value="{{ key }}" class="btn act-{{ key }}">{{ name }}</button>{% endfor %}

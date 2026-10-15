@@ -29,7 +29,7 @@
 
 {% if result %}
 <section class="panel">
-  <h2>{{ 'Ready to load' if result.ok else 'Fix these first' }} <small>{{ filename }}</small></h2>
+  <h2>{{ 'Checked: ready to load' if result.ok else 'Not loaded. Fix these first' }} <small>{{ filename }}</small></h2>
   <div class="body">
     <div class="grid four">
       <div class="panel kpi"><div class="k">Players</div><div class="v">{{ result.players|length }}</div></div>

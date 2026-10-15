@@ -1,6 +1,6 @@
-"""Judge input (D-2026-10-14-16): type one deposit or withdrawal, see the score change.
+"""Manual entry (D-2026-10-14-16): type one deposit or withdrawal, see the score change.
 
-Rows are marked entry_source='judge', stay synthetic, and /reset removes them. Names are generated,
+Rows are marked entry_source='manual', stay synthetic, and /reset removes them. Names are generated,
 never typed, so nobody enters a real person. Every entry writes an audit event.
 """
 from __future__ import annotations
@@ -17,7 +17,7 @@ CITIES = ["Toronto", "Ottawa", "Hamilton", "London", "Kitchener", "Windsor", "Su
           "Sault Ste. Marie", "Thunder Bay", "Kingston", "Barrie", "Niagara Falls"]
 METHODS = {"deposit": ["debit", "credit", "e_transfer", "cash_cage", "prepaid"],
            "withdrawal": ["e_transfer", "cash_cage"]}
-ACTOR = "judge (demo)"
+ACTOR = "manual entry (demo)"
 MAX_AMOUNT = 250_000
 
 
@@ -94,34 +94,34 @@ def save(conn, e: Entry) -> str:
     with conn.cursor() as cur:
         if e.player_id:
             if not cur.execute("SELECT 1 FROM player WHERE id = %s", (e.player_id,)).fetchone():
-                raise ValueError(f"No player {e.player_id}. Leave the field empty to create a new player.")
+                raise ValueError(f"No player with ID {e.player_id}. To add a new player, leave Player ID empty; an ID is assigned automatically.")
             pid = e.player_id
         else:
-            row = cur.execute("SELECT count(*) AS n FROM player WHERE id LIKE %s", ("J-%",)).fetchone()
+            row = cur.execute("SELECT count(*) AS n FROM player WHERE id LIKE %s", ("M-%",)).fetchone()
             n = (row["n"] if isinstance(row, dict) else row[0]) + 1
-            pid = f"J-{n:03d}"
+            pid = f"M-{n:03d}"
             cur.execute(
                 "INSERT INTO player (id, display_name, occupation, income_band, age_band, region, peer_segment,"
-                " created_at, entry_source) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'judge')",
-                (pid, f"Judge Player {n}", e.new_occupation, e.new_income, e.new_age, e.new_city,
+                " created_at, entry_source) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'manual')",
+                (pid, f"Player M-{n:03d}", e.new_occupation, e.new_income, e.new_age, e.new_city,
                  f"{e.new_age}|{e.new_income}", C.HIST_START - timedelta(days=60)))
-        card = f"judge-card-{e.card_last4}" if e.card_last4 else None
-        acct = (f"judge-acct-other-{pid}" if e.third_party else f"judge-acct-{pid}") if e.ptype == "withdrawal" else None
+        card = f"manual-card-{e.card_last4}" if e.card_last4 else None
+        acct = (f"manual-acct-other-{pid}" if e.third_party else f"manual-acct-{pid}") if e.ptype == "withdrawal" else None
         cur.execute(
             "INSERT INTO txn (player_id, ts, type, amount, method, method_fingerprint, method_last4, location_region,"
             " device_id, payout_account, payout_holder_match, entry_source)"
-            " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'judge-device', %s, %s, 'judge')",
+            " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'manual-device', %s, %s, 'manual')",
             (pid, e.when, e.ptype, e.amount, e.method, card, e.card_last4, e.city, acct,
              (not e.third_party) if e.ptype == "withdrawal" else None))
         if e.wagered:
             cur.execute(
                 "INSERT INTO txn (player_id, ts, type, amount, method, location_region, device_id, entry_source)"
-                " VALUES (%s, %s, 'wager', %s, 'wallet', %s, 'judge-device', 'judge')",
+                " VALUES (%s, %s, 'wager', %s, 'wallet', %s, 'manual-device', 'manual')",
                 (pid, e.when + timedelta(minutes=10), e.wagered, e.city))
         # A short play session at the same place and time, so the location check sees where it happened.
         cur.execute(
             "INSERT INTO session (player_id, start_ts, end_ts, net_result, location_region, device_id, entry_source)"
-            " VALUES (%s, %s, %s, %s, %s, 'judge-device', 'judge')",
+            " VALUES (%s, %s, %s, %s, %s, 'manual-device', 'manual')",
             (pid, e.when, e.when + timedelta(minutes=30), -e.wagered, e.city))
     conn.commit()
     return pid
@@ -138,7 +138,7 @@ def record(conn, pid: str, e: Entry, before: dict | None, after: dict) -> None:
     score = f"score {before['score'] if before else 'new'} -> {after['score']}"
     conn.execute(
         "INSERT INTO audit_event (actor, player_id, action, note, score_snapshot) VALUES (%s, %s, 'manual_entry', %s, %s)",
-        (ACTOR, pid, f"Judge input: {what} ({score})", Jsonb(after)))
+        (ACTOR, pid, f"Manual entry: {what} ({score})", Jsonb(after)))
     conn.commit()
 
 

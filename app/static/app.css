@@ -174,3 +174,10 @@ details.help .pop { position: absolute; z-index: 20; top: 26px; left: -10px; wid
 .two-rings { display: flex; gap: 14px; align-items: center; }
 .ringlbl { font-size: 10px; color: var(--dim); text-align: center; margin-top: 2px; font-weight: 700; letter-spacing: .06em; }
 .form .lt { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+
+.flash { position: sticky; top: 8px; z-index: 30; margin: 0 0 14px; padding: 10px 14px; border-radius: 8px; background: rgba(99,207,154,.16); color: var(--low); border: 1px solid rgba(99,207,154,.4); font-weight: 600; font-size: 14px; transition: opacity .6s; }
+.flash.gone { opacity: 0; }
+button.busy { opacity: .7; cursor: progress; }
+.errbox { border-color: var(--high) !important; }
+.errbox h2 { color: var(--high); }
+[title] { cursor: help; }
