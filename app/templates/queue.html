@@ -2,6 +2,7 @@
 {% from "_help.html" import help %}
 {% from "_ring.html" import ring %}
 {% block title %}Review queue - UltraByte Solutions{% endblock %}
+{% block bodyattrs %} data-urgent="{{ rows|selectattr("labels")|map(attribute="labels")|map("map", attribute="key")|map("select", "equalto", "urgent")|map("list")|map("length")|select("gt", 0)|list|length }}"{% endblock %}
 {% block content %}
 <div class="head">
   <div><h1>Review queue {{ help("Same players, same 30 days, two ways of alerting. Left: the old threshold rule. Right: the explainable scores. A manual entry changes both sides at once. STR = Suspicious Transaction Report (filed with FINTRAC, Canada's financial intelligence agency); AML = anti-money laundering.") }}</h1>

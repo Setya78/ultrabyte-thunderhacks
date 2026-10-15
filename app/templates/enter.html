@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% from "_help.html" import help %}
 {% block title %}Manual entry - UltraByte Solutions{% endblock %}
+{% block bodyattrs %}{% if res and res.diff.new_labels|selectattr(0, "equalto", "URGENT")|list %} data-alert="urgent"{% endif %}{% endblock %}
 {% block content %}
 <div class="head">
   <div><h1>Manual entry {{ help('Type one deposit or withdrawal for an existing or new player; the scores are recalculated at once. Synthetic only: names are generated, every entry is written to the audit trail, and Reset removes it.') }}</h1></div>

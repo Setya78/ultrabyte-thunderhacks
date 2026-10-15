@@ -8,7 +8,7 @@
   <link rel="icon" type="image/png" sizes="64x64" href="/static/brand/team/favicon-64.png">
   <link rel="apple-touch-icon" href="/static/brand/team/favicon-192.png">
 </head>
-<body>
+<body{% block bodyattrs %}{% endblock %}>
 <div class="shell">
   <aside class="side">
     <a class="brand" href="/"><img src="/static/brand/team/umark-256.png" alt="" width="112" height="112"><b>UltraByte</b><small>Solutions</small></a>
@@ -34,6 +34,7 @@
   <main>
   {% if request.state.user %}
   <div class="topbar">
+    <button type="button" class="sound" id="soundbtn" title="Alert sound for new URGENT cases" aria-pressed="true"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="w" d="M16 9a4 4 0 010 6M18.5 6.5a8 8 0 010 11"/></svg></button>
     <details class="usermenu">
       <summary><span class="avatar">{{ request.state.user[0]|upper }}</span><span class="uname">{{ request.state.user }}</span><span class="role">{{ request.state.role }}</span><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></summary>
       <div class="menu">
@@ -56,6 +57,33 @@ document.addEventListener('submit', function (e) {
 });
 window.addEventListener('pageshow', function () { document.querySelectorAll('button.busy').forEach(function (b) { b.disabled = false; b.textContent = b.dataset.label; b.classList.remove('busy'); }); });
 var f = document.querySelector('.flash'); if (f) setTimeout(function () { f.classList.add('gone'); }, 6000);
+// Alert sound for red situations: two short tones, generated in the browser (no audio file). Off switch remembered per browser.
+(function () {
+  var btn = document.getElementById('soundbtn'); if (!btn) return;
+  var on = true; try { on = localStorage.getItem('ub_sound') !== 'off'; } catch (e) {}
+  function paint() { btn.setAttribute('aria-pressed', on ? 'true' : 'false'); btn.classList.toggle('off', !on); }
+  paint();
+  function beep() {
+    if (!on) return;
+    try {
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [0, 0.22].forEach(function (t) {
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine'; o.frequency.value = 880; o.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.0001, ctx.currentTime + t); g.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + 0.18); o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.2);
+      });
+    } catch (e) {}
+  }
+  btn.addEventListener('click', function () { on = !on; try { localStorage.setItem('ub_sound', on ? 'on' : 'off'); } catch (e) {} paint(); if (on) beep(); });
+  var urgent = document.body.getAttribute('data-urgent'); // number of URGENT cases on this page, set by the queue
+  if (urgent !== null) {
+    var seen = 0; try { seen = parseInt(localStorage.getItem('ub_urgent_seen') || '0', 10); } catch (e) {}
+    if (parseInt(urgent, 10) > seen) beep();
+    try { localStorage.setItem('ub_urgent_seen', urgent); } catch (e) {}
+  }
+  if (document.body.getAttribute('data-alert') === 'urgent') beep(); // manual entry that just produced URGENT
+})();
 </script>
 </div>
 </body>
