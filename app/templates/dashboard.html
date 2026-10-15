@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - UltraByte{% endblock %}
+{% block content %}
+<section class="bar"><h1>Overview by category</h1></section>
+<p class="meta">One view for compliance and player protection. Last 30 days (15 Sep - 14 Oct 2026). A player can appear in more than one group.</p>
+<div class="kpis">
+  {% for g in groups %}
+  <a class="kpi kpilink" href="#{{ g.key }}"><div class="k">{{ g.title }}</div><div class="vv"><span class="new">{{ g.players|length }}</span></div><div class="sub">{{ g.desc }}</div></a>
+  {% endfor %}
+</div>
+{% for g in groups %}
+<section class="card" id="{{ g.key }}">
+  <h2>{{ g.title }} <span class="pid">{{ g.players|length }} players &middot; owner: {{ g.team }}</span></h2>
+  <table class="queue small">
+    <thead><tr><th>Player</th><th>Score</th><th>Reason</th><th>Suggested</th></tr></thead>
+    <tbody>
+      {% for r, why in g.players %}
+      <tr><td><a href="/player/{{ r.player_id }}">{{ r.display_name }}</a> <span class="pid">{{ r.player_id }}</span></td>
+          <td>{{ r.score }} <span class="band band-{{ r.band|lower }}">{{ r.band }}</span></td><td>{{ why }}</td><td>{{ r.suggestion }}</td></tr>
+      {% else %}
+      <tr><td colspan="4" class="empty">None.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endfor %}
+{% endblock %}

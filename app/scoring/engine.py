@@ -58,6 +58,8 @@ class PlayerScore:
     v1_reason: str
     metrics: dict = field(default_factory=dict)
     evidence_txn_ids: list[int] = field(default_factory=list)
+    suggestion: str = ""
+    suggestion_rule: str = ""
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -66,6 +68,32 @@ class PlayerScore:
     def priority(self) -> tuple:
         keys = {l.key for l in self.labels}
         return ("urgent" not in keys, "str" not in keys, -self.score)
+
+
+def suggest(band: str, labels: list[Label], checks: list[Check] | None = None) -> tuple[str, str]:
+    """Suggested next step (S2). Advice only: the investigator decides and records the decision."""
+    keys = {l.key for l in labels}
+    safer = " + Safer Gambling check-in" if "safer" in keys else ""
+    if "urgent" in keys:
+        return ("Escalate - Fraud: lock account, verify identity" + safer,
+                "URGENT label: unusual locations with a new card or bank account")
+    if "str" in keys:
+        first = next(l for l in labels if l.key == "str")
+        return ("Escalate - STR candidate: review for a suspicious transaction report" + safer,
+                f"STR label: {first.reason}")
+    if band == "High":
+        return ("Escalate - AML: request source of funds" + safer, "Band High (score >= 50)")
+    income = next((c for c in (checks or []) if c.key == "income"), None)
+    if band == "Medium" and income and income.points == income.max:
+        return ("Escalate - AML: request source of funds" + safer,
+                "Band Medium and 30-day deposits at or above estimated monthly income")
+    if band == "Medium" and "safer" in keys:
+        return ("Monitor - refer to Safer Gambling", "Band Medium with a Safer Gambling label")
+    if band == "Medium":
+        return ("Monitor - review again if the pattern continues", "Band Medium (score 25-49), no label")
+    if "safer" in keys:
+        return ("Monitor - refer to Safer Gambling", "Safer Gambling label, band Low")
+    return ("Dismiss - consistent with income, own history and peers", "Band Low, no label")
 
 
 def _month_index(ts) -> int | None:
@@ -275,7 +303,9 @@ def _score_one(p, months, d30, peer_vals, wdeps, wwds, money, wagers, sessions,
     top = pinned[0].reason if pinned else scored[0].reason if scored else "No unusual activity."
 
     big = [t for t in wdeps if float(t["amount"]) >= C.V1_THRESHOLD]
+    suggestion, rule = suggest(band, labels, checks)
     return PlayerScore(
+        suggestion=suggestion, suggestion_rule=rule,
         player_id=pid, display_name=p["display_name"], occupation=p["occupation"], age_band=p["age_band"],
         income_band=p["income_band"], region=p["region"], score=score, band=band, checks=checks, labels=labels,
         caught=caught, top_reason=top, v1_flagged=bool(big), v1_reason="Deposit over limit" if big else "",

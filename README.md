@@ -17,6 +17,12 @@ UltraByte flags unusual player activity, compares it against each player's own h
 | M1 | Context score: 4 checks x 25 points, each with a reason and a source; STR / URGENT / Safer Gambling labels | done |
 | M2 | Ranked queue with Version 1.0 / 2.0 switch; player page ("why 75?", reasons with sources, 6-month chart vs peer range, locations, highlighted evidence) | done |
 | M3 | Escalate / Monitor / Dismiss with a note, saved to the append-only audit trail with a full score snapshot | done |
+| S1 | Validation page: planted cases expected vs actual, Version 1.0 vs 2.0, false positives over the whole population | done |
+| S2 | Suggested next step per alert, rule-based, with the rule shown (advice only; the investigator decides) | done |
+| S3 | Dashboard by category: URGENT, STR candidates, context risk, Safer Gambling | done |
+| C1 | Network view: cards and payout bank accounts shared by more than one player | done |
+
+Pages: `/` queue (switch `?mode=v1`), `/player/{id}`, `/dashboard`, `/network`, `/validation`, `/audit`. Health: `/health`. Demo reset: `POST /reset`.
 
 ## Architecture
 
@@ -93,6 +99,14 @@ No CI and no secrets in the repo. `scripts/deploy.sh` calls a script on the serv
 - Estimated income is the midpoint of the income band, not a real income figure.
 - All locations are inside Ontario (assumption: online play requires being in Ontario).
 - No authentication: this is a single-user demo, so every decision is recorded as "investigator (demo)".
+- Suggested actions are fixed rules in `app/scoring/engine.py` (`suggest`); no LLM is used (`LLM_ENABLED=false`).
+- The demo date is fixed: "last 30 days" means 15 Sep - 14 Oct 2026, so the data never changes between resets.
+
+## Assets and licences
+
+- Logo "Eight Bits" (letter B from 8 squares, one square = the anomaly) was made during the event as SVG shapes in
+  `app/static/brand/`. The wordmark text uses Inter (SIL Open Font License) when installed, otherwise system sans-serif.
+- No third-party images or icons. Python libraries: FastAPI, Uvicorn, Jinja2, psycopg (see `requirements.txt`).
 
 ## AI disclosure
 

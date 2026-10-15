@@ -91,6 +91,7 @@
 
 <section class="card" id="audit">
   <h2>Decision</h2>
+  <p class="suggestbox"><strong>Suggested:</strong> {{ r.suggestion }}<span class="src">Rule: {{ r.suggestion_rule }}. A suggestion only; the investigator decides.</span></p>
   <form method="post" action="/player/{{ r.player_id }}/decision" class="decide">
     <textarea name="note" rows="2" placeholder="Why? (saved to the audit trail with the full score at this moment)"></textarea>
     <div class="btns">

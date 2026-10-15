@@ -44,7 +44,7 @@
         <div class="legend">{% for c in r.checks %}{{ c.name }} {{ c.points }}{% if not loop.last %} &middot; {% endif %}{% endfor %}</div>
       </td>
       <td>{% for l in r.labels|unique(attribute='text') %}<span class="label label-{{ l.key }}">{{ l.text }}</span> {% endfor %}</td>
-      <td>{{ r.top_reason }}</td>
+      <td>{{ r.top_reason }}<div class="suggest">Suggested: {{ r.suggestion }}</div></td>
     </tr>
     {% else %}
     <tr><td colspan="6" class="empty">No scored alerts.</td></tr>

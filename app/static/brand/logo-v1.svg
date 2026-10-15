@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 89" role="img" aria-label="UltraByte">
+  <title>UltraByte</title>
+  <rect x="0" y="0" width="20" height="20" fill="#16233F"/>
+  <path d="M23,0 H34.0 Q43,0 43,9.0 V20 H23 Z" fill="#16233F"/>
+  <rect x="0" y="23" width="20" height="20" fill="#16233F"/>
+  <path d="M23,23 H43 V34.0 Q43,43 34.0,43 H23 Z" fill="#16233F"/>
+  <rect x="0" y="46" width="20" height="20" fill="#16233F"/>
+  <path d="M23,46 H34.0 Q43,46 43,55.0 V66 H23 Z" fill="#F08A24"/>
+  <rect x="0" y="69" width="20" height="20" fill="#16233F"/>
+  <path d="M23,69 H43 V80.0 Q43,89 34.0,89 H23 Z" fill="#16233F"/>
+  <text x="58" y="56" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="38" font-weight="800" fill="#16233F" letter-spacing="-0.5">UltraByte</text>
+</svg>
