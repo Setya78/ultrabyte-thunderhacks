@@ -53,3 +53,16 @@ def case_status(conn) -> dict:
         state, label = STATES[d["action"]]
         out[d["player_id"]] = {"state": state, "label": label, "action": d["action"], "actor": d["actor"], "ts": d["ts"]}
     return out
+
+
+def latest_notes(conn) -> dict:
+    """Latest non-empty comment per player on a case decision or hand-off -> {player_id: {note, actor, ts}}. Read-only.
+    Owner 2026-10-15 19:09: cases with an investigator comment are pinned on top of the queue."""
+    out = {}
+    for d in conn.execute(
+        "SELECT DISTINCT ON (player_id) player_id, note, actor, ts FROM audit_event"
+        " WHERE action IN ('escalate','monitor','dismiss','handling','resolve') AND player_id IS NOT NULL"
+        " AND note IS NOT NULL AND btrim(note) <> ''"
+        " ORDER BY player_id, ts DESC, id DESC").fetchall():
+        out[d["player_id"]] = {"note": d["note"], "actor": d["actor"], "ts": d["ts"]}
+    return out

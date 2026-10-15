@@ -472,3 +472,14 @@ details.help .pop.flip { left: auto; right: -10px; }
 @media (max-width: 600px) { .dock { right: 10px; bottom: 10px; gap: 6px; } .vcompare { padding: 6px 10px; font-size: 12px; } }
 @media print { .dock { display: none; } }
 main { padding-bottom: 80px; }
+/* Fix 2026-10-15 19:10: any element with the hidden attribute stays hidden, even when a rule sets display (grid rows,
+   phone-view table rows). Search and filters set hidden; without this the inbox rows stayed visible. */
+[hidden] { display: none !important; }
+/* "With comment" list pinned on top (owner 2026-10-15 19:09). */
+.in-comment { border: 1px solid #9FC3EE; box-shadow: 0 0 0 3px rgba(23,99,198,.08); }
+.in-comment h2 { color: #0F4C99; }
+.mrow .why.note { font-style: italic; font-weight: 600; color: #0F4C99; display: inline-flex; align-items: center; gap: 6px; }
+.mrow .why.note b { font-style: normal; font-weight: 800; }
+.mrow .why.note svg { width: 15px; height: 15px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+.mrow .why.note { display: block; } .mrow .why.note svg { display: inline-block; vertical-align: -2px; margin-right: 4px; }
+.mrow .why.note { border-left: 0; padding: 0; margin: 0; background: none; }

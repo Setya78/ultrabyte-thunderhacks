@@ -31,7 +31,7 @@
       <div class="who"><a class="p" href="/player/{{ r.player_id }}">{{ r.display_name }}</a><span class="pid">{{ r.player_id }}</span></div>
       <div class="what">
         {% for l in r.labels|unique(attribute='text') %}<span class="label label-{{ l.key }}" title="{{ gloss['URGENT'] if l.key == 'urgent' else gloss['STR'] }}">{{ l.text }}</span>{% endfor %}{% if r.harm_band != 'Low' %}<span class="band band-{{ r.harm_band|lower }}" title="{{ gloss['SG'] }}">SG {{ r.harm_band }}</span>{% endif %}{% if r.source != 'seed' %}<span class="tag-new" title="Added during this demo session by {{ r.source }}">NEW</span>{% endif %}
-        <span class="why">{{ r.top_reason }}</span>
+        {% set n = notes.get(r.player_id) %}{% if n %}<span class="why note" title="Comment by {{ n.actor }}, {{ n.ts.astimezone(edt).strftime('%d %b %H:%M') }}: {{ n.note }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg><b>{{ n.actor.split(' ')[0] }}:</b> {{ n.note }}</span>{% else %}<span class="why">{{ r.top_reason }}</span>{% endif %}
       </div>
       <div class="meta">{% if d %}<span class="tag-st st-{{ d.state }}">{{ d.label }}</span><time>{{ d.ts.astimezone(edt).strftime('%d %b %H:%M') }}</time>{% else %}<span class="band band-{{ r.band|lower }}" title="{{ gloss['AML'] }}">{{ r.band }} {{ r.score }}</span>{% endif %}</div>
     </li>
@@ -42,6 +42,7 @@
 </section>
 {% endmacro %}
 
+{% if commented %}{{ inbox(commented, 'comment', 'With comment', "Open cases where the investigator or compliance wrote a comment with the decision. Newest comment first. Read it on the player page and pick the case up.", "") }}{% endif %}
 {{ inbox(todo, 'todo', 'To do', "Players the scoring caught that nobody has decided on yet. URGENT and STR candidates on top, then highest score. Open one, read why, record Escalate / Monitor / Dismiss, and it leaves this list.", "Nothing waiting. Every alert has a decision.") }}
 {{ inbox(progress, 'progress', 'In progress', "Decided but still open: Escalated (waiting for compliance), In progress (compliance picked it up), Monitor (watching).", "Nothing in progress.") }}
 <details class="done-wrap"{% if not closed %} hidden{% endif %}><summary>Done <span class="cnt">{{ closed|length }}</span> <small>dismissed or resolved</small></summary>

@@ -19,7 +19,7 @@ from app.scoring import engine
 from app.scoring import rules as RL
 
 BASE = Path(__file__).resolve().parent
-VERSION = "0.15.2-menu"
+VERSION = "0.15.3-comments"
 
 app = FastAPI(title="UltraByte Solutions", version=VERSION)
 app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
@@ -176,20 +176,25 @@ def queue(request: Request):
     status = db.status()
     rows = []
     decided: dict = {}
+    notes: dict = {}
     if status.get("db") == "ok" and status.get("players"):
         rows = [r for r in scores() if r.caught]
         # Owner 2026-10-15: the queue is the worklist. A player with a recorded decision moves to "Decided" below the
         # players that still need one; the latest decision per player comes from the append-only audit trail.
         with db.connect() as conn:
             decided = audit.case_status(conn)
+            notes = audit.latest_notes(conn)
     todo = [r for r in rows if r.player_id not in decided]
     order = {s: i for i, s in enumerate(audit.STATE_ORDER)}
     done = sorted((r for r in rows if r.player_id in decided), key=lambda r: (order[decided[r.player_id]["state"]], r.priority))
     # Owner 2026-10-15 18:53: inbox view. "In progress" = still open (escalated, handling, monitor); "Done" = closed.
-    progress = [r for r in done if decided[r.player_id]["state"] in ("escalated", "handling", "monitor")]
+    # Owner 2026-10-15 19:09: open cases with a comment are pinned on top ("With comment"), newest comment first.
+    commented = sorted((r for r in done if decided[r.player_id]["state"] in ("escalated", "handling", "monitor") and r.player_id in notes),
+                       key=lambda r: notes[r.player_id]["ts"], reverse=True)
+    progress = [r for r in done if decided[r.player_id]["state"] in ("escalated", "handling", "monitor") and r.player_id not in notes]
     closed = [r for r in done if decided[r.player_id]["state"] not in ("escalated", "handling", "monitor")]
     return templates.TemplateResponse(request, "queue.html", {"rows": rows, "todo": todo, "done": done, "progress": progress,
-                                                              "closed": closed, "decided": decided,
+                                                              "closed": closed, "commented": commented, "notes": notes, "decided": decided,
                                                               "status": status, "edt": C.EDT})
 
 
