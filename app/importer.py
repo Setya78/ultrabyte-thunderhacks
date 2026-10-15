@@ -245,7 +245,7 @@ def load(conn, res: Result, mode: str) -> dict:
             # Like /reset: the demo-only path that clears the audit trail (audit rows reference players).
             cur.execute("TRUNCATE audit_event, planted_case, txn, session, player RESTART IDENTITY")
         else:
-            existing = {r[0] for r in cur.execute("SELECT id FROM player").fetchall()}
+            existing = {r["id"] for r in cur.execute("SELECT id FROM player").fetchall()}
             clash = sorted(p["id"] for p in res.players if p["id"] in existing)
             if clash:
                 raise ValueError(f"player_id already exists: {', '.join(clash[:5])}{'...' if len(clash) > 5 else ''}")

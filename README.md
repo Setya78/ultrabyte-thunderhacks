@@ -92,6 +92,12 @@ more). It is not OLG's actual rule.
   used only to measure Version 1.0 vs 2.0.
 - The seed is deterministic (fixed RNG seed and fixed reference date), so every reset produces identical data.
 
+## Demo data
+
+`demo/UltraByte_demo_300_players.xlsx` holds 308 synthetic players with planted scenarios (see its README sheet). Import it with
+mode **Add** so the 490 background players keep the peer check meaningful; **Reset demo data** removes it again. Regenerate
+with `python demo/make_demo.py` (deterministic).
+
 ## Run locally
 
 ```bash
