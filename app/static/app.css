@@ -282,3 +282,43 @@ main { padding-bottom: 96px; }
   .side .status { display: none; }
   .side.open .status { display: flex; }
 }
+
+/* ---- Light theme (owner request 2026-10-15 15:46): white background, dark text; only the logo keeps its blue.
+   Overrides the dark palette above through the same variables, plus the few rules that hard-code a colour. ---- */
+:root {
+  --bg: #F4F7FA; --surface: #FFFFFF; --raised: #EEF3F8; --line: #DDE6EE; --line-2: #C2D1DE;
+  --ink: #102233; --muted: #4B6377; --dim: #66808F;
+  --orange: #1F6FD1; --cyan: #1763C6; --navy: #102435; --silver: #DCE6EF;
+  --high: #C73636; --medium: #A86A0C; --low: #1F8052;
+  --c-income: #2B7BDB; --c-history: #7FB2EE; --c-peer: #A9BFD3; --c-location: #6A5FD6;
+}
+.side { background: #FFFFFF; }
+.side .brand img { background: #0B1B2A; border-radius: 22px; padding: 6px; }
+.side .brand b { background: none; color: var(--ink); }
+.side nav a.on { background: #E6EFF9; color: #0F4C99; }
+.side nav a:hover { background: var(--raised); }
+.synthetic { background: #E3EEFB; color: #0F4C99; }
+.synthetic i { background: #1763C6; }
+.panel { box-shadow: 0 1px 2px rgba(16,34,51,.06); }
+.panel.old { background: #F7F9FB; }
+.t tbody tr:hover td { background: #F6F9FC; }
+tr.evidence td { background: #EAF2FD; }
+.band-high { background: #FCE9E9; color: var(--high); border: 1px solid #F0B4B4; }
+.band-medium { background: #FDF1DC; color: var(--medium); }
+.band-low { background: #E3F4EB; color: var(--low); }
+.label-urgent, .act-escalate { background: #C73636; color: #FFFFFF; }
+.act-monitor { background: #F2C14E; color: #2A1A00; }
+.label-str { background: #102233; color: #FFFFFF; }
+.label-safer { background: #E3F4EB; color: var(--low); }
+.tag-ai { background: #ECEAFD; color: #4A3FBF; }
+.tag-rule { background: #E8EDF2; color: #3B5163; }
+.switch a.on, .vtag, .usermenu .avatar, .profilehead .avatar { color: #FFFFFF; }
+.chart .bar { fill: #B9CADB; } .chart .peerband { fill: #2B7BDB; opacity: .10; }
+.net .instt { fill: #102233; }
+.ring.sg .arc.escalation { stroke: #1F8052; } .ring.sg .arc.night { stroke: #3FAE7C; } .ring.sg .arc.chase { stroke: #8ED3AE; } .ring.sg .arc.intensity { stroke: #136B42; }
+.dot.escalation { background: #1F8052; } .dot.night { background: #3FAE7C; } .dot.chase { background: #8ED3AE; } .dot.intensity { background: #136B42; }
+.flash { background: #E3F4EB; color: var(--low); border-color: #A8DCC0; }
+.usermenu .menu { box-shadow: 0 10px 30px rgba(16,34,51,.15); }
+.steps-v2 .steps-v { background: #CFE3FA; }
+@keyframes pulse-red { 0%, 100% { box-shadow: 0 0 0 0 rgba(199,54,54,.45); } 50% { box-shadow: 0 0 0 6px rgba(199,54,54,0); } }
+.loginbox img { background: #0B1B2A; border-radius: 20px; padding: 6px; box-sizing: content-box; }

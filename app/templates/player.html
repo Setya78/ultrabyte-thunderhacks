@@ -10,13 +10,29 @@
   <div class="who">
     <h1>{{ r.display_name }} <span class="pid">{{ r.player_id }}</span></h1>
     <div class="meta">{{ r.occupation }}, aged {{ r.age_band }}, income {{ r.income_band }}, home {{ r.region }}</div>
-    {% set m = r.metrics %}{% set pr = m.peer_range_monthly[-1] if m.peer_range_monthly else none %}
-    <div class="meta expact"><strong>Expected:</strong> about ${{ '{:,.0f}'.format(m.hist_monthly_avg) }} a month (own previous 5 months){% if pr %}, peers ${{ '{:,.0f}'.format(pr[0]) }}-${{ '{:,.0f}'.format(pr[1]) }}{% endif %}
-      &middot; <strong>Actual:</strong> ${{ '{:,.0f}'.format(m.dep30) }} in the last 30 days{% if m.hist_monthly_avg >= 1 and m.dep30 >= 2 * m.hist_monthly_avg %} ({{ '{:,.0f}'.format(m.dep30 / m.hist_monthly_avg) }}&times; usual){% endif %}
-      {{ help("Expected = this player's average monthly deposits over the previous 5 months, and the normal range (10th to 90th percentile) for players of the same age band and income band. Actual = deposits in the last 30 days. Same numbers as the chart below.") }}</div>
     <div class="tags"><span class="band band-{{ r.band|lower }}" title="{{ gloss['AML'] }}">AML {{ r.band }}</span> <span class="band band-{{ r.harm_band|lower }}" title="{{ gloss['SG'] }}">Safer Gambling {{ r.harm_band }}</span> {% for l in r.labels|unique(attribute='text') %}<span class="label label-{{ l.key }}" title="{{ gloss['URGENT'] if l.key == 'urgent' else gloss['STR'] }}">{{ l.text }}</span>{% endfor %}</div>
   </div>
   <div class="act"><div class="src">Suggested <span class="tag-rule">rule-based, not AI</span> {{ help("Rule: " ~ r.suggestion_rule.rstrip(".") ~ ". Produced by fixed rules in the scoring engine, not by an AI model. A suggestion only; the investigator decides.") }}</div><div style="font-weight:700;max-width:26ch">{{ r.suggestion }}</div></div>
+</section>
+
+{% set m = r.metrics %}{% set pr = m.peer_range_monthly[-1] if m.peer_range_monthly else none %}
+{% set ck = {} %}{% for c in r.checks %}{% set _ = ck.update({c.key: c}) %}{% endfor %}
+{% macro flag(c) %}{% if c is none or c.reason.startswith("Not scored") %}<span class="pid">not compared</span>{% elif c.points %}<span class="band band-high" style="animation:none">Unusual</span> <small class="pid">{{ c.points }}/25</small>{% else %}<span class="band band-low">Normal</span>{% endif %}{% endmacro %}
+<section class="panel" id="expected">
+  <h2>Expected vs actual <small>last 30 days</small> {{ help("Expected = what this player normally does (own previous 5 months), what similar players do (same age band and income band, 10th to 90th percentile) and what the income band suggests. Actual = the last 30 days. The flag is the same check that sets the AML score; no new data.") }}</h2>
+  <table class="t">
+    <thead><tr><th>Compared with</th><th>Expected</th><th>Actual</th><th>Flag</th></tr></thead>
+    <tbody>
+      <tr><td>Own history</td><td>about ${{ '{:,.0f}'.format(m.hist_monthly_avg) }} a month</td>
+          <td>${{ '{:,.0f}'.format(m.dep30) }}{% if m.hist_monthly_avg >= 50 %} ({{ '{:,.0f}'.format(m.dep30 / m.hist_monthly_avg) }}&times; usual){% endif %}</td><td>{{ flag(ck.get('history')) }}</td></tr>
+      <tr><td>Similar players</td><td>{% if pr %}${{ '{:,.0f}'.format(pr[0]) }} to ${{ '{:,.0f}'.format(pr[1]) }} a month{% else %}not enough peers{% endif %}</td>
+          <td>${{ '{:,.0f}'.format(m.dep30) }}</td><td>{{ flag(ck.get('peer')) }}</td></tr>
+      <tr><td>Income band <small class="pid">where available</small></td><td>income about ${{ '{:,.0f}'.format(m.est_monthly_income) }} a month (midpoint of {{ r.income_band }})</td>
+          <td>{% if m.est_monthly_income %}{{ '{:,.0f}'.format(100 * m.dep30 / m.est_monthly_income) }}% of estimated income{% else %}-{% endif %}</td><td>{{ flag(ck.get('income')) }}</td></tr>
+      <tr><td>Location</td><td>home {{ r.region }}</td>
+          <td>{{ places|length }} {{ 'city' if places|length == 1 else 'cities' }}{% if places %}: {{ places|map(attribute='city')|join(', ') }}{% endif %}</td><td>{{ flag(ck.get('location')) }}</td></tr>
+    </tbody>
+  </table>
 </section>
 
 {% if llm_enabled %}
