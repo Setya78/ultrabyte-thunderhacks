@@ -367,3 +367,13 @@ body { font-weight: 500; }
 .btn.act-dismiss:hover { background: #EEF3F9; color: var(--ink); border-color: #1A5DB8; }
 .loginbox .btn.act-escalate { background: linear-gradient(180deg,#1F6FD1,#1857AA); border-color: #1857AA; }
 .loginbox .btn.act-escalate:hover { background: #1857AA; }
+
+/* ---- Fix (owner 16:45): "?" popovers were cut off. Cause: theme A set `.panel { overflow: hidden }` for the rounded
+   corners, which clipped every absolutely positioned popover inside a panel. Corners are now rounded per child instead;
+   popovers may also flip to the left edge near the viewport's right side (steps.js-free script in base.html). ---- */
+.panel { overflow: visible; }
+.panel > :first-child { border-top-left-radius: 14px; border-top-right-radius: 14px; }
+.panel > :last-child { border-bottom-left-radius: 14px; border-bottom-right-radius: 14px; }
+details.help .pop { z-index: 60; box-shadow: 0 8px 24px rgba(14,32,51,.18); background: #FFFFFF; border-color: #C9D6E3; }
+details.help .pop.flip { left: auto; right: -10px; }
+.form label details.help .pop, .rules details.help .pop { width: min(360px, 80vw); }

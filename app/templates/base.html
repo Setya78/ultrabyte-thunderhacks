@@ -57,6 +57,20 @@ document.addEventListener('submit', function (e) {
   setTimeout(function () { b.disabled = true; b.textContent = 'Saving…'; b.classList.add('busy'); }, 0);
   setTimeout(function () { b.disabled = false; b.textContent = b.dataset.label; b.classList.remove('busy'); }, 15000);
 });
+// "?" help: only one open at a time, and a popover that would run past the right edge opens to the left instead.
+document.addEventListener('toggle', function (e) {
+  var d = e.target; if (!d.matches || !d.matches('details.help')) return;
+  if (!d.open) return;
+  document.querySelectorAll('details.help[open]').forEach(function (o) { if (o !== d) o.open = false; });
+  var p = d.querySelector('.pop'); if (!p) return;
+  p.classList.remove('flip');
+  var r = p.getBoundingClientRect();
+  if (r.right > window.innerWidth - 8) p.classList.add('flip');
+}, true);
+document.addEventListener('click', function (e) {
+  if (e.target.closest && e.target.closest('details.help')) return;
+  document.querySelectorAll('details.help[open]').forEach(function (o) { o.open = false; });
+});
 window.addEventListener('pageshow', function () { document.querySelectorAll('button.busy').forEach(function (b) { b.disabled = false; b.textContent = b.dataset.label; b.classList.remove('busy'); }); });
 var f = document.querySelector('.flash'); if (f) setTimeout(function () { f.classList.add('gone'); }, 6000);
 // Alert sound for red situations: two short tones, generated in the browser (no audio file). Off switch remembered per browser.
