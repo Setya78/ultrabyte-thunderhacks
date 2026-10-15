@@ -421,3 +421,54 @@ details.help .pop.flip { left: auto; right: -10px; }
 .filters .btn { padding: 7px 12px; }
 .chips, .chip, .chips-l { display: none; }
 .tag-st { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .04em; padding: 1px 6px; border-radius: 4px; vertical-align: middle; white-space: nowrap; margin-left: 4px; }
+
+/* ---- Inbox queue + Overview "?" cards (owner 2026-10-15 18:53): one line per player, details on click. ---- */
+.inbox h2 .cnt, .done-wrap summary .cnt { display: inline-block; min-width: 22px; padding: 0 7px; border-radius: 11px; background: #E6EFF9; color: #0F4C99; font-size: 12px; font-weight: 800; text-align: center; margin-left: 4px; }
+.mlist { list-style: none; margin: 0; padding: 0; }
+.mrow { display: grid; grid-template-columns: minmax(170px, 220px) 1fr auto; gap: 14px; align-items: center; padding: 11px 18px 11px 15px; border-top: 1px solid var(--line); border-left: 3px solid transparent; cursor: pointer; }
+.mrow:hover { background: #F6F9FC; }
+.mrow.b-high { border-left-color: #C73636; } .mrow.b-medium { border-left-color: #E0A030; } .mrow.b-low { border-left-color: #8FC9AA; }
+.mrow .who { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mrow .who .p { font-weight: 800; }
+.mrow .what { min-width: 0; display: flex; align-items: center; gap: 6px; overflow: hidden; }
+.mrow .what .label, .mrow .what .band, .mrow .what .tag-new { flex: none; margin: 0; }
+.mrow .why { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); font-weight: 600; }
+.mrow .meta { display: flex; align-items: center; gap: 8px; white-space: nowrap; font-size: 13px; color: var(--muted); }
+.mrow .meta .tag-st { margin: 0; }
+.in-progress .mrow .who .p, .in-done .mrow .who .p, .in-progress .mrow .why, .in-done .mrow .why { font-weight: 500; }
+.in-done .mrow { border-left-color: transparent; }
+.mempty, .qnone { padding: 14px 18px; color: var(--muted); border-top: 1px solid var(--line); }
+.done-wrap { margin-top: 12px; }
+.done-wrap > summary { cursor: pointer; padding: 10px 4px; font-weight: 800; color: var(--muted); list-style: none; }
+.done-wrap > summary::-webkit-details-marker { display: none; }
+.done-wrap > summary::before { content: "\25B8"; display: inline-block; width: 16px; transition: transform .15s; }
+.done-wrap[open] > summary::before { transform: rotate(90deg); }
+.done-wrap > summary small { font-weight: 500; margin-left: 6px; }
+.done-wrap .inbox { margin-top: 6px; }
+.panel.inbox + .panel.inbox { margin-top: 14px; }
+.kpi .k { display: flex; align-items: flex-start; gap: 2px; }
+.kpi .k a { color: inherit; } .kpi a.v { display: block; color: var(--ink); } .kpi a:hover { text-decoration: none; color: #1763C6; }
+.kpi .k details.help { margin-left: auto; flex: none; }
+.kpi .k details.help .pop { left: auto; right: -10px; }
+@media (max-width: 760px) {
+  .mrow { grid-template-columns: 1fr auto; gap: 4px 10px; }
+  .mrow .what { grid-column: 1 / -1; grid-row: 2; flex-wrap: wrap; }
+  .mrow .why { white-space: normal; flex-basis: 100%; }
+}
+
+/* ---- Menu groups, to-do count, demo dock (owner 2026-10-15 19:00). ---- */
+.side nav .navhead { display: block; padding: 14px 10px 4px; font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+.side nav .navhead:first-of-type { padding-top: 0; }
+.navcount { margin-left: auto; min-width: 22px; padding: 1px 7px; border-radius: 11px; background: #C73636; color: #FFFFFF; font-size: 12px; font-weight: 800; text-align: center; line-height: 18px; }
+.dock { position: fixed; right: 16px; bottom: 16px; z-index: 50; display: flex; align-items: center; gap: 10px; }
+.dock .steps { position: static; }
+.vcompare { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; background: #FFFFFF; border: 1px solid #9AA6B2; box-shadow: 0 2px 10px rgba(0,0,0,.25); color: #10202E; font-size: 13px; font-weight: 700; white-space: nowrap; }
+.vcompare svg { width: 16px; height: 16px; stroke: #1F8052; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.vcompare:hover, .vcompare.on { text-decoration: none; border-color: #1763C6; color: #0F4C99; }
+.shared + .shared { border-top: 1px solid var(--line); }
+.shared h3 { margin: 0; padding: 14px 18px 0; font-size: 15px; font-weight: 800; } .shared h3 small { font-weight: 500; color: var(--muted); margin-left: 6px; }
+.shared .net { margin: 8px 18px 6px; max-width: min(520px, calc(100% - 36px)); }
+@media (max-width: 960px) { .side nav .navhead { display: none; } .navcount { margin-left: 6px; } }
+@media (max-width: 600px) { .dock { right: 10px; bottom: 10px; gap: 6px; } .vcompare { padding: 6px 10px; font-size: 12px; } }
+@media print { .dock { display: none; } }
+main { padding-bottom: 80px; }

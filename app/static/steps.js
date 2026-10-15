@@ -13,7 +13,7 @@
   box.innerHTML = '<summary title="One step = one click (link, button or menu). Typing is not counted. Reset before each run.">' +
     '<span class="steps-v">' + (ver === 'v1' ? 'Version 1.0' : 'Version 2.0') + '</span> Steps <b></b></summary>' +
     '<div class="steps-pop"><ol></ol><p class="steps-cmp"></p><button type="button" class="steps-reset">Reset count</button></div>';
-  document.body.appendChild(box);
+  (document.getElementById('dock') || document.body).appendChild(box); // Version 2.0: beside the Validation button
 
   function paint() {
     var a = load();
@@ -33,6 +33,7 @@
     if (!el || el.closest('.topbar') || el.closest('.v1user') || el.closest('.navtoggle')) return; // sound, user menu and sign-out are not work steps
     if (el.tagName === 'SUMMARY' && el.closest('details.help')) return; // "?" help popovers are not work steps
     var label = (el.getAttribute('aria-label') || el.textContent || el.value || '').replace(/\s+/g, ' ').trim().slice(0, 40) || el.tagName.toLowerCase();
+    var nc = el.querySelector && el.querySelector('.navcount'); if (nc) label = label.replace(nc.textContent, '').trim(); // menu to-do count is not part of the step name
     // A button on its own ("Search", "Escalate") says little in the list: add the screen it was pressed on.
     if (el.tagName !== 'A' && el.tagName !== 'SUMMARY') {
       var h = document.querySelector('main h1');

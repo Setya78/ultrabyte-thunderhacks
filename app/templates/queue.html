@@ -1,12 +1,13 @@
 {% extends "base.html" %}
 {% from "_help.html" import help %}
-{% from "_ring.html" import ring %}
 {% block title %}Review queue - UltraByte Solutions{% endblock %}
 {% block bodyattrs %} data-urgent="{{ rows|selectattr("labels")|map(attribute="labels")|map("map", attribute="key")|map("select", "equalto", "urgent")|map("list")|map("length")|select("gt", 0)|list|length }}"{% endblock %}
 {% block content %}
+{# Owner 2026-10-15 18:53: the queue reads like an inbox. Three lists only (To do, In progress, Done), one line per player,
+   no score rings or profile detail here. Click a row to open the player; scores, evidence and team view live on the
+   player page and Overview. #}
 <div class="head">
-  <div><h1>Review queue {{ help("Players ranked by two explainable scores. Every point has a reason; every decision goes to the audit trail. STR = Suspicious Transaction Report (filed with FINTRAC, Canada's financial intelligence agency); AML = anti-money laundering.") }}</h1>
-    <p class="sub">Your worklist: alerts that still need a decision, then the ones already decided. {% if status.db == "ok" %}{{ status.players }} players, {{ status.txns }} transactions, 15 Sep to 14 Oct 2026.{% else %}Database: {{ status.db }}{% endif %} For the same players by team, see Overview.</p></div>
+  <div><h1>Review queue {{ help("Your inbox of alerts. To do: nobody has decided yet, most urgent first. In progress: escalated, picked up by compliance, or on monitor. Done: dismissed or resolved. Click a player to see the scores, the evidence and to record a decision; every decision goes to the audit trail. " ~ (status.players ~ " players, " ~ status.txns ~ " transactions, 15 Sep to 14 Oct 2026, all synthetic." if status.db == "ok" else "Database: " ~ status.db)) }}</h1></div>
   <div class="tools">
     <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="qsearch" type="search" placeholder="Search name or ID, e.g. Morgan or P-7730" autocomplete="off" aria-label="Search the queue by name or player ID"></label>
     <form method="post" action="/reset"><button class="btn" type="submit">Reset demo data</button></form>
@@ -16,47 +17,47 @@
 <div class="filters" role="group" aria-label="Filter the queue">
   <label>Band<select id="f-band"><option value="">All</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label>
   <label>Category<select id="f-cat"><option value="">All</option><option value="urgent">URGENT</option><option value="str">STR candidate</option><option value="sg">Safer Gambling</option><option value="new">Newly added</option></select></label>
-  <label>Status<select id="f-state"><option value="">All</option><option value="todo">Action required</option><option value="escalated">Escalated, waiting</option><option value="handling">In progress</option><option value="monitor">Monitor</option><option value="dismiss">Dismissed</option><option value="resolved">Resolved</option></select></label>
+  <label>Status<select id="f-state"><option value="">All</option><option value="todo">To do</option><option value="escalated">Escalated, waiting</option><option value="handling">In progress</option><option value="monitor">Monitor</option><option value="dismiss">Dismissed</option><option value="resolved">Resolved</option></select></label>
   <button type="button" class="btn" id="f-clear" hidden>Clear</button>
 </div>
-{% macro qtable(list, sec, title, sub, hlp) %}
-<div class="panel q-{{ sec }}">
-<h2>{{ title }} <small>{{ list|length }} player{{ "s" if list|length != 1 }}{% if sub %} &middot; {{ sub }}{% endif %}</small> {{ help(hlp) }}</h2>
-<table class="t">
-  <thead><tr><th>#</th><th>Scores {{ help("Left: AML score (anti-money laundering: is money moving through the account rather than being played?). Right: Safer Gambling score (signs of harm to the player). Each arc is one check, up to 25 points.") }}</th><th>Player</th><th class="hide-s">Labels</th><th>Why</th><th class="hide-m">{% if sec == 'done' %}Case status {{ help(gloss['STATUS']) }}{% else %}Suggested <span class="tag-rule">rule-based</span>{% endif %}</th></tr></thead>
-  <tbody>
-    {% set prev_grp = {'v': ''} %}
-    {% for r in list %}
-    {% set keys = r.labels|map(attribute='key')|list %}{% set grp = 'URGENT: possible account takeover' if 'urgent' in keys else 'STR candidates: possible suspicious transaction report' if 'str' in keys else 'Other alerts, highest score first' %}
-    {% if sec == 'done' %}{% set grp = decided[r.player_id].label %}{% endif %}
-    {% if loop.first or grp != prev_grp.v %}<tr class="grouphead{{ ' st-' ~ decided[r.player_id].state if sec == 'done' }}"><td colspan="6">{{ grp }}</td></tr>{% endif %}{% set _ = prev_grp.update({'v': grp}) %}
-    <tr data-band="{{ r.band|lower }}" data-sg="{{ r.harm_band|lower }}" data-labels="{{ keys|join(' ') }}" data-source="{{ r.source }}" data-state="{{ decided[r.player_id].state if sec == 'done' else 'todo' }}">
-      <td class="pid" style="margin:0">{{ loop.index }}</td>
-      <td><div class="two-rings"><div>{{ ring(r) }}<div class="ringlbl" title="{{ gloss['AML'] }}">AML</div></div><div>{{ ring(r, kind='sg') }}<div class="ringlbl" title="{{ gloss['SG'] }}">SAFER</div></div></div></td>
-      <td data-name="{{ r.display_name|lower }}" data-id="{{ r.player_id|lower }}"><a class="p" href="/player/{{ r.player_id }}" style="white-space:nowrap">{{ r.display_name }}</a><span class="pid">{{ r.player_id }}</span>{% if r.source != 'seed' %} <span class="tag-new" title="Added during this demo session by {{ r.source }}; not part of the seed">NEW &middot; {{ r.source }}</span>{% endif %}{% if sec == 'done' %} <span class="tag-st st-{{ decided[r.player_id].state }}">{{ decided[r.player_id].label }}</span>{% endif %}<div class="src">{{ r.occupation }}, {{ r.age_band }}, {{ r.income_band }}</div></td>
-      <td class="hide-s"><span class="band band-{{ r.band|lower }}">{{ r.band }}</span> {% if r.harm_band != 'Low' %}<span class="band band-{{ r.harm_band|lower }}">SG {{ r.harm_band }}</span>{% endif %}{% for l in r.labels|unique(attribute='text') %}<span class="label label-{{ l.key }}" title="{{ gloss['URGENT'] if l.key == 'urgent' else gloss['STR'] }}">{{ l.text }}</span>{% endfor %}</td>
-      <td class="reason">{{ r.top_reason }}</td>
-      {% if sec == 'done' %}{% set d = decided[r.player_id] %}<td class="hide-m"><span class="band st-{{ d.state }}">{{ d.label }}</span><div class="src">{{ labels.get(d.action, d.action) }} by {{ d.actor }}, {{ d.ts.astimezone(edt).strftime('%d %b %H:%M') }}</div></td>
-      {% else %}<td class="hide-m suggest">{{ r.suggestion }}</td>{% endif %}
-    </tr>
-    {% else %}<tr><td colspan="6" class="empty">{% if sec == 'done' %}No decisions yet. Decide on a player page and it moves here.{% else %}Nothing waiting. Every alert has a decision.{% endif %}</td></tr>{% endfor %}
-    <tr class="qnone" hidden><td colspan="6" class="empty">No player here matches. <span class="qopen"></span></td></tr>
-  </tbody>
-</table>
-</div>
+
+{% macro inbox(list, sec, title, hlp, empty) %}
+<section class="panel inbox in-{{ sec }}" data-sec="{{ sec }}">
+  <h2>{{ title }} <span class="cnt">{{ list|length }}</span> {{ help(hlp) }}</h2>
+  <ul class="mlist">
+  {% for r in list %}
+    {% set keys = r.labels|map(attribute='key')|list %}{% set d = decided.get(r.player_id) %}
+    <li class="mrow b-{{ r.band|lower }}" data-href="/player/{{ r.player_id }}" data-band="{{ r.band|lower }}" data-sg="{{ r.harm_band|lower }}" data-labels="{{ keys|join(' ') }}" data-source="{{ r.source }}" data-state="{{ d.state if d else 'todo' }}" data-name="{{ r.display_name|lower }}" data-id="{{ r.player_id|lower }}">
+      <div class="who"><a class="p" href="/player/{{ r.player_id }}">{{ r.display_name }}</a><span class="pid">{{ r.player_id }}</span></div>
+      <div class="what">
+        {% for l in r.labels|unique(attribute='text') %}<span class="label label-{{ l.key }}" title="{{ gloss['URGENT'] if l.key == 'urgent' else gloss['STR'] }}">{{ l.text }}</span>{% endfor %}{% if r.harm_band != 'Low' %}<span class="band band-{{ r.harm_band|lower }}" title="{{ gloss['SG'] }}">SG {{ r.harm_band }}</span>{% endif %}{% if r.source != 'seed' %}<span class="tag-new" title="Added during this demo session by {{ r.source }}">NEW</span>{% endif %}
+        <span class="why">{{ r.top_reason }}</span>
+      </div>
+      <div class="meta">{% if d %}<span class="tag-st st-{{ d.state }}">{{ d.label }}</span><time>{{ d.ts.astimezone(edt).strftime('%d %b %H:%M') }}</time>{% else %}<span class="band band-{{ r.band|lower }}" title="{{ gloss['AML'] }}">{{ r.band }} {{ r.score }}</span>{% endif %}</div>
+    </li>
+  {% endfor %}
+    <li class="mempty"{% if list %} hidden{% endif %}>{{ empty }}</li>
+    <li class="qnone" hidden>No player here matches. <span class="qopen"></span></li>
+  </ul>
+</section>
 {% endmacro %}
-{{ qtable(todo, 'todo', 'Action required', 'no decision yet, most urgent first', "Your worklist: players the scoring caught and nobody has decided on. URGENT and STR candidates sit on top. Open a player, read why, record Escalate / Monitor / Dismiss, and the row moves to Decided. Overview shows the same players grouped by team instead.") }}
-{{ qtable(done, 'done', 'Decided', 'escalated first, then in progress, monitor, dismissed, resolved', "Players with a recorded decision, grouped by case status: Escalated (waiting for compliance), In progress (compliance picked it up), Monitor, Dismissed, Resolved. The audit trail holds every step with the score at that moment.") }}
+
+{{ inbox(todo, 'todo', 'To do', "Players the scoring caught that nobody has decided on yet. URGENT and STR candidates on top, then highest score. Open one, read why, record Escalate / Monitor / Dismiss, and it leaves this list.", "Nothing waiting. Every alert has a decision.") }}
+{{ inbox(progress, 'progress', 'In progress', "Decided but still open: Escalated (waiting for compliance), In progress (compliance picked it up), Monitor (watching).", "Nothing in progress.") }}
+<details class="done-wrap"{% if not closed %} hidden{% endif %}><summary>Done <span class="cnt">{{ closed|length }}</span> <small>dismissed or resolved</small></summary>
+{{ inbox(closed, 'done', 'Done', "Closed cases: dismissed by the investigator or resolved by compliance. The audit trail keeps every step with the score at that moment.", "Nothing closed yet.") }}
+</details>
+
 <script>
-// Queue search (owner 2026-10-15): filters the ranked rows by name or player ID as you type; group headers hide when
-// none of their rows match. An ID that is not in the queue (a Low-band player) gets a direct link to its player page.
+// Inbox behaviour (owner 2026-10-15 18:53): whole row opens the player; search + dropdown filters hide rows; a section
+// with nothing left says so. An ID that is not in the queue (a Low-band player) gets a direct link to its player page.
 (function () {
+  var rows = Array.prototype.slice.call(document.querySelectorAll('li.mrow'));
+  rows.forEach(function (r) { r.addEventListener('click', function (e) { if (e.target.closest('a, details')) return; location.href = r.dataset.href; }); });
   var box = document.getElementById('qsearch'); if (!box) return;
-  var rows = Array.prototype.slice.call(document.querySelectorAll('tbody tr')).filter(function (r) { return r.querySelector('td[data-id]'); });
-  var heads = Array.prototype.slice.call(document.querySelectorAll('tr.grouphead'));
-  var nones = Array.prototype.slice.call(document.querySelectorAll('tr.qnone'));
   var f = { band: '', cat: '', state: '' };
   var sel = { band: document.getElementById('f-band'), cat: document.getElementById('f-cat'), state: document.getElementById('f-state') }, clear = document.getElementById('f-clear');
+  var doneWrap = document.querySelector('details.done-wrap');
   function catHit(r) {
     var v = f.cat; if (!v) return true;
     if (v === 'new') return r.dataset.source !== 'seed';
@@ -64,22 +65,24 @@
     return (' ' + r.dataset.labels + ' ').indexOf(' ' + v + ' ') >= 0;
   }
   function apply() {
-    var q = box.value.trim().toLowerCase(), shown = 0;
+    var q = box.value.trim().toLowerCase(), active = !!(q || f.band || f.cat || f.state);
     rows.forEach(function (r) {
-      var c = r.querySelector('td[data-id]'), hit = !q || c.dataset.name.indexOf(q) >= 0 || c.dataset.id.indexOf(q) >= 0 || c.dataset.id.replace('p-', '').replace('m-', '').indexOf(q) >= 0;
-      hit = hit && (!f.band || r.dataset.band === f.band) && catHit(r) && (!f.state || r.dataset.state === f.state);
-      r.hidden = !hit; if (hit) shown++;
-    });
-    heads.forEach(function (h) {
-      var n = h.nextElementSibling, any = false;
-      while (n && !n.classList.contains('grouphead') && !n.classList.contains('qnone')) { if (!n.hidden) any = true; n = n.nextElementSibling; }
-      h.hidden = !any;
+      var hit = !q || r.dataset.name.indexOf(q) >= 0 || r.dataset.id.indexOf(q) >= 0 || r.dataset.id.replace('p-', '').replace('m-', '').indexOf(q) >= 0;
+      r.hidden = !(hit && (!f.band || r.dataset.band === f.band) && catHit(r) && (!f.state || r.dataset.state === f.state));
     });
     var m = q.match(/^(p|m)-?(\d{3,4})$/), link = m ? 'Open <a href="/player/' + m[1].toUpperCase() + '-' + m[2] + '">' + m[1].toUpperCase() + '-' + m[2] + '</a> directly.' : '';
-    nones.forEach(function (nn) {
-      var tb = nn.parentNode, vis = Array.prototype.filter.call(tb.querySelectorAll('tr'), function (r) { return r.querySelector('td[data-id]') && !r.hidden; }).length;
-      nn.hidden = !((q || f.band || f.cat || f.state) && vis === 0); nn.querySelector('.qopen').innerHTML = link;
+    var total = document.querySelectorAll('li.mrow:not([hidden])').length;
+    document.querySelectorAll('section.inbox').forEach(function (s, i) {
+      var all = s.querySelectorAll('li.mrow').length, vis = s.querySelectorAll('li.mrow:not([hidden])').length, nn = s.querySelector('.qnone');
+      // One "no match" line: on To do with the direct link when nothing matches anywhere, else a short note per empty list.
+      nn.hidden = !(active && vis === 0 && (all > 0 || (i === 0 && total === 0)));
+      nn.firstChild.textContent = total === 0 ? 'No player matches. ' : 'No match in this list. ';
+      nn.querySelector('.qopen').innerHTML = total === 0 && i === 0 ? link : '';
+      if (total === 0 && i > 0) nn.hidden = true;
+      s.querySelector('h2 .cnt').textContent = active ? vis + ' of ' + all : all;
     });
+    // A search that hits a closed case opens Done so the match is visible.
+    if (doneWrap && active && doneWrap.querySelector('li.mrow:not([hidden])')) doneWrap.open = true;
   }
   box.addEventListener('input', apply);
   Object.keys(sel).forEach(function (k) { sel[k].addEventListener('change', function () { f[k] = sel[k].value; clear.hidden = !(f.band || f.cat || f.state); apply(); }); });

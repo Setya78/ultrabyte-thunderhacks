@@ -3,26 +3,77 @@
 {% from "_ring.html" import ring %}
 {% block title %}Overview - UltraByte Solutions{% endblock %}
 {% block content %}
-<div class="head"><div><h1>Overview {{ help('Compliance and player protection in one view, last 30 days. A player can appear in more than one group.') }}</h1>
-  <p class="sub">The same players as the review queue, sorted by the team that handles them: Fraud (URGENT), AML (STR candidates, AML context risk), Safer Gambling. One player can sit in two groups; the player ID is the person.</p></div></div>
+{# Owner 2026-10-15 18:53: explanations sit behind "?" (not under the numbers), and Overview gets the same search as the queue. #}
+<div class="head">
+  <div><h1>Overview {{ help('The same players as the review queue, sorted by the team that handles them: Fraud (URGENT), AML (STR candidates, AML context risk), Safer Gambling. One player can sit in two groups; the player ID is the person. Last 30 days.') }}</h1></div>
+  <div class="tools">
+    <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="osearch" type="search" placeholder="Search name or ID, e.g. Morgan or P-7730" autocomplete="off" aria-label="Search Overview by name or player ID"></label>
+  </div>
+</div>
 <div class="grid four">
   {% for g in groups %}
-  <a class="panel kpi" href="#{{ g.key }}"><div class="k">{{ g.title }}</div><div class="v">{{ g.players|length }}</div><div class="cmp">{{ g.desc }}</div></a>
+  <div class="panel kpi"><div class="k"><a href="#{{ g.key }}">{{ g.title }}</a> {{ help(g.desc ~ ". Owner: " ~ g.team ~ ".") }}</div><a class="v" href="#{{ g.key }}">{{ g.players|length }}</a></div>
   {% endfor %}
+  <div class="panel kpi"><div class="k"><a href="#shared">Shared cards &amp; bank accounts</a> {{ help("One card or one payout bank account used by more than one player: one person running several accounts, or money moved through other people's accounts. Card and account numbers are masked. Owner: AML.") }}</div><a class="v" href="#shared">{{ links|length }}</a></div>
 </div>
 {% for g in groups %}
-<section class="panel" id="{{ g.key }}">
-  <h2>{{ g.title }} <small>{{ g.players|length }} player{{ "s" if g.players|length != 1 }}, owner: {{ g.team }}</small></h2>
+<section class="panel ogroup" id="{{ g.key }}">
+  <h2>{{ g.title }} <small><span class="cnt">{{ g.players|length }}</span> player{{ "s" if g.players|length != 1 }}, owner: {{ g.team }}</small> {{ help(g.desc ~ ".") }}</h2>
   <table class="t">
     <thead><tr><th>Score {{ help("AML = anti-money laundering score (where is the money from?). SAFER = Safer Gambling score (is the player being harmed?). Each group shows the score its team works with.") }}</th><th>Player</th><th>Why</th><th class="hide-m">Suggested</th></tr></thead>
     <tbody>
       {% for r, why, team_score, step in g.players %}
-      <tr><td><div class="score">{% if g.key == "safer" %}<div>{{ ring(r, kind="sg") }}<div class="ringlbl" title="{{ gloss['SG'] }}">SAFER</div></div><span class="band band-{{ r.harm_band|lower }}">{{ r.harm_band }}</span>{% else %}<div>{{ ring(r) }}<div class="ringlbl" title="{{ gloss['AML'] }}">AML</div></div><span class="band band-{{ r.band|lower }}">{{ r.band }}</span>{% endif %}</div></td>
+      <tr data-name="{{ r.display_name|lower }}" data-id="{{ r.player_id|lower }}"><td><div class="score">{% if g.key == "safer" %}<div>{{ ring(r, kind="sg") }}<div class="ringlbl" title="{{ gloss['SG'] }}">SAFER</div></div><span class="band band-{{ r.harm_band|lower }}">{{ r.harm_band }}</span>{% else %}<div>{{ ring(r) }}<div class="ringlbl" title="{{ gloss['AML'] }}">AML</div></div><span class="band band-{{ r.band|lower }}">{{ r.band }}</span>{% endif %}</div></td>
           <td><a class="p" href="/player/{{ r.player_id }}">{{ r.display_name }}</a><span class="pid">{{ r.player_id }}</span>{% if r.source != 'seed' %} <span class="tag-new">NEW &middot; {{ r.source }}</span>{% endif %}{% if decided.get(r.player_id) %} <span class="tag-st st-{{ decided[r.player_id].state }}">{{ decided[r.player_id].label }}</span>{% endif %}{% set others = member[r.player_id]|reject("equalto", g.short)|list %}{% if others %}<div class="src">also in {{ others|join(", ") }}</div>{% endif %}</td>
           <td class="reason">{{ why }}</td><td class="hide-m suggest">{{ step }}</td></tr>
-      {% else %}<tr><td colspan="4" class="empty">None.</td></tr>{% endfor %}
+      {% else %}<tr class="none"><td colspan="4" class="empty">None.</td></tr>{% endfor %}
     </tbody>
   </table>
 </section>
 {% endfor %}
+{# Shared cards & accounts moved here from its own menu page (owner 2026-10-15 19:00): it is another view of the same players. #}
+<section class="panel ogroup" id="shared">
+  <h2>Shared cards &amp; bank accounts <small><span class="cnt">{{ links|length }}</span> shared, owner: AML</small> {{ help("Each block is one card or payout account and the players who used it, with how often. Click a player to see their scores.") }}</h2>
+  {% for g in links %}
+  <div class="shared">
+    <h3>{{ g.kind }}{% if g.last4 %} ending {{ g.last4 }}{% endif %} <small>{{ g.players|length }} players, {{ g.uses }} transaction{{ "s" if g.uses != 1 }}</small></h3>
+    <svg viewBox="0 0 {{ 160 * g.players|length + 40 }} 120" class="net" role="img" aria-label="Players linked by a shared {{ g.kind|lower }}">
+      <rect x="{{ (160 * g.players|length + 40) / 2 - 70 }}" y="6" width="140" height="30" rx="6" class="inst"></rect>
+      <text x="{{ (160 * g.players|length + 40) / 2 }}" y="26" text-anchor="middle" class="instt">{{ "Card" if g.last4 else "Bank account" }}{% if g.last4 %} ..{{ g.last4 }}{% endif %}</text>
+      {% for p in g.players %}{% set cx = 40 + 160 * loop.index0 + 60 %}
+      <line x1="{{ (160 * g.players|length + 40) / 2 }}" y1="36" x2="{{ cx }}" y2="76" class="edge"></line>
+      <rect x="{{ cx - 60 }}" y="76" width="120" height="34" rx="6" class="pnode"></rect>
+      <text x="{{ cx }}" y="97" text-anchor="middle" class="pnodet">{{ p.player_id }}</text>
+      {% endfor %}
+    </svg>
+    <table class="t">
+      <tbody>{% for p in g.players %}<tr data-name="{{ p.display_name|lower }}" data-id="{{ p.player_id|lower }}"><td><a class="p" href="/player/{{ p.player_id }}">{{ p.display_name }}</a><span class="pid">{{ p.player_id }}</span>{% if decided.get(p.player_id) %} <span class="tag-st st-{{ decided[p.player_id].state }}">{{ decided[p.player_id].label }}</span>{% endif %}</td><td>{{ p.score }} <span class="band band-{{ p.band|lower }}">{{ p.band }}</span></td><td>{% for l in p.labels|unique(attribute='text') %}<span class="label label-{{ l.key }}">{{ l.text }}</span>{% endfor %}</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+  {% else %}<p class="empty">No shared cards or accounts.</p>{% endfor %}
+</section>
+<p class="panel empty onone" hidden>No player in any group matches. <span class="qopen"></span></p>
+<script>
+// Overview search (owner 2026-10-15 18:53): same behaviour as the queue search; groups with no match are hidden.
+(function () {
+  var box = document.getElementById('osearch'); if (!box) return;
+  var secs = Array.prototype.slice.call(document.querySelectorAll('section.ogroup')), none = document.querySelector('.onone');
+  box.addEventListener('input', function () {
+    var q = box.value.trim().toLowerCase(), total = 0;
+    secs.forEach(function (s) {
+      var rows = s.querySelectorAll('tr[data-id]'), vis = 0;
+      rows.forEach(function (r) {
+        var hit = !q || r.dataset.name.indexOf(q) >= 0 || r.dataset.id.indexOf(q) >= 0 || r.dataset.id.replace('p-', '').replace('m-', '').indexOf(q) >= 0;
+        r.hidden = !hit; if (hit) vis++;
+      });
+      s.querySelectorAll('.shared').forEach(function (b) { b.hidden = !!q && !b.querySelector('tr[data-id]:not([hidden])'); });
+      s.hidden = !!q && vis === 0; total += vis;
+      if (s.id !== 'shared') s.querySelector('h2 .cnt').textContent = q ? vis + ' of ' + rows.length : rows.length;
+    });
+    var m = q.match(/^(p|m)-?(\d{3,4})$/);
+    none.hidden = !(q && total === 0);
+    none.querySelector('.qopen').innerHTML = m ? 'Open <a href="/player/' + m[1].toUpperCase() + '-' + m[2] + '">' + m[1].toUpperCase() + '-' + m[2] + '</a> directly.' : '';
+  });
+})();
+</script>
 {% endblock %}

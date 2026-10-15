@@ -19,7 +19,7 @@ from app.scoring import engine
 from app.scoring import rules as RL
 
 BASE = Path(__file__).resolve().parent
-VERSION = "0.15.0-worklist"
+VERSION = "0.15.2-menu"
 
 app = FastAPI(title="UltraByte Solutions", version=VERSION)
 app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
@@ -151,6 +151,20 @@ def scores() -> list[engine.PlayerScore]:
     return _cache["scores"]
 
 
+def todo_count() -> int | None:
+    """Unread-style count for the Review queue menu item (owner 2026-10-15 19:00): caught players with no decision yet.
+    Read-only; returns None when the database is not ready so the menu simply shows no number."""
+    try:
+        with db.connect() as conn:
+            decided = audit.case_status(conn)
+        return sum(1 for r in scores() if r.caught and r.player_id not in decided)
+    except Exception:
+        return None
+
+
+templates.env.globals.update(todo_count=todo_count)
+
+
 @app.get("/health")
 def health():
     return {"status": "ok", "version": VERSION, "data": "SYNTHETIC", **db.status()}
@@ -171,7 +185,11 @@ def queue(request: Request):
     todo = [r for r in rows if r.player_id not in decided]
     order = {s: i for i, s in enumerate(audit.STATE_ORDER)}
     done = sorted((r for r in rows if r.player_id in decided), key=lambda r: (order[decided[r.player_id]["state"]], r.priority))
-    return templates.TemplateResponse(request, "queue.html", {"rows": rows, "todo": todo, "done": done, "decided": decided,
+    # Owner 2026-10-15 18:53: inbox view. "In progress" = still open (escalated, handling, monitor); "Done" = closed.
+    progress = [r for r in done if decided[r.player_id]["state"] in ("escalated", "handling", "monitor")]
+    closed = [r for r in done if decided[r.player_id]["state"] not in ("escalated", "handling", "monitor")]
+    return templates.TemplateResponse(request, "queue.html", {"rows": rows, "todo": todo, "done": done, "progress": progress,
+                                                              "closed": closed, "decided": decided,
                                                               "status": status, "edt": C.EDT})
 
 
@@ -403,11 +421,12 @@ def dashboard(request: Request):
     for g in groups:
         for r, *_ in g["players"]:
             member.setdefault(r.player_id, []).append(g["short"])
-    return templates.TemplateResponse(request, "dashboard.html", {"groups": groups, "decided": decided, "member": member})
+    return templates.TemplateResponse(request, "dashboard.html", {"groups": groups, "decided": decided, "member": member,
+                                                                  "links": shared_links()})
 
 
-@app.get("/network")
-def network(request: Request):
+def shared_links() -> list[dict]:
+    """Cards and payout accounts used by more than one player (masked). Shown on Overview since 2026-10-15 19:00."""
     with db.connect() as conn:
         rows = conn.execute("""
             SELECT 'Card' AS kind, method_fingerprint AS ref, max(method_last4) AS last4,
@@ -420,9 +439,14 @@ def network(request: Request):
             HAVING count(DISTINCT player_id) > 1
             ORDER BY 1, 2""").fetchall()
     by_id = {r.player_id: r for r in scores()}
-    links = [{"kind": r["kind"], "ref": r["ref"][:9] + "...", "last4": r["last4"], "uses": r["uses"],
-              "players": [by_id[p] for p in r["players"]]} for r in rows]
-    return templates.TemplateResponse(request, "network.html", {"links": links})
+    return [{"kind": r["kind"], "ref": r["ref"][:9] + "...", "last4": r["last4"], "uses": r["uses"],
+             "players": [by_id[p] for p in r["players"]]} for r in rows]
+
+
+@app.get("/network")
+def network(request: Request):
+    """Owner 2026-10-15 19:00: shared cards and accounts are a view of the same players, so they live on Overview now."""
+    return RedirectResponse("/dashboard#shared", status_code=303)
 
 
 _pending: dict[str, importer.Result] = {}

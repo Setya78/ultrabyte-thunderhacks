@@ -16,14 +16,16 @@
     {% set path = request.url.path %}
     <button type="button" class="navtoggle" aria-expanded="false" aria-controls="mainnav" onclick="var s=this.closest('.side');var o=s.classList.toggle('open');this.setAttribute('aria-expanded',o)"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>Menu</button>
     <nav id="mainnav">
-      <a href="/" title="Players to look at today, most urgent first" class="{{ 'on' if path == '/' or path.startswith('/player') }}"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/></svg>Review queue</a>
+      {# Owner 2026-10-15 19:00: menu = running the app. Daily work first, then managing it. Shared cards live on Overview;
+         Validation (Version 1.0 vs 2.0) is a demo button in the bottom dock, not a menu item. #}
+      <span class="navhead">Daily work</span>
+      <a href="/" title="Players to look at today, most urgent first" class="{{ 'on' if path == '/' or path.startswith('/player') }}"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/></svg>Review queue{% set tc = todo_count() %}{% if tc %}<span class="navcount" title="{{ tc }} player{{ 's' if tc != 1 }} to review">{{ tc }}</span>{% endif %}</a>
       <a href="/dashboard" title="The same players grouped by the team that handles them" class="{{ 'on' if path == '/dashboard' }}"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="11" width="8" height="10" rx="1.5"/><rect x="3" y="14" width="8" height="7" rx="1.5"/></svg>Overview</a>
-      <a href="/network" title="One card or bank account used by several players" class="{{ 'on' if path == '/network' }}"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.5"/><circle cx="5" cy="19" r="2.5"/><circle cx="19" cy="19" r="2.5"/><path d="M10.5 7l-4 9.5M13.5 7l4 9.5"/></svg>Shared cards &amp; accounts</a>
-      <a href="/validation" title="Does the scoring catch the test cases? Old rule vs new" class="{{ 'on' if path == '/validation' }}"><svg viewBox="0 0 24 24"><path d="M4 13l5 5L20 7"/></svg>Validation</a>
+      <a href="/audit" title="Permanent record of who did what and when" class="{{ 'on' if path == '/audit' }}"><svg viewBox="0 0 24 24"><path d="M6 3h9l5 5v13H6z"/><path d="M14 3v6h6M9 13h7M9 17h7"/></svg>Audit trail</a>
+      <span class="navhead">Manage</span>
+      <a href="/rules" title="The thresholds behind every score, set by compliance" class="{{ 'on' if path == '/rules' }}"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="8" cy="17" r="2"/></svg>Score rules</a>
       <a href="/enter" title="Type one transaction and watch the score change" class="{{ 'on' if path == '/enter' }}"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Manual entry</a>
       <a href="/import" title="Upload your own synthetic players from Excel" class="{{ 'on' if path.startswith('/import') }}"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M4 19h16"/></svg>Import test data</a>
-      <a href="/rules" title="The thresholds behind every score, set by compliance" class="{{ 'on' if path == '/rules' }}"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="8" cy="17" r="2"/></svg>Score rules</a>
-      <a href="/audit" title="Permanent record of who did what and when" class="{{ 'on' if path == '/audit' }}"><svg viewBox="0 0 24 24"><path d="M6 3h9l5 5v13H6z"/><path d="M14 3v6h6M9 13h7M9 17h7"/></svg>Audit trail</a>
     </nav>
     <div class="status">
       {% if not auth_enabled() %}<span class="src" style="color:var(--medium)">Sign-in not configured</span>{% endif %}
@@ -114,6 +116,7 @@ document.querySelectorAll('table.t').forEach(function (t) {
   });
 });
 </script>
+<div class="dock" id="dock"><a class="vcompare{{ ' on' if path == '/validation' }}" href="/validation" title="For the demo: does the scoring catch the planted test cases? Version 1.0 (one threshold rule) vs Version 2.0"><svg viewBox="0 0 24 24"><path d="M4 13l5 5L20 7"/></svg>Version 1.0 vs 2.0</a></div>
 {% if request.state.user %}<script src="/static/steps.js?v={{ version }}"></script>{% endif %}
 </div>
 </body>
