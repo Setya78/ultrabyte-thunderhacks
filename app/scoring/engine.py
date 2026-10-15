@@ -129,11 +129,27 @@ def score_all(data: dict) -> list[PlayerScore]:
     for seg in peers:
         peers[seg].sort()
 
+    # Peer "normal range" per month (10th-90th percentile) for the player-page chart.
+    seg_month = defaultdict(lambda: [[] for _ in range(len(C.MONTH_STARTS) - 1)])
+    for pid, p in players.items():
+        for k, v in enumerate(monthly[pid]):
+            seg_month[p["peer_segment"]][k].append(v)
+    peer_range = {}
+    for seg, cols in seg_month.items():
+        rng = []
+        for vals in cols:
+            vals = sorted(vals)
+            lo, hi = vals[int(0.10 * (len(vals) - 1))], vals[int(0.90 * (len(vals) - 1))]
+            rng.append((round(lo, 2), round(hi, 2)))
+        peer_range[seg] = rng
+
     results = []
     for pid, p in players.items():
         results.append(_score_one(p, monthly[pid], dep30[pid], peers[p["peer_segment"]], win_deposits[pid],
                                   win_withdrawals[pid], all_money[pid], wagers[pid], sessions[pid],
                                   card_users, acct_users, first_seen_card, first_seen_acct))
+    for r in results:
+        r.metrics["peer_range_monthly"] = peer_range[players[r.player_id]["peer_segment"]]
     results.sort(key=lambda r: r.priority)
     return results
 

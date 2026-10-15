@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Audit trail - UltraByte{% endblock %}
+{% block content %}
+<section class="bar"><h1>Audit trail</h1></section>
+<p class="meta">Every decision, newest first. The database rejects edits and deletions of these rows; each row keeps the full score breakdown at the moment of the decision.</p>
+<table class="queue small">
+  <thead><tr><th>When (EDT)</th><th>Who</th><th>Player</th><th>Action</th><th>Score then</th><th>Note</th></tr></thead>
+  <tbody>
+    {% for h in rows %}
+    <tr><td>{{ h.ts.astimezone(edt).strftime('%d %b %H:%M:%S') }}</td><td>{{ h.actor }}</td>
+        <td>{% if h.player_id %}<a href="/player/{{ h.player_id }}">{{ h.player_id }}</a>{% endif %}</td>
+        <td>{{ h.action }}</td><td>{{ h.score or '' }}</td><td>{{ h.note or '' }}</td></tr>
+    {% else %}
+    <tr><td colspan="6" class="empty">No events yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

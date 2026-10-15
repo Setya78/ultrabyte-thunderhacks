@@ -20,7 +20,7 @@
   <thead><tr><th>Player</th><th>Alert</th></tr></thead>
   <tbody>
     {% for r in rows %}
-    <tr><td>{{ r.display_name }} <span class="pid">{{ r.player_id }}</span></td><td>{{ r.v1_reason }}</td></tr>
+    <tr><td><a href="/player/{{ r.player_id }}?mode=v1">{{ r.display_name }}</a> <span class="pid">{{ r.player_id }}</span></td><td>{{ r.v1_reason }}</td></tr>
     {% else %}
     <tr><td colspan="2" class="empty">No alerts.</td></tr>
     {% endfor %}
@@ -35,7 +35,7 @@
     {% for r in rows %}
     <tr>
       <td>{{ loop.index }}</td>
-      <td>{{ r.display_name }} <span class="pid">{{ r.player_id }}</span></td>
+      <td><a href="/player/{{ r.player_id }}?mode=v2">{{ r.display_name }}</a> <span class="pid">{{ r.player_id }}</span></td>
       <td><strong>{{ r.score }}</strong> <span class="band band-{{ r.band|lower }}">{{ r.band }} risk</span></td>
       <td>
         <div class="bar4" title="{% for c in r.checks %}{{ c.name }} {{ c.points }}/25; {% endfor %}">
