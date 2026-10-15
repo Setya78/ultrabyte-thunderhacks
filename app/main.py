@@ -170,7 +170,7 @@ def queue(request: Request):
             decided = audit.case_status(conn)
     todo = [r for r in rows if r.player_id not in decided]
     order = {s: i for i, s in enumerate(audit.STATE_ORDER)}
-    done = sorted((r for r in rows if r.player_id in decided), key=lambda r: (order[decided[r.player_id]["state"]], r.priority()))
+    done = sorted((r for r in rows if r.player_id in decided), key=lambda r: (order[decided[r.player_id]["state"]], r.priority))
     return templates.TemplateResponse(request, "queue.html", {"rows": rows, "todo": todo, "done": done, "decided": decided,
                                                               "status": status, "edt": C.EDT})
 
