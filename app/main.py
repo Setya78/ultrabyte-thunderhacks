@@ -196,7 +196,7 @@ def player(request: Request, pid: str):
     r = _by_id(pid)
     with db.connect() as conn:
         txns = conn.execute(
-            "SELECT id, ts, type, amount, method_last4, location_region, payout_holder_match, entry_source,"
+            "SELECT id, ts, type, amount, method, method_last4, location_region, payout_holder_match, entry_source,"
             " payout_account IS NOT NULL AND payout_account NOT IN (SELECT payout_account FROM txn h WHERE h.player_id = %s"
             "   AND h.payout_account IS NOT NULL AND h.ts < %s) AS new_account FROM txn"
             " WHERE player_id = %s AND (type IN ('deposit','withdrawal') OR (type = 'win' AND amount >= %s))"

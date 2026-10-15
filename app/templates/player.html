@@ -93,7 +93,7 @@
         <td>{{ t.type.replace('_', ' ') }}</td>
         <td>${{ '{:,.2f}'.format(t.amount) }}</td>
         <td>{{ t.location_region }}{% if t.entry_source in ("judge", "manual") %}<span class="tag-judge">manual entry</span>{% endif %}</td>
-        <td>{% if t.method_last4 %}card {{ t.method_last4 }}{% endif %}{% if t.type == 'withdrawal' and t.new_account %}to a new bank account {% endif %}{% if t.payout_holder_match == false %}<strong>payout to another person's account</strong>{% endif %}{% if t.type == 'win' %}game win{% endif %}{% if t.id in evidence %}<span class="ev">evidence</span>{% endif %}</td>
+        <td>{% if t.method_last4 %}{{ t.method.replace("_", " ") }} ending {{ t.method_last4 }}{% endif %}{% if t.type == 'withdrawal' and t.new_account %}to a new bank account {% endif %}{% if t.payout_holder_match == false %}<strong>payout to another person's account</strong>{% endif %}{% if t.type == 'win' %}game win{% endif %}{% if t.id in evidence %}<span class="ev">evidence</span>{% endif %}</td>
       </tr>
       {% else %}<tr><td colspan="5" class="empty">No deposits, withdrawals or large wins in the last 30 days.</td></tr>{% endfor %}
     </tbody>

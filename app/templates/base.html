@@ -86,6 +86,19 @@ var f = document.querySelector('.flash'); if (f) setTimeout(function () { f.clas
   if (document.body.getAttribute('data-alert') === 'urgent') beep(); // manual entry that just produced URGENT
 })();
 </script>
+<script>
+// Phone view (Gina, 2026-10-15): each table row becomes a card; every cell carries its column name.
+document.querySelectorAll('table.t').forEach(function (t) {
+  var heads = Array.prototype.map.call(t.querySelectorAll('thead th'), function (th) {
+    var c = th.cloneNode(true); c.querySelectorAll('details, .tag-rule').forEach(function (x) { x.remove(); });
+    var s = c.textContent.replace(/\s+/g, ' ').trim(); return s === '#' ? '' : s;
+  });
+  t.querySelectorAll('tbody tr').forEach(function (tr) {
+    if (tr.children.length !== heads.length) return; // group headers and "No ..." rows span the table
+    Array.prototype.forEach.call(tr.children, function (td, i) { if (heads[i]) td.setAttribute('data-label', heads[i]); });
+  });
+});
+</script>
 {% if request.state.user %}<script src="/static/steps.js"></script>{% endif %}
 </div>
 </body>

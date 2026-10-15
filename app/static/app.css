@@ -252,3 +252,21 @@ body.login { display: grid; place-items: center; min-height: 100vh; }
 .grid > *, .why .row > * { min-width: 0; }
 .why .t2 { overflow-wrap: anywhere; }
 @media (max-width: 600px) { .why .row { grid-template-columns: 64px 1fr; gap: 10px; padding: 12px 14px; } }
+
+/* Phone (<= 600 px, Gina 2026-10-15): no sideways scrolling inside tables either. Each row is a card,
+   each cell shows its column name above the value. The step badge never covers the last row. */
+main { padding-bottom: 96px; }
+@media (max-width: 600px) {
+  .t, .t tbody, .t tr, .t td { display: block; width: auto; }
+  .t { overflow: visible; }
+  .t thead { display: none; }
+  .t tr { padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  .t tbody tr:last-child { border-bottom: 0; }
+  .t td, .t tbody tr:last-child td { border: 0; padding: 3px 0; min-width: 0 !important; }
+  .t td:empty { display: none; }
+  .t td[data-label]::before { content: attr(data-label); display: block; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--dim); margin-top: 6px; }
+  .t .hide-s, .t .hide-m { display: block; }
+  .t tr.grouphead { padding: 0; }
+  .t tr.grouphead td { padding: 8px 14px; }
+  .t td.pid { font-size: 12px; }
+}
