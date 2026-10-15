@@ -2,7 +2,8 @@
 {% block title %}Transaction history{% endblock %}
 {% block content %}
 <h1>Transaction history{% if pid %}: {{ pid }}{% endif %}</h1>
-<form class="inline" method="get" action="/v1/history"><label>Player ID <input name="pid" value="{{ pid }}" size="10"></label><button class="btn" type="submit">Search</button></form>
+<form class="inline" method="get" action="/v1/history"><label>Player ID <input name="pid" value="{{ pid }}" size="10" placeholder="e.g. P-8104"></label><button class="btn" type="submit">Search</button></form>
+{% if not pid %}<p class="muted">Type the player ID from the alert (for example P-8104) and press Search.</p>{% endif %}
 {% if pid %}
 <div class="box">
 <strong>Deposits and withdrawals</strong> <span class="muted">15 Apr to 14 Oct 2026, newest first</span>
@@ -11,7 +12,7 @@
   <tbody>
   {% for t in money %}
   <tr><td>{{ t.ts.astimezone(edt).strftime('%Y-%m-%d %H:%M') }}</td><td>{{ t.type }}</td><td class="num">{{ "{:,.2f}".format(t.amount) }}</td><td>{{ t.method.replace("_", " ") }}</td><td>{{ t.method_last4 or '' }}</td><td>{{ (t.method_fingerprint or '')[-6:] }}</td><td>{{ t.location_region }}</td><td>{% if t.type == 'withdrawal' %}{{ 'Yes' if t.payout_holder_match else 'No' }}{% endif %}</td></tr>
-  {% else %}<tr><td colspan="8">No records for {{ pid }}.</td></tr>{% endfor %}
+  {% else %}<tr><td colspan="8">No player with ID {{ pid }}. Player IDs look like P-8104; copy it from the alert.</td></tr>{% endfor %}
   </tbody>
 </table>
 </div>

@@ -2,6 +2,7 @@
 {% block title %}Case notes{% endblock %}
 {% block content %}
 <h1>Case notes{% if alert %}: {{ alert }}{% endif %}</h1>
+<p class="muted">Write down what you decided and why. This screen does not search or save; the note is copied for the team spreadsheet.</p>
 <div class="box">
   <form id="v1note" onsubmit="return false">
     <p><label>Player ID <input id="n_pid" value="{{ pid }}" size="10"></label>

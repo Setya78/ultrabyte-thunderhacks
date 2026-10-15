@@ -2,7 +2,8 @@
 {% block title %}Customer profile{% endblock %}
 {% block content %}
 <h1>Customer profile{% if pid %}: {{ pid }}{% endif %}</h1>
-<form class="inline" method="get" action="/v1/profile"><label>Player ID <input name="pid" value="{{ pid }}" size="10"></label><button class="btn" type="submit">Search</button></form>
+<form class="inline" method="get" action="/v1/profile"><label>Player ID <input name="pid" value="{{ pid }}" size="10" placeholder="e.g. P-8104"></label><button class="btn" type="submit">Search</button></form>
+{% if not pid %}<p class="muted">Type the player ID from the alert (for example P-8104) and press Search.</p>{% endif %}
 {% if pid %}
 <div class="box">
 {% if p %}
@@ -14,7 +15,7 @@
   <dt>Home region</dt><dd>{{ p.region }}</dd>
   <dt>Account opened</dt><dd>{{ p.created_at.astimezone(edt).strftime('%Y-%m-%d') }}</dd>
 </dl>
-{% else %}No customer {{ pid }}.{% endif %}
+{% else %}No player with ID {{ pid }}. Player IDs look like P-8104; copy it from the alert.{% endif %}
 </div>
 {% endif %}
 {% endblock %}

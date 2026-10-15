@@ -19,6 +19,12 @@ templates = Jinja2Templates(directory=BASE / "templates")
 router = APIRouter(prefix="/v1")
 
 
+def _pid(raw: str) -> str:
+    """Accept what people type: 'p-8104', ' P-8104 ', '8104' all mean P-8104 (team feedback 2026-10-15)."""
+    s = raw.strip().upper().replace(" ", "")
+    return f"P-{s}" if s.isdigit() else s
+
+
 def _threshold(conn) -> float:
     return float(RL.current(conn).v1_threshold)
 
@@ -51,6 +57,7 @@ def alert(request: Request, tid: int):
 @router.get("/history")
 def history(request: Request, pid: str = ""):
     """Screen 3: raw deposit and withdrawal history (6 months) and raw play (30 days). No chart, no peers."""
+    pid = _pid(pid)
     money, play = [], []
     if pid:
         with db.connect() as conn:
@@ -67,6 +74,7 @@ def history(request: Request, pid: str = ""):
 @router.get("/profile")
 def profile(request: Request, pid: str = ""):
     """Screen 4: the customer record as an account system would show it."""
+    pid = _pid(pid)
     p = None
     if pid:
         with db.connect() as conn:
@@ -79,13 +87,14 @@ def profile(request: Request, pid: str = ""):
 def lookup(request: Request, last4: str = ""):
     """Screen 5: the investigator types a card's last four digits to find other players using it."""
     rows = []
-    last4 = last4.strip()[:4]
+    typed = last4.strip()
+    last4 = typed[-4:] if typed.isdigit() else typed
     if last4:
         with db.connect() as conn:
-            rows = conn.execute(
+            rows = [] if not last4.isdigit() else conn.execute(
                 "SELECT player_id, method_fingerprint, count(*) AS n, min(ts) AS first, max(ts) AS last FROM txn"
                 " WHERE method_last4 = %s GROUP BY 1, 2 ORDER BY 1", (last4,)).fetchall()
-    return templates.TemplateResponse(request, "v1_lookup.html", {"last4": last4, "rows": rows, "edt": C.EDT})
+    return templates.TemplateResponse(request, "v1_lookup.html", {"last4": last4, "rows": rows, "edt": C.EDT, "not_card": bool(typed) and not typed.isdigit()})
 
 
 @router.get("/decision")

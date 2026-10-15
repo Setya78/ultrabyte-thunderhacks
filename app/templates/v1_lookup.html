@@ -2,8 +2,9 @@
 {% block title %}Card lookup{% endblock %}
 {% block content %}
 <h1>Card lookup</h1>
-<form class="inline" method="get" action="/v1/lookup"><label>Card last 4 digits <input name="last4" value="{{ last4 }}" size="5" maxlength="4" inputmode="numeric"></label><button class="btn" type="submit">Search</button></form>
-{% if last4 %}
+<form class="inline" method="get" action="/v1/lookup"><label>Card: last 4 digits <input name="last4" value="{{ last4 }}" size="6" inputmode="numeric" placeholder="e.g. 4417"></label><button class="btn" type="submit">Search</button></form>
+<p class="muted">Searches by card number, not by player. Find the last 4 digits of the card in the player's Transaction history (column "Card ending").</p>
+{% if not_card %}<div class="box">"{{ last4 }}" is not a card number. Type the last 4 digits of a card, for example 4417.</div>{% elif last4 %}
 <div class="box">
 <p class="muted" style="margin-top:0">Players with a card ending {{ last4 }}. Different card refs mean different cards with the same last digits.</p>
 <table>

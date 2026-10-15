@@ -227,3 +227,28 @@ body.login { display: grid; place-items: center; min-height: 100vh; }
 
 /* Queue group headers (review 2026-10-15 #3): the order is explained on screen. */
 .t tr.grouphead td { background: var(--raised); color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 6px 12px; }
+
+/* Phone layout (checked at 390 px wide, 2026-10-15): no sideways page scroll. Menu becomes one swipeable row,
+   wide tables scroll inside their own panel, charts shrink to fit. */
+.shell > main { min-width: 0; }
+@media (max-width: 960px) {
+  .side { min-width: 0; }
+  .side nav { flex-wrap: nowrap; overflow-x: auto; flex: 1 1 100%; min-width: 0; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .side nav::-webkit-scrollbar { display: none; }
+  .side nav a { flex: none; white-space: nowrap; }
+  .side .status { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+  .t { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .t td.reason, .t td.suggest, .t td.note, .t td:last-child { min-width: 190px; }
+  .t td, .t th { vertical-align: top; }
+  .topbar { flex-wrap: wrap; gap: 8px; }
+  .sub, .src, .reason { overflow-wrap: anywhere; }
+  svg.chart, svg.net { max-width: 100%; height: auto; }
+}
+@media (max-width: 600px) {
+  .side .status span:nth-child(n+3):not(:has(a)) { display: none; }
+  .head { flex-wrap: wrap; gap: 12px; }
+  .usermenu .role { display: none; }
+}
+.grid > *, .why .row > * { min-width: 0; }
+.why .t2 { overflow-wrap: anywhere; }
+@media (max-width: 600px) { .why .row { grid-template-columns: 64px 1fr; gap: 10px; padding: 12px 14px; } }
