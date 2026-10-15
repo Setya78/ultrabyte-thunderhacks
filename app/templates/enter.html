@@ -39,6 +39,7 @@
     <fieldset id="newp">
       <legend>New player</legend>
       <div class="cols">
+        <label>Display name <small>fictional, e.g. Riley K.; empty = Player M-###</small><input name="new_name" value="{{ form.new_name or '' }}" maxlength="40" placeholder="Riley K." autocomplete="off"></label>
         <label>Age band<select name="new_age">{% for x in ages %}<option {{ 'selected' if form.new_age == x }}>{{ x }}</option>{% endfor %}</select></label>
         <label>Income band<select name="new_income">{% for x in incomes %}<option {{ 'selected' if form.new_income == x or (not form.new_income and x == '<20k') }}>{{ x }}</option>{% endfor %}</select></label>
         <label>Home city<select name="new_city">{% for x in cities %}<option {{ 'selected' if form.new_city == x or (not form.new_city and x == 'Sault Ste. Marie') }}>{{ x }}</option>{% endfor %}</select></label>

@@ -1,9 +1,12 @@
 """Manual entry (D-2026-10-14-16): type one deposit or withdrawal, see the score change.
 
-Rows are marked entry_source='manual', stay synthetic, and /reset removes them. Names are generated,
-never typed, so nobody enters a real person. Every entry writes an audit event.
+Rows are marked entry_source='manual', stay synthetic, and /reset removes them. A new player's display name may be
+typed (owner 2026-10-15 17:05; labelled fictional, letters only) or left empty for a generated 'Player M-###'.
+Every entry writes an audit event.
 """
 from __future__ import annotations
+
+import re
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -36,6 +39,7 @@ class Entry:
     new_income: str = ""
     new_city: str = ""
     new_occupation: str = ""
+    new_name: str = ""
 
 
 def parse(form: dict) -> tuple[Entry | None, list[str]]:
@@ -80,6 +84,9 @@ def parse(form: dict) -> tuple[Entry | None, list[str]]:
     if not e.player_id:
         e.new_age, e.new_income, e.new_city = g("new_age"), g("new_income"), g("new_city")
         e.new_occupation = (g("new_occupation") or "not stated")[:40]
+        e.new_name = " ".join(g("new_name").split())[:40]
+        if e.new_name and not re.fullmatch(r"[A-Za-z][A-Za-z .'\-]*", e.new_name):
+            errs.append("New player: name may only use letters, spaces, dots, hyphens and apostrophes (use a fictional name).")
         if e.new_age not in AGE_BANDS:
             errs.append("New player: choose an age band.")
         if e.new_income not in INCOME_BANDS:
@@ -103,7 +110,7 @@ def save(conn, e: Entry) -> str:
             cur.execute(
                 "INSERT INTO player (id, display_name, occupation, income_band, age_band, region, peer_segment,"
                 " created_at, entry_source) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'manual')",
-                (pid, f"Player M-{n:03d}", e.new_occupation, e.new_income, e.new_age, e.new_city,
+                (pid, e.new_name or f"Player M-{n:03d}", e.new_occupation, e.new_income, e.new_age, e.new_city,
                  f"{e.new_age}|{e.new_income}", C.HIST_START - timedelta(days=60)))
         card = f"manual-card-{e.card_last4}" if e.card_last4 else None
         acct = (f"manual-acct-other-{pid}" if e.third_party else f"manual-acct-{pid}") if e.ptype == "withdrawal" else None
