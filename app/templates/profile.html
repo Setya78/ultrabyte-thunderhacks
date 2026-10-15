@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "_help.html" import help %}
+{% block title %}Profile - UltraByte Solutions{% endblock %}
+{% block content %}
+<div class="head"><div><h1>Profile</h1></div></div>
+<div class="grid two">
+<section class="panel">
+  <h2>Account</h2>
+  <div class="body">
+    <div class="profilehead"><span class="avatar">{{ me.user[0]|upper }}</span><div><div style="font-size:20px;font-weight:800">{{ me.user }}</div><span class="role">{{ me.role }}</span></div></div>
+    <dl class="kv" style="margin-top:18px">
+      <dt>Role</dt><dd>{{ me.role }} {{ help(gloss['ROLE_' ~ me.role]) }}</dd>
+      <dt>Can change rules</dt><dd>{{ 'Yes' if me.role == 'compliance' else 'No (read-only)' }}</dd>
+      <dt>Session expires</dt><dd>{{ me.expires.astimezone(edt).strftime('%d %b %H:%M') }} EDT</dd>
+      <dt>Display name</dt><dd class="mock">Not set <span class="src">(mock-up: profile fields are not stored in this demo)</span></dd>
+      <dt>Team</dt><dd class="mock">{{ 'Compliance' if me.role == 'compliance' else 'AML investigations' }} <span class="src">(mock-up)</span></dd>
+    </dl>
+  </div>
+</section>
+<section class="panel" id="password">
+  <h2>Change password {{ help("Mock-up. In this demo, accounts and passwords are managed outside the app (environment configuration); in production this would be the operator's identity provider with SSO and MFA.") }}</h2>
+  <div class="body form mock">
+    <label>Current password<input type="password" disabled placeholder="Managed outside the app in this demo"></label>
+    <label>New password<input type="password" disabled></label>
+    <label>Repeat new password<input type="password" disabled></label>
+    <div class="btns"><button class="btn" type="button" disabled>Change password</button></div>
+    <p class="src">Demo sign-in only: no MFA, no SSO, no self-service password change. Disclosed in the README.</p>
+  </div>
+</section>
+</div>
+<section class="panel">
+  <h2>My recent activity <small>from the audit trail</small></h2>
+  <table class="t">
+    <thead><tr><th>When (EDT)</th><th>Player</th><th>Action</th><th>Note</th></tr></thead>
+    <tbody>
+      {% for h in rows %}<tr><td>{{ h.ts.astimezone(edt).strftime('%d %b %H:%M:%S') }}</td><td>{% if h.player_id %}<a class="p" href="/player/{{ h.player_id }}">{{ h.player_id }}</a>{% endif %}</td><td>{{ labels.get(h.action, h.action) }}</td><td class="reason" style="max-width:none">{{ h.note or '' }}</td></tr>
+      {% else %}<tr><td colspan="4" class="empty">No activity yet.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

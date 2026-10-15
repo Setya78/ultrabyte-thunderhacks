@@ -73,6 +73,24 @@ def login_post(request: Request, username: str = Form(""), password: str = Form(
     return resp
 
 
+@app.get("/profile")
+def profile(request: Request):
+    if not request.state.user:
+        return RedirectResponse("/", status_code=303)
+    from datetime import datetime, timezone
+
+    raw = request.cookies.get(auth.COOKIE) or ""
+    try:
+        exp = datetime.fromtimestamp(int(raw.split("|")[2]), tz=timezone.utc)
+    except (IndexError, ValueError):
+        exp = datetime.now(tz=timezone.utc)
+    with db.connect() as conn:
+        rows = conn.execute("SELECT id, ts, player_id, action, note FROM audit_event WHERE actor = %s ORDER BY ts DESC, id DESC LIMIT 20",
+                            (request.state.user,)).fetchall()
+    return templates.TemplateResponse(request, "profile.html", {
+        "me": {"user": request.state.user, "role": request.state.role, "expires": exp}, "rows": rows, "edt": C.EDT})
+
+
 @app.post("/logout")
 def logout(request: Request):
     if request.state.user:
@@ -110,6 +128,8 @@ GLOSSARY = {
     "EDT": "Eastern Daylight Time (Ontario).",
     "V1": "Version 1.0: the old rule. Any single deposit of $10,000 or more raises an alert, with no ranking and no reasons.",
     "V2": "Version 2.0: this app. Two scores with reasons, labels with evidence, and an audit trail.",
+    "ROLE_investigator": "Reviews the queue, records decisions, enters transactions, requests AI summaries. Sees rules read-only.",
+    "ROLE_compliance": "Everything an investigator can do, plus changing the rule thresholds (each change is versioned and audited).",
 }
 templates.env.globals.update(version=VERSION, llm_enabled=llm.enabled(), labels=audit.LABELS, gloss=GLOSSARY, form_token=_fresh_token, auth_enabled=auth.enabled)
 

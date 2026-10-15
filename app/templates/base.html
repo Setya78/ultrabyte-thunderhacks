@@ -24,14 +24,26 @@
       <a href="/audit" class="{{ 'on' if path == '/audit' }}"><svg viewBox="0 0 24 24"><path d="M6 3h9l5 5v13H6z"/><path d="M14 3v6h6M9 13h7M9 17h7"/></svg>Audit trail</a>
     </nav>
     <div class="status">
-      {% if request.state.user %}<div class="who"><span><b>{{ request.state.user }}</b> <span class="role">{{ request.state.role }}</span></span><form method="post" action="/logout"><button class="btn" type="submit">Sign out</button></form></div>
-      {% elif not auth_enabled() %}<span class="src" style="color:var(--medium)">Sign-in not configured</span>{% endif %}
+      {% if not auth_enabled() %}<span class="src" style="color:var(--medium)">Sign-in not configured</span>{% endif %}
       <span class="synthetic"><i></i>Synthetic data</span>
       <span>v{{ version }} &middot; AI summary {{ "on" if llm_enabled else "off" }}</span>
       <span>Built during ThunderHacks II</span>
     </div>
   </aside>
-  <main>{% set ok = request.query_params.get('ok') %}{% if ok %}<div class="flash" role="status">{{ ok }}</div>{% endif %}{% block content %}{% endblock %}</main>
+  <main>
+  {% if request.state.user %}
+  <div class="topbar">
+    <details class="usermenu">
+      <summary><span class="avatar">{{ request.state.user[0]|upper }}</span><span class="uname">{{ request.state.user }}</span><span class="role">{{ request.state.role }}</span><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></summary>
+      <div class="menu">
+        <a href="/profile">Profile</a>
+        <a href="/profile#password">Change password</a>
+        <form method="post" action="/logout"><button type="submit">Sign out</button></form>
+      </div>
+    </details>
+  </div>
+  {% endif %}
+  {% set ok = request.query_params.get('ok') %}{% if ok %}<div class="flash" role="status">{{ ok }}</div>{% endif %}{% block content %}{% endblock %}</main>
 <script>
 // Every form: the button shows it is working and cannot be double-clicked.
 document.addEventListener('submit', function (e) {

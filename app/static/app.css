@@ -190,3 +190,22 @@ body.login { display: grid; place-items: center; min-height: 100vh; }
 .side .who { font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .side .who b { color: var(--ink); } .side .who form button { font-size: 12px; padding: 4px 8px; }
 .role { font-size: 10px; font-weight: 800; letter-spacing: .08em; padding: 1px 6px; border-radius: 4px; background: var(--raised); color: var(--muted); text-transform: uppercase; }
+
+.topbar { display: flex; justify-content: flex-end; align-items: center; margin: -8px 0 10px; min-height: 28px; }
+.usermenu { position: relative; }
+.usermenu summary { list-style: none; display: inline-flex; align-items: center; gap: 8px; padding: 5px 10px 5px 5px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-size: 13px; }
+.usermenu summary::-webkit-details-marker { display: none; }
+.usermenu summary:hover, .usermenu[open] summary { border-color: var(--cyan); }
+.usermenu summary svg { width: 14px; height: 14px; stroke: var(--muted); fill: none; stroke-width: 2; }
+.usermenu .avatar { width: 24px; height: 24px; border-radius: 50%; background: var(--c-income); color: #04192B; font-weight: 800; display: grid; place-items: center; font-size: 12px; }
+.usermenu .uname { font-weight: 700; color: var(--ink); }
+.usermenu .menu { position: absolute; right: 0; top: 40px; z-index: 40; min-width: 190px; background: var(--raised); border: 1px solid var(--line-2); border-radius: 10px; padding: 6px; box-shadow: 0 10px 30px rgba(0,0,0,.4); display: grid; }
+.usermenu .menu a, .usermenu .menu button { display: block; width: 100%; text-align: left; padding: 9px 12px; border-radius: 7px; color: var(--ink); font: inherit; font-size: 14px; background: none; border: 0; cursor: pointer; }
+.usermenu .menu a:hover, .usermenu .menu button:hover { background: var(--surface); text-decoration: none; }
+.usermenu .menu form { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 4px; }
+.profilehead { display: flex; gap: 16px; align-items: center; }
+.profilehead .avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--c-income); color: #04192B; font-weight: 800; display: grid; place-items: center; font-size: 24px; }
+.kv { display: grid; grid-template-columns: 160px 1fr; gap: 8px 14px; font-size: 14px; }
+.kv dt { color: var(--muted); } .kv dd { margin: 0; }
+.mock { opacity: .75; }
+@media (max-width: 960px) { .topbar { margin-top: 4px; } }
