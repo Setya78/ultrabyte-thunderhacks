@@ -377,3 +377,12 @@ body { font-weight: 500; }
 details.help .pop { z-index: 60; box-shadow: 0 8px 24px rgba(14,32,51,.18); background: #FFFFFF; border-color: #C9D6E3; }
 details.help .pop.flip { left: auto; right: -10px; }
 .form label details.help .pop, .rules details.help .pop { width: min(360px, 80vw); }
+
+/* ---- Ring colour by band (owner 2026-10-15 17:16): red = High, yellow = Medium, green = Low, for both the AML and the
+   Safer Gambling ring. Each arc is still one check: the four segments keep their gaps and tooltips, drawn in the band
+   colour at four opacities (income, history, peers, location / escalation, night, chase, intensity). ---- */
+.ring.b-high .arc { stroke: #C73636; } .ring.b-medium .arc { stroke: #D99A1E; } .ring.b-low .arc { stroke: #1F8052; }
+.ring .arc.income, .ring .arc.escalation { opacity: 1; } .ring .arc.history, .ring .arc.night { opacity: .8; }
+.ring .arc.peer, .ring .arc.chase { opacity: .6; } .ring .arc.location, .ring .arc.intensity { opacity: .45; }
+.ring.b-high text { fill: #A82424; } .ring.b-medium text { fill: #8A5400; } .ring.b-low text { fill: #146B42; }
+.ring.b-high .track { stroke: #FCE9E9; } .ring.b-medium .track { stroke: #FDF1DC; } .ring.b-low .track { stroke: #E3F4EB; }

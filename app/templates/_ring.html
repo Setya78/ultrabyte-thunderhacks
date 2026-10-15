@@ -3,7 +3,8 @@
 {% set C = 138.23 %}
 {% set checks = r.harm_checks if kind == 'sg' else r.checks %}
 {% set score = r.harm_score if kind == 'sg' else r.score %}
-<svg class="ring{{ ' lg' if large }}{{ ' sg' if kind == 'sg' }}" viewBox="0 0 50 50" role="img" aria-label="{{ 'Safer Gambling score' if kind == 'sg' else 'Score' }} {{ score }} of 100: {% for c in checks %}{{ c.name }} {{ c.points }}{% if not loop.last %}, {% endif %}{% endfor %}">
+{% set band = (r.harm_band if kind == 'sg' else r.band)|lower %}
+<svg class="ring{{ ' lg' if large }}{{ ' sg' if kind == 'sg' }} b-{{ band }}" viewBox="0 0 50 50" role="img" aria-label="{{ 'Safer Gambling score' if kind == 'sg' else 'Score' }} {{ score }} of 100: {% for c in checks %}{{ c.name }} {{ c.points }}{% if not loop.last %}, {% endif %}{% endfor %}">
   <circle class="track" cx="25" cy="25" r="22"></circle>
   {% for c in checks %}{% if c.points %}
   <circle class="arc {{ c.key }}" cx="25" cy="25" r="22" transform="rotate(-90 25 25)"
