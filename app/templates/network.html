@@ -2,7 +2,8 @@
 {% from "_help.html" import help %}
 {% block title %}Shared accounts - UltraByte Solutions{% endblock %}
 {% block content %}
-<div class="head"><div><h1>Shared cards and bank accounts {{ help('Funding cards and payout accounts used by more than one player. Instruments are masked.') }}</h1></div></div>
+<div class="head"><div><h1>Shared cards and bank accounts {{ help('Funding cards and payout accounts used by more than one player. Instruments are masked.') }}</h1>
+  <p class="sub">One card or one bank account used by several players. That can mean one person running several accounts, or money being moved through other people's accounts. Each group shows the players and how often the card or account was used; click a player to see their scores.</p></div></div>
 {% for g in links %}
 <section class="panel">
   <h2>{{ g.kind }}{% if g.last4 %} ending {{ g.last4 }}{% endif %} <small>{{ g.players|length }} players, {{ g.uses }} transactions</small></h2>

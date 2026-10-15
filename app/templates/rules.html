@@ -3,7 +3,8 @@
 {% block title %}Rules - UltraByte Solutions{% endblock %}
 {% block content %}
 <div class="head">
-  <div><h1>Rules <span class="pid">version {{ rule_version }}</span> {{ help("Every threshold the score uses, owned by compliance, not by developers. Saving creates a new version; old versions are never changed. Each score snapshot records the version that produced it.") }}</h1></div>
+  <div><h1>Rules <span class="pid">version {{ rule_version }}</span> {{ help("Every threshold the score uses, owned by compliance, not by developers. Saving creates a new version; old versions are never changed. Each score snapshot records the version that produced it.") }}</h1>
+    <p class="sub">The numbers behind every score, for example how many deposits just under $10,000 count as suspicious. The compliance team sets them here, not the programmers. Every change is saved as a new version with a reason, and the queue is re-scored at once.</p></div>
   {% if can_edit %}<form method="post" action="/rules" class="tools"><input type="hidden" name="_tok" value="{{ form_token() }}"><button class="btn" name="step" value="defaults" type="submit">Reset to defaults</button></form>
   {% else %}<span class="src">Read-only: only the compliance role can change rules.</span>{% endif %}
 </div>
