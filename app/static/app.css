@@ -343,3 +343,27 @@ h1 { color: #0B1B2A; }
 .btn { background: #FFFFFF; border-color: #C9D6E3; } .btn:hover { border-color: #1A5DB8; color: #1A5DB8; }
 .tools .btn { background: linear-gradient(180deg,#1F6FD1,#1857AA); color: #fff; border-color: #1857AA; }
 .label-str { background: #0E2236; }
+
+/* ---- Readability (owner 2026-10-15 16:11): darker text everywhere on the light workspace, brighter nav on the navy sidebar. ---- */
+:root { --ink: #071523; --muted: #2F4659; --dim: #3F566A; --cyan: #0F4FA8; --orange: #0F4FA8; }
+body { font-weight: 500; }
+.panel h2 small, .sub, .src, .pid, .t th, .ringlbl, .chart .val, .chart .axis { color: var(--muted); }
+.chart .val, .chart .axis { fill: #2F4659; }
+.t td { color: var(--ink); }
+.why .t2, .reason { color: #1E3446; }
+.suggest, a { color: #0F4FA8; }
+.side nav a { color: #DCE8F3; font-weight: 600; }
+.side nav a.on, .side nav a:hover { color: #FFFFFF; }
+.side .brand small, .side .status { color: #B5C9DA; } .side .status a { color: #D6EEFF; }
+.band-high { color: #A82424; } .band-medium { color: #8A5400; } .band-low { color: #146B42; }
+
+/* ---- Fix (owner 16:15): the theme's ".btn" rule painted action buttons white, so white text on Escalate / Sign in only
+   showed on hover. Action colours restated with higher specificity, always visible; hover only darkens. ---- */
+.btn.act-escalate { background: #C73636; color: #FFFFFF; border-color: #C73636; }
+.btn.act-escalate:hover { background: #A82424; border-color: #A82424; color: #FFFFFF; }
+.btn.act-monitor { background: #F2C14E; color: #2A1A00; border-color: #E0AC2E; }
+.btn.act-monitor:hover { background: #E0AC2E; color: #2A1A00; border-color: #C9951A; }
+.btn.act-dismiss { background: #FFFFFF; color: var(--ink); border-color: #9FB3C6; }
+.btn.act-dismiss:hover { background: #EEF3F9; color: var(--ink); border-color: #1A5DB8; }
+.loginbox .btn.act-escalate { background: linear-gradient(180deg,#1F6FD1,#1857AA); border-color: #1857AA; }
+.loginbox .btn.act-escalate:hover { background: #1857AA; }
