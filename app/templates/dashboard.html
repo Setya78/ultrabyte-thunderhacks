@@ -14,10 +14,10 @@
 <section class="panel" id="{{ g.key }}">
   <h2>{{ g.title }} <small>{{ g.players|length }} player{{ "s" if g.players|length != 1 }}, owner: {{ g.team }}</small></h2>
   <table class="t">
-    <thead><tr><th>Score</th><th>Player</th><th>Why</th><th class="hide-m">Suggested</th></tr></thead>
+    <thead><tr><th>Score {{ help("AML = anti-money laundering score (where is the money from?). SAFER = Safer Gambling score (is the player being harmed?). Each group shows the score its team works with.") }}</th><th>Player</th><th>Why</th><th class="hide-m">Suggested</th></tr></thead>
     <tbody>
       {% for r, why, team_score, step in g.players %}
-      <tr><td><div class="score">{% if g.key == "safer" %}{{ ring(r, kind="sg") }}<span class="band band-{{ r.harm_band|lower }}">{{ r.harm_band }}</span>{% else %}{{ ring(r) }}<span class="band band-{{ r.band|lower }}">{{ r.band }}</span>{% endif %}</div></td>
+      <tr><td><div class="score">{% if g.key == "safer" %}<div>{{ ring(r, kind="sg") }}<div class="ringlbl" title="{{ gloss['SG'] }}">SAFER</div></div><span class="band band-{{ r.harm_band|lower }}">{{ r.harm_band }}</span>{% else %}<div>{{ ring(r) }}<div class="ringlbl" title="{{ gloss['AML'] }}">AML</div></div><span class="band band-{{ r.band|lower }}">{{ r.band }}</span>{% endif %}</div></td>
           <td><a class="p" href="/player/{{ r.player_id }}">{{ r.display_name }}</a><span class="pid">{{ r.player_id }}</span>{% set others = member[r.player_id]|reject("equalto", g.short)|list %}{% if others %}<div class="src">also in {{ others|join(", ") }}</div>{% endif %}</td>
           <td class="reason">{{ why }}</td><td class="hide-m suggest">{{ step }}</td></tr>
       {% else %}<tr><td colspan="4" class="empty">None.</td></tr>{% endfor %}
