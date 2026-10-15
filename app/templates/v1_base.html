@@ -12,6 +12,9 @@
     .bar b { font-size: 15px; letter-spacing: .02em; }
     .bar a { color: #DCE3EA; text-decoration: none; padding: 4px 8px; border-radius: 3px; }
     .bar a:hover, .bar a.on { background: #56626F; color: #fff; }
+    .v1user { margin-left: auto; display: flex; gap: 10px; align-items: center; color: #DCE3EA; font-size: 13px; }
+    .v1user button { font: inherit; color: #fff; background: transparent; border: 1px solid #8A949F; border-radius: 3px; padding: 3px 10px; cursor: pointer; }
+    .v1user button:hover { background: #56626F; }
     .banner { background: #FFF4C2; border-bottom: 1px solid #E2C95A; padding: 7px 16px; font-size: 13px; }
     main { padding: 16px; max-width: 1100px; }
     h1 { font-size: 18px; margin: 4px 0 12px; }
@@ -43,6 +46,7 @@
   <a href="/v1/profile" class="{{ 'on' if path == '/v1/profile' }}">Customer profile</a>
   <a href="/v1/lookup" class="{{ 'on' if path == '/v1/lookup' }}">Card lookup</a>
   <a href="/v1/decision" class="{{ 'on' if path == '/v1/decision' }}">Case notes</a>
+  {% if request.state.user %}<form class="v1user" method="post" action="/logout"><span>{{ request.state.user }}</span><button type="submit">Sign out</button></form>{% endif %}
 </div>
 <div class="banner"><strong>Version 1.0, illustrative reconstruction</strong> of a typical threshold-alert routine, built by the team for comparison. Not OLG's system. Same synthetic data as Version 2.0.</div>
 <main>{% block content %}{% endblock %}</main>

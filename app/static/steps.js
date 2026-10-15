@@ -30,9 +30,15 @@
   document.addEventListener('click', function (e) {
     if (box.contains(e.target)) return;
     var el = e.target.closest('a[href], button, summary, input[type=submit]');
-    if (!el || el.closest('.topbar')) return;
+    if (!el || el.closest('.topbar') || el.closest('.v1user')) return; // sound, user menu and sign-out are not work steps
     if (el.tagName === 'SUMMARY' && el.closest('details.help')) return; // "?" help popovers are not work steps
     var label = (el.getAttribute('aria-label') || el.textContent || el.value || '').replace(/\s+/g, ' ').trim().slice(0, 40) || el.tagName.toLowerCase();
+    // A button on its own ("Search", "Escalate") says little in the list: add the screen it was pressed on.
+    if (el.tagName !== 'A' && el.tagName !== 'SUMMARY') {
+      var h = document.querySelector('main h1');
+      var where = h ? h.textContent.replace(/\s+/g, ' ').split(':')[0].trim() : '';
+      if (where && label.indexOf(where) < 0) label += ' (' + where + ')';
+    }
     var a = load(); a.push(label); save(a); paint();
   }, true);
 })();
