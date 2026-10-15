@@ -147,8 +147,9 @@ No CI and no secrets in the repo. `scripts/deploy.sh` calls a script on the serv
 - Sign-in is demo-grade: static accounts and passwords from `OPERATOR_ACCOUNTS`, an HMAC-signed cookie (8 h), no MFA, no
   SSO, no lockout. If `OPERATOR_ACCOUNTS` is unset the app runs without sign-in and says so in the sidebar.
 - Manual entry: a typed deposit also creates a 30-minute session at the same city and time (so the location check can see
-  it), and the same card "last 4" on two manually entered players counts as a shared card. New players get the id prefix `M-`
-  and an optional typed display name (labelled fictional, letters only) or a generated `Player M-###`. Manually entered rows are tagged `entry_source = 'manual'`.
+  it), and the same card "last 4" on two manually entered players counts as a shared card. New players get the id prefix `M-`;
+  a fictional first and last name (optional, letters only) is stored as "First L." like the seed, and the occupation is picked from
+  the seed's list for the income band. Manually entered rows are tagged `entry_source = 'manual'`.
 - Import "replace" mode clears the audit trail together with the data (same demo-only path as reset); "add" mode keeps it.
 - The demo date is fixed: "last 30 days" means 15 Sep - 14 Oct 2026, so the data never changes between resets.
 

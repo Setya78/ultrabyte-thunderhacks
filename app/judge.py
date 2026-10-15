@@ -14,6 +14,15 @@ from datetime import datetime, timedelta
 from psycopg.types.json import Jsonb
 
 from app.importer import AGE_BANDS, INCOME_BANDS
+
+# Same lists as db/seed/generate.py OCCUPATIONS (keep in sync): a manual player picks from the dataset's own occupations.
+OCCUPATIONS = {
+    "<20k": ["student", "part-time server", "retail associate", "unemployed"],
+    "20-50k": ["cook", "warehouse worker", "admin assistant", "retired"],
+    "50-100k": ["nurse", "teacher", "electrician", "analyst"],
+    "100-200k": ["engineer", "sales manager", "pharmacist", "consultant"],
+    "200k+": ["business owner", "physician", "executive", "lawyer"],
+}
 from app.scoring import config as C
 
 CITIES = ["Toronto", "Ottawa", "Hamilton", "London", "Kitchener", "Windsor", "Sudbury",
@@ -78,15 +87,25 @@ def parse(form: dict) -> tuple[Entry | None, list[str]]:
     except ValueError:
         wagered = 0.0
         errs.append("Amount played is not a number.")
-    e = Entry(player_id=g("player_id"), ptype=ptype, amount=amount, when=when, method=method, city=city,
+    mode = g("mode") or ("existing" if g("player_id") else "new")
+    if mode == "existing" and not g("player_id"):
+        errs.append("Existing player: enter the player's ID (e.g. P-5120), or switch to New player.")
+    e = Entry(player_id=g("player_id") if mode == "existing" else "", ptype=ptype, amount=amount, when=when, method=method, city=city,
               card_last4=last4 if ptype == "deposit" else None, wagered=wagered if ptype == "deposit" else 0.0,
               third_party=ptype == "withdrawal" and g("third_party") == "yes")
     if not e.player_id:
         e.new_age, e.new_income, e.new_city = g("new_age"), g("new_income"), g("new_city")
-        e.new_occupation = (g("new_occupation") or "not stated")[:40]
-        e.new_name = " ".join(g("new_name").split())[:40]
-        if e.new_name and not re.fullmatch(r"[A-Za-z][A-Za-z .'\-]*", e.new_name):
-            errs.append("New player: name may only use letters, spaces, dots, hyphens and apostrophes (use a fictional name).")
+        e.new_occupation = g("new_occupation")
+        if e.new_income in OCCUPATIONS and e.new_occupation not in OCCUPATIONS[e.new_income]:
+            errs.append(f"New player: choose an occupation from the {e.new_income} list.")
+        first, last = " ".join(g("new_first").split())[:30], " ".join(g("new_last").split())[:30]
+        name_re = r"[A-Za-z][A-Za-z'\-]*( [A-Za-z][A-Za-z'\-]*)*"
+        if (first or last) and not (first and last):
+            errs.append("New player: enter both a first name and a last name, or leave both empty.")
+        elif first and not (re.fullmatch(name_re, first) and re.fullmatch(name_re, last)):
+            errs.append("New player: names may only use letters, hyphens and apostrophes (use a fictional name).")
+        # Stored as "First L." like every other player in the dataset (data minimisation, P7).
+        e.new_name = f"{first} {last[0].upper()}." if first and last else ""
         if e.new_age not in AGE_BANDS:
             errs.append("New player: choose an age band.")
         if e.new_income not in INCOME_BANDS:
@@ -101,7 +120,7 @@ def save(conn, e: Entry) -> str:
     with conn.cursor() as cur:
         if e.player_id:
             if not cur.execute("SELECT 1 FROM player WHERE id = %s", (e.player_id,)).fetchone():
-                raise ValueError(f"No player with ID {e.player_id}. To add a new player, leave Player ID empty; an ID is assigned automatically.")
+                raise ValueError(f"No player with ID {e.player_id}. Check the Review queue, or switch to New player (the ID is assigned automatically).")
             pid = e.player_id
         else:
             row = cur.execute("SELECT count(*) AS n FROM player WHERE id LIKE %s", ("M-%",)).fetchone()

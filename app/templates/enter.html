@@ -34,16 +34,18 @@
 <section class="panel">
   <h2>1. Player</h2>
   <div class="body form">
-    <label>Player ID <small>empty = new player</small>
-      <input name="player_id" list="pids" value="{{ form.player_id or '' }}" placeholder="e.g. P-5120 or M-001" autocomplete="off"></label>
+    <label>Who is this for?<select name="mode" id="pmode"><option value="new" {{ 'selected' if (form.mode or 'new') == 'new' }}>New player (ID is assigned automatically)</option><option value="existing" {{ 'selected' if form.mode == 'existing' }}>Existing player</option></select></label>
+    <label id="pidrow">Player ID <small>from the Review queue, e.g. P-5120 or M-001</small>
+      <input name="player_id" list="pids" value="{{ form.player_id or '' }}" placeholder="P-5120" autocomplete="off"></label>
     <fieldset id="newp">
       <legend>New player</legend>
       <div class="cols">
-        <label>Display name <small>fictional, e.g. Riley K.; empty = Player M-###</small><input name="new_name" value="{{ form.new_name or '' }}" maxlength="40" placeholder="Riley K." autocomplete="off"></label>
+        <label>First name <small>fictional</small><input name="new_first" value="{{ form.new_first or '' }}" maxlength="30" placeholder="Riley" autocomplete="off"></label>
+        <label>Last name <small>fictional; shown as "Riley K."</small><input name="new_last" value="{{ form.new_last or '' }}" maxlength="30" placeholder="Kowalski" autocomplete="off"></label>
         <label>Age band<select name="new_age">{% for x in ages %}<option {{ 'selected' if form.new_age == x }}>{{ x }}</option>{% endfor %}</select></label>
         <label>Income band<select name="new_income">{% for x in incomes %}<option {{ 'selected' if form.new_income == x or (not form.new_income and x == '<20k') }}>{{ x }}</option>{% endfor %}</select></label>
         <label>Home city<select name="new_city">{% for x in cities %}<option {{ 'selected' if form.new_city == x or (not form.new_city and x == 'Sault Ste. Marie') }}>{{ x }}</option>{% endfor %}</select></label>
-        <label>Occupation<input name="new_occupation" value="{{ form.new_occupation or 'student' }}" maxlength="40"></label>
+        <label>Occupation <small>from the dataset's list for the income band</small><select name="new_occupation" id="newocc">{% for band, occs in occupations.items() %}<optgroup label="{{ band }}" data-band="{{ band }}">{% for o in occs %}<option value="{{ o }}" {{ 'selected' if form.new_occupation == o }}>{{ o }}</option>{% endfor %}</optgroup>{% endfor %}</select></label>
       </div>
     </fieldset>
   </div>
@@ -71,9 +73,16 @@
 <script>
 (function () {
   var pid = document.querySelector('[name=player_id]'), newp = document.getElementById('newp'), tt = document.getElementById('ttype');
+  var mode = document.getElementById('pmode'), pidrow = document.getElementById('pidrow');
+  var inc = document.querySelector('[name=new_income]'), occ = document.getElementById('newocc');
   var method = document.querySelector('[name=method]');
   function sync() {
-    newp.disabled = pid.value.trim() !== ''; newp.style.opacity = newp.disabled ? .45 : 1;
+    var existing = mode.value === 'existing';
+    pidrow.style.display = existing ? '' : 'none'; if (!existing) pid.value = '';
+    newp.disabled = existing; newp.style.opacity = existing ? .45 : 1;
+    var band = inc.value, ok2 = false;
+    occ.querySelectorAll('optgroup').forEach(function (g) { var on = g.dataset.band === band; g.hidden = !on; Array.prototype.forEach.call(g.children, function (o) { o.disabled = !on; if (on && o.selected) ok2 = true; }); });
+    if (!ok2) { var f2 = occ.querySelector('optgroup[data-band="' + band + '"] option'); if (f2) f2.selected = true; }
     var t = tt.value;
     document.querySelectorAll('.dep').forEach(function (e) { e.style.display = t === 'deposit' ? '' : 'none'; });
     document.querySelectorAll('.wd').forEach(function (e) { e.style.display = t === 'withdrawal' ? '' : 'none'; });
@@ -81,7 +90,7 @@
     Array.prototype.forEach.call(method.options, function (o) { o.hidden = o.disabled = o.dataset.for.split(' ').indexOf(t) < 0; if (o.selected && !o.hidden) ok = true; });
     if (!ok) { var first = Array.prototype.find.call(method.options, function (o) { return !o.hidden; }); if (first) first.selected = true; }
   }
-  pid.addEventListener('input', sync); tt.addEventListener('change', sync); sync();
+  mode.addEventListener('change', sync); inc.addEventListener('change', sync); tt.addEventListener('change', sync); sync();
 })();
 </script>
 {% endblock %}

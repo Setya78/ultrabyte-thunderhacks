@@ -259,7 +259,8 @@ _entries: dict[str, dict] = {}
 def enter_page(request: Request, r: str = "", pid: str = ""):
     return templates.TemplateResponse(request, "enter.html", {
         "res": _entries.get(r), "errors": [], "form": {"player_id": pid}, "cities": judge.CITIES,
-        "methods": judge.METHODS, "ages": importer.AGE_BANDS, "incomes": importer.INCOME_BANDS})
+        "methods": judge.METHODS, "ages": importer.AGE_BANDS, "incomes": importer.INCOME_BANDS,
+        "occupations": judge.OCCUPATIONS})
 
 
 @app.post("/enter")
@@ -273,11 +274,11 @@ async def enter_post(request: Request):
         try:
             before = _by_id(entry.player_id).to_dict()
         except HTTPException:
-            errors = [f"No player with ID {entry.player_id}. To add a new player, leave Player ID empty; an ID is assigned automatically."]
+            errors = [f"No player with ID {entry.player_id}. Check the Review queue, or switch to New player (the ID is assigned automatically)."]
     if errors:
         return templates.TemplateResponse(request, "enter.html", {
             "res": None, "errors": errors, "form": form, "cities": judge.CITIES, "methods": judge.METHODS,
-            "ages": importer.AGE_BANDS, "incomes": importer.INCOME_BANDS}, status_code=400)
+            "ages": importer.AGE_BANDS, "incomes": importer.INCOME_BANDS, "occupations": judge.OCCUPATIONS}, status_code=400)
     with db.connect() as conn:
         pid = judge.save(conn, entry)
         _cache.clear()
