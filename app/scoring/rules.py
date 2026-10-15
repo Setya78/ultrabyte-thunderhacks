@@ -31,6 +31,7 @@ SPEC = [
     ("minimal_play_ratio", 0.10, "Minimal play: wagered below this share of deposits", "STR labels", "Deposit, little play, withdraw."),
     ("v1_threshold", 10000, "Version 1.0: single deposit at or above ($)", "STR labels", "The old rule, used by the Version 1.0 console (/v1) and the Validation page."),
     # Safer Gambling score
+    ("sg_escalation_min_rise", 0.10, "Escalation: a month counts as a rise at (+ share)", "Safer Gambling", "0.10 = at least 10% more than the month before. Smaller changes are normal variation (review 2026-10-15)."),
     ("sg_escalating_months", 4, "Escalation: 25 points at months rising in a row", "Safer Gambling", "Deposits higher than the month before, N months running. One month fewer: 15 points."),
     ("sg_night_share", 0.60, "Night play: 25 points at share of sessions 00:00-04:00", "Safer Gambling", "Two thirds of this share: 15 points."),
     ("sg_night_min_sessions", 3, "Night play: minimum sessions to score", "Safer Gambling", ""),
@@ -72,6 +73,8 @@ def validate(form: dict) -> tuple[dict, list[str]]:
             errs.append("Band High must be above Band Medium")
         if out["structuring_high"] < out["structuring_low"]:
             errs.append("Structuring: upper amount must be at or above the lower amount")
+        if not 0 <= out["sg_escalation_min_rise"] <= 1:
+            errs.append("Escalation: rise share must be between 0 and 1")
         if not 0 <= out["peer_p95"] <= out["peer_p99"] <= 1:
             errs.append("Peers: percentiles must be between 0 and 1 and p95 at or below p99")
     return out, errs

@@ -156,6 +156,16 @@ def _background(rng, p: Player):
         _normal_month(rng, p, k, actual_monthly * rate * rng.uniform(0.7, 1.3))
 
 
+def _plausible_occupations(players: list, keep: set) -> None:
+    """No "retired, 30-44" or "student, 45-64" (review 2026-10-15 #10). Background players only; the replacement is
+    the first other occupation in the same income band, so no random draw and no score changes (scores use the
+    income band, not the occupation)."""
+    odd = {"retired": ("19-29", "30-44"), "student": ("45-64", "65+")}
+    for p in players:
+        if p.id not in keep and p.age_band in odd.get(p.occupation, ()):
+            p.occupation = next(o for o in OCCUPATIONS[p.income_band] if o not in odd)
+
+
 def _unique_names(players: list, keep_first: set) -> None:
     """One display name per player (team feedback 2026-10-15: two "Logan V." with different IDs looked like one person).
 
@@ -311,6 +321,7 @@ def build(rng: random.Random | None = None):
     add("J", j, "Wins $4,000; payout requested to a bank account in another person's name", "flag", "fraud_aml",
         "FINTRAC: winnings transferred to another person")
 
+    _plausible_occupations(players, {pid for _, pid, *_ in planted})
     _unique_names(players, {pid for _, pid, *_ in planted})
     return players, planted
 

@@ -83,7 +83,7 @@
 </div>
 
 <section class="panel">
-  <h2>Deposits and withdrawals <small>last 30 days</small> {{ help("Highlighted rows are the evidence for the labels.") }}</h2>
+  <h2>Deposits, withdrawals and large wins <small>last 30 days</small> {{ help("Highlighted rows are the evidence for the labels. Wins are listed from $1,000.") }}</h2>
   <table class="t">
     <thead><tr><th>When (EDT)</th><th>Type</th><th>Amount</th><th>Where</th><th>Detail</th></tr></thead>
     <tbody>
@@ -93,9 +93,9 @@
         <td>{{ t.type.replace('_', ' ') }}</td>
         <td>${{ '{:,.2f}'.format(t.amount) }}</td>
         <td>{{ t.location_region }}{% if t.entry_source in ("judge", "manual") %}<span class="tag-judge">manual entry</span>{% endif %}</td>
-        <td>{% if t.method_last4 %}card {{ t.method_last4 }}{% endif %}{% if t.payout_holder_match == false %}<strong>payout to another person's account</strong>{% endif %}{% if t.id in evidence %}<span class="ev">evidence</span>{% endif %}</td>
+        <td>{% if t.method_last4 %}card {{ t.method_last4 }}{% endif %}{% if t.type == 'withdrawal' and t.new_account %}to a new bank account {% endif %}{% if t.payout_holder_match == false %}<strong>payout to another person's account</strong>{% endif %}{% if t.type == 'win' %}game win{% endif %}{% if t.id in evidence %}<span class="ev">evidence</span>{% endif %}</td>
       </tr>
-      {% else %}<tr><td colspan="5" class="empty">No deposits or withdrawals in the last 30 days.</td></tr>{% endfor %}
+      {% else %}<tr><td colspan="5" class="empty">No deposits, withdrawals or large wins in the last 30 days.</td></tr>{% endfor %}
     </tbody>
   </table>
 </section>

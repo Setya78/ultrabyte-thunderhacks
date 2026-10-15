@@ -224,3 +224,6 @@ body.login { display: grid; place-items: center; min-height: 100vh; }
 .sound { margin-right: 8px; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); cursor: pointer; display: grid; place-items: center; }
 .sound svg { width: 18px; height: 18px; stroke: var(--muted); fill: none; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
 .sound:hover { border-color: var(--cyan); } .sound.off .w { display: none; } .sound.off { opacity: .6; }
+
+/* Queue group headers (review 2026-10-15 #3): the order is explained on screen. */
+.t tr.grouphead td { background: var(--raised); color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 6px 12px; }

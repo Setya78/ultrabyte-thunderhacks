@@ -17,7 +17,10 @@
 <table class="t">
   <thead><tr><th>#</th><th>Scores {{ help("Left: AML score (anti-money laundering: is money moving through the account rather than being played?). Right: Safer Gambling score (signs of harm to the player). Each arc is one check, up to 25 points.") }}</th><th>Player</th><th class="hide-s">Labels</th><th>Why</th><th class="hide-m">Suggested <span class="tag-rule">rule-based</span></th></tr></thead>
   <tbody>
+    {% set prev_grp = {'v': ''} %}
     {% for r in rows %}
+    {% set keys = r.labels|map(attribute='key')|list %}{% set grp = 'URGENT: possible account takeover' if 'urgent' in keys else 'STR candidates: possible suspicious transaction report' if 'str' in keys else 'Other alerts, highest score first' %}
+    {% if loop.first or grp != prev_grp.v %}<tr class="grouphead"><td colspan="6">{{ grp }}</td></tr>{% endif %}{% set _ = prev_grp.update({'v': grp}) %}
     <tr>
       <td class="pid" style="margin:0">{{ loop.index }}</td>
       <td><div class="two-rings"><div>{{ ring(r) }}<div class="ringlbl" title="{{ gloss['AML'] }}">AML</div></div><div>{{ ring(r, kind='sg') }}<div class="ringlbl" title="{{ gloss['SG'] }}">SAFER</div></div></div></td>

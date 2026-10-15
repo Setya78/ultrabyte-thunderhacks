@@ -100,7 +100,9 @@ def suggest(band: str, labels: list[Label], checks: list[Check] | None = None, h
         return ("Monitor - review again if the pattern continues", "Band Medium, no label")
     if harm_band == "Medium":
         return ("Monitor - refer to Safer Gambling", "Safer Gambling band Medium, context band Low")
-    return ("Dismiss - consistent with income, own history and peers", "Band Low, no label")
+    peer = next((c for c in (checks or []) if c.key == "peer"), None)
+    peers = "" if peer is None or peer.reason.startswith("Not scored") else " and peers"
+    return (f"Dismiss - consistent with income{',' if peers else ' and'} own history{peers}", "Band Low, no label")
 
 
 def _month_index(ts) -> int | None:
@@ -221,11 +223,13 @@ def _score_one(p, months, d30, peer_vals, wdeps, wwds, money, wagers, sessions,
     others.remove(d30)
     pct = bisect_left(others, d30) / len(others) if others else 0.0
     pts = 25 if pct > R.peer_p99 else 15 if pct >= R.peer_p95 else 0
-    reason = (f"Higher than {pct:.0%} of {len(others)} players aged {p['age_band']} "
-              f"earning {p['income_band']}.")
+    n_o = len(others)
+    who = f"{n_o} player{'s' if n_o != 1 else ''} aged {p['age_band']} earning {p['income_band']}"
+    # Review 2026-10-15 #2: "Higher than 100% of ..." read like an error.
+    reason = f"Higher than all {who}." if others and pct >= 1 else f"Higher than {pct:.0%} of {who}."
     if R.peer_min_group and len(others) < R.peer_min_group:
         pts = 0
-        reason = (f"Not scored: only {len(others)} comparable players (aged {p['age_band']}, earning "
+        reason = (f"Not scored: only {len(others)} comparable player{'s' if len(others) != 1 else ''} (aged {p['age_band']}, earning "
                   f"{p['income_band']}); at least {R.peer_min_group} are needed for a fair comparison.")
     checks.append(Check("peer", "Peers", pts, reason, C.SOURCES["peer"]))
 
@@ -237,7 +241,8 @@ def _score_one(p, months, d30, peer_vals, wdeps, wwds, money, wagers, sessions,
             span = [t for t, c, _, _ in sessions[i:] if t - t0 <= timedelta(hours=R.location_hours)]
             hours = (max(span) - t0).total_seconds() / 3600
             pts = 25
-            reason = f"Sessions from {', '.join(sorted(cities))} within {hours:.1f} hours."
+            reason = (f"Sessions from {', '.join(sorted(cities))} within {hours:.1f} hours"
+                      + (": too far apart to travel in that time." if hours < 12 else "."))
             break
     checks.append(Check("location", "Location", pts, reason, C.SOURCES["location"]))
 
@@ -287,17 +292,18 @@ def _score_one(p, months, d30, peer_vals, wdeps, wwds, money, wagers, sessions,
         if new_card or new_acct:
             parts = [x for x, ok in (("a new card", new_card), ("a new bank account", new_acct)) if ok]
             evidence += [t["id"] for t in wdeps + wwds]
-            labels.append(Label("urgent", "URGENT", f"Unusual locations together with {' and '.join(parts)}: "
-                                f"possible account takeover.", C.SOURCES["location"]))
+            labels.append(Label("urgent", "URGENT", f"Impossible travel between cities together with {' and '.join(parts)}: "
+                                f"possible account takeover." if checks[3].reason.endswith("that time.") else
+                                f"Unusual locations together with {' and '.join(parts)}: possible account takeover.", C.SOURCES["location"]))
 
     # ---- Safer Gambling score: four checks x 25, separate from the AML score (D-2026-10-15-19) ----
     harm = []
     run = best = 0
     for a, b in zip(months, months[1:]):
-        run = run + 1 if b > a and a > 0 else 0
+        run = run + 1 if a > 0 and b >= a * (1 + R.sg_escalation_min_rise) else 0  # review #4: tiny rises do not count
         best = max(best, run)
     pts = 25 if best >= R.sg_escalating_months else 15 if best >= R.sg_escalating_months - 1 else 0
-    reason = (f"Deposits have risen {best} months in a row." if best >= 2
+    reason = (f"Deposits have risen at least {R.sg_escalation_min_rise:.0%} a month, {best} months in a row." if best >= 2
               else "No sustained rise in monthly deposits.")
     harm.append(Check("escalation", "Escalation", pts, reason, C.SOURCES["safer"]))
 
@@ -305,7 +311,7 @@ def _score_one(p, months, d30, peer_vals, wdeps, wwds, money, wagers, sessions,
     night = sum(1 for t, _, _, _ in sessions if C.NIGHT_START_H <= t.astimezone(C.EDT).hour < C.NIGHT_END_H)
     share = night / n_sess if n_sess else 0.0
     if n_sess < R.sg_night_min_sessions:
-        pts, reason = 0, f"Not scored: only {n_sess} sessions in the last 30 days."
+        pts, reason = 0, f"Not scored: only {n_sess} session{'s' if n_sess != 1 else ''} in the last 30 days."
     else:
         pts = 25 if share >= R.sg_night_share else 15 if share >= R.sg_night_share * 2 / 3 else 0
         reason = f"{share:.0%} of {n_sess} sessions were between midnight and 4 a.m."

@@ -19,7 +19,7 @@ from app.scoring import engine
 from app.scoring import rules as RL
 
 BASE = Path(__file__).resolve().parent
-VERSION = "0.12.0-v1"
+VERSION = "0.13.0-review"
 
 app = FastAPI(title="UltraByte Solutions", version=VERSION)
 app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
@@ -196,9 +196,12 @@ def player(request: Request, pid: str):
     r = _by_id(pid)
     with db.connect() as conn:
         txns = conn.execute(
-            "SELECT id, ts, type, amount, method_last4, location_region, payout_holder_match, entry_source FROM txn"
-            " WHERE player_id = %s AND type IN ('deposit','withdrawal') AND ts >= %s AND ts < %s ORDER BY ts",
-            (pid, C.WIN_START, C.WIN_END)).fetchall()
+            "SELECT id, ts, type, amount, method_last4, location_region, payout_holder_match, entry_source,"
+            " payout_account IS NOT NULL AND payout_account NOT IN (SELECT payout_account FROM txn h WHERE h.player_id = %s"
+            "   AND h.payout_account IS NOT NULL AND h.ts < %s) AS new_account FROM txn"
+            " WHERE player_id = %s AND (type IN ('deposit','withdrawal') OR (type = 'win' AND amount >= %s))"
+            " AND ts >= %s AND ts < %s ORDER BY ts",
+            (pid, C.WIN_START, pid, BIG_WIN, C.WIN_START, C.WIN_END)).fetchall()
         places = conn.execute(
             "SELECT location_region AS city, count(*) AS sessions, min(start_ts) AS first, max(start_ts) AS last"
             " FROM session WHERE player_id = %s AND start_ts >= %s AND start_ts < %s GROUP BY 1 ORDER BY 3",
@@ -209,6 +212,8 @@ def player(request: Request, pid: str):
         "evidence": set(r.evidence_txn_ids), "edt": C.EDT, "actions": audit.ACTIONS,
         "summary": _summary_for(r)})
 
+
+BIG_WIN = 1000  # wins of $1,000 or more are listed on the player page so a large payout has its source (review #9)
 
 _summary_tries: dict[str, dict] = {}
 
@@ -333,8 +338,17 @@ def dashboard(request: Request):
 
     short = {"urgent": "URGENT", "str": "STR", "aml": "AML context", "safer": "Safer Gambling"}
 
+    def team_view(key, r):
+        """Each group shows its own team's score and next step (review 2026-10-15 #7)."""
+        if key == "safer":
+            step = ("Escalate - Safer Gambling: proactive outreach, consider limits" if r.harm_band == "High"
+                    else "Monitor - refer to Safer Gambling")
+            return r.harm_score, step
+        return r.score, engine.suggest(r.band, r.labels, r.checks)[0]
+
     def group(key, title, desc, team, pick):
-        players = [(r, why) for r in rows for why in [pick(r)] if why]
+        players = [(r, why) + team_view(key, r) for r in rows for why in [pick(r)] if why]
+        players.sort(key=lambda x: -x[2])
         return {"key": key, "title": title, "desc": desc, "team": team, "players": players, "short": short[key]}
 
     def label_reason(key):
@@ -354,7 +368,7 @@ def dashboard(request: Request):
     # Team feedback 2026-10-15: show when the same player sits in more than one group, so it is not read as two people.
     member = {}
     for g in groups:
-        for r, _ in g["players"]:
+        for r, *_ in g["players"]:
             member.setdefault(r.player_id, []).append(g["short"])
     return templates.TemplateResponse(request, "dashboard.html", {"groups": groups, "member": member})
 

@@ -6,7 +6,7 @@
   <p class="sub">One card or one bank account used by several players. That can mean one person running several accounts, or money being moved through other people's accounts. Each group shows the players and how often the card or account was used; click a player to see their scores.</p></div></div>
 {% for g in links %}
 <section class="panel">
-  <h2>{{ g.kind }}{% if g.last4 %} ending {{ g.last4 }}{% endif %} <small>{{ g.players|length }} players, {{ g.uses }} transactions</small></h2>
+  <h2>{{ g.kind }}{% if g.last4 %} ending {{ g.last4 }}{% endif %} <small>{{ g.players|length }} player{{ "s" if g.players|length != 1 }}, {{ g.uses }} transaction{{ "s" if g.uses != 1 }}</small></h2>
   <div class="body">
   <svg viewBox="0 0 {{ 160 * g.players|length + 40 }} 120" class="net" role="img" aria-label="Players linked by a shared instrument">
     <rect x="{{ (160 * g.players|length + 40) / 2 - 70 }}" y="6" width="140" height="30" rx="6" class="inst"></rect>

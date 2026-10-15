@@ -55,7 +55,7 @@
       <label>Amount (CAD)<input name="amount" inputmode="decimal" required value="{{ form.amount or '9500' }}"></label>
       <label>Date<input type="date" name="date" min="2026-09-15" max="2026-10-14" value="{{ form.date or '2026-10-14' }}" required></label>
       <label>Time (EDT)<input type="time" name="time" value="{{ form.time or '14:00' }}"></label>
-      <label>Method<select name="method">{% for t, ms in methods.items() %}{% for m in ms %}<option value="{{ m }}" data-for="{{ t }}" {{ 'selected' if form.method == m }}>{{ m.replace('_', ' ') }}</option>{% endfor %}{% endfor %}</select></label>
+      <label>Method<select name="method">{% set seen = [] %}{% for t, ms in methods.items() %}{% for m in ms if m not in seen %}{% set _ = seen.append(m) %}<option value="{{ m }}" data-for="{% for t2, ms2 in methods.items() if m in ms2 %}{{ t2 }} {% endfor %}" {{ 'selected' if form.method == m }}>{{ m.replace('_', ' ') }}</option>{% endfor %}{% endfor %}</select></label>
       <label>City<select name="city">{% for x in cities %}<option {{ 'selected' if form.city == x or (not form.city and x == 'Sault Ste. Marie') }}>{{ x }}</option>{% endfor %}</select></label>
       <label class="dep">Card last 4<input name="card_last4" maxlength="4" inputmode="numeric" value="{{ form.card_last4 or '' }}"></label>
       <label class="dep">Amount played<input name="wagered" inputmode="decimal" value="{{ form.wagered or '0' }}"></label>
@@ -77,7 +77,7 @@
     document.querySelectorAll('.dep').forEach(function (e) { e.style.display = t === 'deposit' ? '' : 'none'; });
     document.querySelectorAll('.wd').forEach(function (e) { e.style.display = t === 'withdrawal' ? '' : 'none'; });
     var ok = false;
-    Array.prototype.forEach.call(method.options, function (o) { o.hidden = o.dataset.for !== t; if (o.selected && !o.hidden) ok = true; });
+    Array.prototype.forEach.call(method.options, function (o) { o.hidden = o.disabled = o.dataset.for.split(' ').indexOf(t) < 0; if (o.selected && !o.hidden) ok = true; });
     if (!ok) { var first = Array.prototype.find.call(method.options, function (o) { return !o.hidden; }); if (first) first.selected = true; }
   }
   pid.addEventListener('input', sync); tt.addEventListener('change', sync); sync();
