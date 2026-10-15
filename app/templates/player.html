@@ -122,15 +122,15 @@
 
 <section class="panel" id="audit">
   <h2>Decision {% if case %}<span class="band st-{{ case.state }}" style="margin-left:6px">{{ case.label }}</span><small>{{ labels.get(case.action, case.action) }} by {{ case.actor }}, {{ case.ts.astimezone(edt).strftime('%d %b %H:%M') }}</small>{% else %}<small>no decision yet</small>{% endif %} {{ help(gloss['STATUS']) }}</h2>
-  {% if case and case.state in ('escalated', 'handling') %}
+  {% if can_status or (case and case.state in ('escalated', 'handling')) %}
   <div class="body handoff">
     {% if can_status %}
     <form method="post" action="/player/{{ r.player_id }}/status" class="decide"><input type="hidden" name="_tok" value="{{ form_token() }}">
-      <div class="src">Compliance hand-off: {% if case.state == 'escalated' %}this case was escalated and nobody has picked it up.{% else %}you are handling this case; close it when done.{% endif %}</div>
+      <div class="src">Compliance: {% if not case %}no decision yet; you can take this case directly.{% elif case.state == 'escalated' %}escalated by {{ case.actor }} and not picked up yet.{% elif case.state == 'handling' %}you are handling this case ({{ case.actor }}); close it when done.{% elif case.state == 'resolved' %}closed by {{ case.actor }}; reopen by marking it as handling.{% else %}last decision was {{ case.label }} by {{ case.actor }}; you can still take it over.{% endif %}</div>
       <textarea name="note" rows="1" placeholder="Note for the audit trail (optional)"></textarea>
       <div class="btns">
-        {% if case.state == 'escalated' %}<button type="submit" name="action" value="handling" class="btn act-monitor">Mark as handling</button>{% endif %}
-        <button type="submit" name="action" value="resolve" class="btn act-resolve">Mark resolved</button>
+        {% if not case or case.state != 'handling' %}<button type="submit" name="action" value="handling" class="btn act-monitor">Mark as handling</button>{% endif %}
+        {% if not case or case.state != 'resolved' %}<button type="submit" name="action" value="resolve" class="btn act-resolve">Mark resolved</button>{% endif %}
       </div>
     </form>
     {% else %}

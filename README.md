@@ -120,7 +120,7 @@ scripts/smoke.sh http://127.0.0.1:3110
 
 No CI and no secrets in the repo. `scripts/deploy.sh` calls a script on the server over SSH; that script pulls `main`, rebuilds the container and checks health. Credentials exist only as environment variables on the server (`.env`, never committed).
 
-- v0.15.0 needs `db/migrations/006_case_status.sql` (adds two audit actions; `scripts/migrate.sh ... apply`). No data change, no reset needed.
+- v0.15.0 needs `db/migrations/006_case_status.sql` (adds two audit actions): `PSQL="docker exec -i ultrabyte-postgres psql -U ultrabyte_app -d thx_ultrabyte" bash scripts/migrate.sh db/migrations/006_case_status.sql apply` (use `bash`: a Windows checkout drops the execute bit). Applied on the demo VPS 2026-10-15 18:07. No data change, no reset needed.
 - nginx in front of the app: `client_max_body_size 20m;` in the server block, or the Excel import (1.5 MB) is refused with 413.
 
 ## Known simplifications (disclosed)

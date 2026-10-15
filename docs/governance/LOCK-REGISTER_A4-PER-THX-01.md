@@ -1,0 +1,41 @@
+# LOCK-REGISTER — A4-PER-THX-01
+
+> Mirror for preflight discoverability. Not authoritative. Owner of record: `decision-A4-PER-THX-01.md` (project level) and `BUILD-LOG.md` in the repo (sprint level, PI §3.6).
+> Satu baris per owner lock yang masih mengikat. Teks lengkap ada di Source. Baris tidak pernah dihapus; status diubah hanya lewat keputusan owner tercatat.
+
+| ID | Date | Lock (one sentence) | Source (owner of record) | Status |
+|---|---|---|---|---|
+| D-2026-10-10-04 | 2026-10-10 | Spawn A4-PER-THX-01 sebagai bounded sprint project, sunset 2026-10-23. | decision-A4-PER-CAR-01.md (hub); seed `03_inputs/` | ACTIVE |
+| D-2026-10-12-01/02 | 2026-10-12 | Infra UltraByte di VPS DIJAGA terisolasi (G0–G7); deploy via SSH script, tanpa GitHub Actions. | Confluence Infra Runbook 103219201 · ⚑ TEXT-UNVERIFIED — entri keputusan tidak ada di log lokal; owner fills | ⚑ TEXT-UNVERIFIED |
+| 4-track | 2026-10-12 | Ikut 4 track; satu produk inti, framing per track. | Sesi chat 12 Okt (summary) · ⚑ TEXT-UNVERIFIED | SUPERSEDED by D-2026-10-14-05 (2026-10-14) |
+| D-2026-10-14-01 | 2026-10-14 | Solo builder; FastAPI + Jinja 1 repo 1 container; app = UI + skor + audit, n8n = LLM + otomasi; LLM di balik flag; hosting DIJAGA; kerja di dalam + luar venue. | BL-MVP-01 §1; decision log | ACTIVE |
+| D-2026-10-14-02 | 2026-10-14 | Logo arah A "Eight Bits". | BL-MVP-01 §7; decision log | SUPERSEDED by D-2026-10-14-14 (logo tim, 2026-10-14 21:25) |
+| D-2026-10-14-03 | 2026-10-14 | Acuan PI = PI terpasang di Project; Infra Runbook tidak diduplikasi lokal. | decision log | ACTIVE |
+| D-2026-10-14-04 | 2026-10-14 | Session lock pra-event s/d 14:53 EDT; BL-MVP-01 v1.0 baseline. | decision log | ACTIVE |
+| D-2026-10-14-05 | 2026-10-14 | Track = OLG Gold + ALCOMS Main; CBN dan Game Jam tidak diikuti. | decision log | ACTIVE |
+| D-2026-10-14-06 | 2026-10-14 | K0 v0.6 LOCKED. | decision log | SUPERSEDED by D-2026-10-14-07 pada §3, §5, §6, §9 |
+| D-2026-10-14-07 | 2026-10-14 | K0 v0.7: spec tim IN-07 (4 cek × 25, label STR/URGENT/Safer, kasus A–J) + 4 amandemen; FP atas populasi; stack tetap. | `00_baselines/K0_Kickoff_Lock_A4-PER-THX-01.md`; decision log | ACTIVE (Safer label → skor kedua per D-19; §3 M2 "toggle V1 vs V2" dan §5 langkah 1 SUPERSEDED by D-22; K0 tidak di-bump; 4 × 25 dikonfirmasi ulang D-25) |
+| D-2026-10-14-08 | 2026-10-14 | App port 3110, bind 127.0.0.1 saja. | repo `BUILD-LOG.md` | ACTIVE |
+| D-2026-10-14-09 | 2026-10-14 | Demo utama = live URL; localhost cadangan (menggantikan Runbook R5 "deploy = Could"). | repo `BUILD-LOG.md` | ACTIVE |
+| D-2026-10-14-10 | 2026-10-14 | VPS menarik repo private via deploy key read-only; dicabut saat teardown. | repo `BUILD-LOG.md` | ACTIVE |
+| D-2026-10-14-11 | 2026-10-14 | Schema sebagai `db/migrations/NNN_*.sql`, pola gate dry-run → apply → verify. | repo `BUILD-LOG.md` | ACTIVE (001–005 applied; 006 ditulis D-26, apply di VPS = ASSUMED) |
+| D-2026-10-14-12 | 2026-10-14 | Cek peer hanya memberi poin bila ≥20 pembanding (amandemen formula IN-07). | repo `BUILD-LOG.md` | ACTIVE (kini threshold `peer_min_group` di /rules) |
+| D-2026-10-14-13 | 2026-10-14 | HS4: Import data via app saja (Excel/CSV, validasi, replace/add); n8n tidak dipakai. | repo `BUILD-LOG.md`; Jira UBP-29 | ACTIVE (n8n kini dipakai hanya untuk AI summary, D-16) |
+| D-2026-10-14-14 | 2026-10-14 | Logo tim (gem "U", AI-generated Gemini, disclosed) final; menggantikan "Eight Bits". | repo `BUILD-LOG.md`; `03_inputs/Gemini_Generated_Image_*.jpeg` | ACTIVE |
+| D-2026-10-14-15 | 2026-10-14 | Session lock Rab malam: v0.8.1 live; nama produk "UltraByte Solutions", palet UI dari logo; Jira UBP tracker; handoff Kamis. | decision log | ACTIVE (palet UI SUPERSEDED by D-27 tema "Sapphire sidebar", 2026-10-15 16:05; logo tetap) |
+| D-2026-10-14-16 | 2026-10-14 | HS4: (A) demo langkah 0 impor Excel; (B) AI summary di balik `LLM_ENABLED` via n8n + Claude, key owner; (C) judge/manual entry dengan pemain baru. LLM tidak pernah menyentuh skor. | repo `BUILD-LOG.md`; decision log D-16 | ACTIVE (klausul "nama digenerate, tidak diketik" dilonggarkan D-27: nama depan/belakang fiktif, disimpan "First L.", 2026-10-15 17:05) |
+| D-2026-10-14-17 | 2026-10-14 | Layar bersih: teks penjelasan hanya di tombol "?"; kalimat Version 1.0 ke deck. | repo `BUILD-LOG.md` | ACTIVE untuk layar bersih, kecuali satu kalimat pembuka di Import, Score rules, Audit trail, Shared cards (owner 09:36, D-24); bagian "Version 1.0 ke deck" SUPERSEDED by D-2026-10-15-22 |
+| D-2026-10-14-18 | 2026-10-14 | V1 dan V2 satu app, antrean "Before \| After" pada data yang sama. | repo `BUILD-LOG.md` | SUPERSEDED by D-2026-10-15-22 (2026-10-15 09:08) |
+| D-2026-10-15-19 | 2026-10-15 | HS4: threshold milik operator, berversi + teraudit (`/rules`); Safer Gambling = skor kedua 4 cek (band Medium 30, High 50). | repo `BUILD-LOG.md`; decision log D-19 | ACTIVE |
+| D-2026-10-15-20 | 2026-10-15 | HS4: sign-in dua peran `investigator` / `compliance`; password hanya di `.env` VPS; aktor audit = user. | repo `BUILD-LOG.md`; decision log D-20 | ACTIVE (compliance kini juga memiliki hand-off kasus, D-26) |
+| D-2026-10-15-21 | 2026-10-15 | Session lock Kam pagi: v0.11.x live `f4bf7b9`; feedback round 1 selesai; sesi 2 = feedback tim + README/Devpost/deck. | decision log D-21 | ACTIVE |
+| D-2026-10-15-22 | 2026-10-15 | HS4: Version 1.0 = rutinitas investigator, ditampilkan di dalam app sebagai konsol terpisah `/v1` (6 layar, label "illustrative reconstruction, not OLG's system", tanpa tautan dari V2); penghitung langkah otomatis di kedua versi (kasus H); toggle Before \| After dihapus; angka V1 vs V2 tetap di `/validation`. Layar rutinitas 3–6 = ASSUMED sampai UBP-22. | repo `BUILD-LOG.md`; decision shard PART2 (2026-10-15) | ACTIVE (kelayakan V1 generik untuk Main Track: confirmed by ALCOMS 15:07, informal; layar 3–6 tetap ASSUMED) |
+| Review-#4 | 2026-10-15 | Escalation (Safer Gambling) menghitung bulan naik hanya bila ≥10% di atas bulan sebelumnya; rule `sg_escalation_min_rise` = 0.10 di Score rules. | repo `BUILD-LOG.md` 10:05; owner "2 dan 3 setuju" 09:40; shard PART2 D-24 | ACTIVE |
+| Overview-groups | 2026-10-15 | Pemain tetap tampil di setiap grup Overview yang relevan; tiap grup menampilkan skor dan saran milik timnya. | owner "ok lakukan sesuai tetap 2 group" 09:41; BUILD-LOG 10:05 | ACTIVE (+ grup kelima "Newly added", D-27) |
+| D-2026-10-15-23 | 2026-10-15 | Lock antara: v0.13.0-review `b8c6674`; tunggu feedback tim. | repo `BUILD-LOG.md` | SUPERSEDED by D-2026-10-15-24 (10:08) |
+| D-2026-10-15-24 | 2026-10-15 | Session lock: v0.13.0-review live `9a98c30` (D-22 + semua perbaikan feedback); deck V1 vs V2; handoff sesi 3. | repo `BUILD-LOG.md`; decision shard PART2 | ACTIVE |
+| D-2026-10-15-25 | 2026-10-15 | Bobot empat cek AML tetap 4 × 25 sampai ada data outcome nyata; label (FINTRAC, URGENT) sudah mendahului skor; tidak melatih model pada data sintetis. | repo `BUILD-LOG.md` D-25; decision shard PART3 | ACTIVE |
+| D-2026-10-15-26 | 2026-10-15 | HS4: hand-off kasus — investigator escalate → compliance "Mark as handling" → "Mark resolved"; aksi audit `handling`/`resolve` (migrasi 006); status = baris terakhir per pemain; compliance only. | repo `BUILD-LOG.md` D-26 + 17:55; decision shard PART3 | ACTIVE (migrasi 006 di VPS + alur end-to-end = ASSUMED, verify-by owner Kam 21:30) |
+| D-2026-10-15-27 | 2026-10-15 | Session lock Kam sore: v0.15.0-worklist live; V1 generik confirmed by ALCOMS (informal); masukan mentor OLG diterapkan sebagai informal; lokasi Ontario sourced AGCO 3.02; tema Sapphire + keterbacaan; Manual entry selaras dataset; Review queue = worklist (search, filter, NEW, Action required vs Decided); Demo Guide doc; skill `laptop-repo-change-loop`; tidak ada fitur baru setelah lock ini (rekomendasi agent, otoritas owner). | decision shard PART3 D-27; repo `BUILD-LOG.md` rows 15:11–17:55 | ACTIVE |
+
+**Numbering note:** sprint locks (D-08…D-14, D-16…D-18, D-22, D-23, D-25, D-26) live in the repo BUILD-LOG (PI §3.6) and share one date sequence with this log so IDs stay unique; D-07 was renumbered in BUILD-LOG on 2026-10-14 19:58 after a clash. D-16, D-19, D-20, D-21 have both a BUILD-LOG line and a project-level entry; D-22 and D-24 are in the 2026-10-15 PART2 shard and D-25, D-26, D-27 in the PART3 shard, all awaiting append to the local master.
