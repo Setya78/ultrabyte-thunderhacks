@@ -270,3 +270,15 @@ main { padding-bottom: 96px; }
   .t tr.grouphead td { padding: 8px 14px; }
   .t td.pid { font-size: 12px; }
 }
+
+/* Phone menu (owner 2026-10-15 10:11): a "Menu" button opens the pages as a vertical list, no sideways swipe. */
+.navtoggle { display: none; }
+@media (max-width: 960px) {
+  .navtoggle { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line-2); background: var(--raised); color: var(--ink); font: inherit; font-weight: 600; cursor: pointer; }
+  .navtoggle svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+  .side nav { display: none; flex: 1 1 100%; flex-direction: column; flex-wrap: nowrap; overflow: visible; }
+  .side.open nav { display: flex; }
+  .side nav a { white-space: normal; }
+  .side .status { display: none; }
+  .side.open .status { display: flex; }
+}

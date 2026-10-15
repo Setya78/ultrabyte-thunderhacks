@@ -30,7 +30,7 @@
   document.addEventListener('click', function (e) {
     if (box.contains(e.target)) return;
     var el = e.target.closest('a[href], button, summary, input[type=submit]');
-    if (!el || el.closest('.topbar') || el.closest('.v1user')) return; // sound, user menu and sign-out are not work steps
+    if (!el || el.closest('.topbar') || el.closest('.v1user') || el.closest('.navtoggle')) return; // sound, user menu and sign-out are not work steps
     if (el.tagName === 'SUMMARY' && el.closest('details.help')) return; // "?" help popovers are not work steps
     var label = (el.getAttribute('aria-label') || el.textContent || el.value || '').replace(/\s+/g, ' ').trim().slice(0, 40) || el.tagName.toLowerCase();
     // A button on its own ("Search", "Escalate") says little in the list: add the screen it was pressed on.

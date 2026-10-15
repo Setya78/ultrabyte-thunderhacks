@@ -14,7 +14,8 @@
   <aside class="side">
     <a class="brand" href="/"><img src="/static/brand/team/umark-256.png" alt="" width="112" height="112"><b>UltraByte</b><small>Solutions</small></a>
     {% set path = request.url.path %}
-    <nav>
+    <button type="button" class="navtoggle" aria-expanded="false" aria-controls="mainnav" onclick="var s=this.closest('.side');var o=s.classList.toggle('open');this.setAttribute('aria-expanded',o)"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>Menu</button>
+    <nav id="mainnav">
       <a href="/" title="Players to look at today, most urgent first" class="{{ 'on' if path == '/' or path.startswith('/player') }}"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/></svg>Review queue</a>
       <a href="/dashboard" title="The same players grouped by the team that handles them" class="{{ 'on' if path == '/dashboard' }}"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="11" width="8" height="10" rx="1.5"/><rect x="3" y="14" width="8" height="7" rx="1.5"/></svg>Overview</a>
       <a href="/network" title="One card or bank account used by several players" class="{{ 'on' if path == '/network' }}"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.5"/><circle cx="5" cy="19" r="2.5"/><circle cx="19" cy="19" r="2.5"/><path d="M10.5 7l-4 9.5M13.5 7l4 9.5"/></svg>Shared cards &amp; accounts</a>
