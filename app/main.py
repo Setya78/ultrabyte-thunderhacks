@@ -15,9 +15,9 @@ from app.scoring import config as C
 from app.scoring import engine
 
 BASE = Path(__file__).resolve().parent
-VERSION = "0.8.0-import"
+VERSION = "0.8.1-brand"
 
-app = FastAPI(title="UltraByte", version=VERSION)
+app = FastAPI(title="UltraByte Solutions", version=VERSION)
 app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
 templates = Jinja2Templates(directory=BASE / "templates")
 templates.env.globals.update(version=VERSION, llm_enabled=os.environ.get("LLM_ENABLED", "false") == "true")
