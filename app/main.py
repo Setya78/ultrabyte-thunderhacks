@@ -19,7 +19,7 @@ from app.scoring import engine
 from app.scoring import rules as RL
 
 BASE = Path(__file__).resolve().parent
-VERSION = "0.14.1-mentor"
+VERSION = "0.15.0-worklist"
 
 app = FastAPI(title="UltraByte Solutions", version=VERSION)
 app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
@@ -160,9 +160,20 @@ def queue(request: Request):
     """Version 2.0 queue only. Version 1.0 is a separate console at /v1 (D-2026-10-15-22 supersedes the Before | After split)."""
     status = db.status()
     rows = []
+    decided: dict = {}
     if status.get("db") == "ok" and status.get("players"):
         rows = [r for r in scores() if r.caught]
-    return templates.TemplateResponse(request, "queue.html", {"rows": rows, "status": status})
+        # Owner 2026-10-15: the queue is the worklist. A player with a recorded decision moves to "Decided" below the
+        # players that still need one; the latest decision per player comes from the append-only audit trail.
+        with db.connect() as conn:
+            for d in conn.execute("SELECT DISTINCT ON (player_id) player_id, action, actor, ts FROM audit_event"
+                                  " WHERE action IN ('escalate','monitor','dismiss') AND player_id IS NOT NULL"
+                                  " ORDER BY player_id, ts DESC").fetchall():
+                decided[d["player_id"]] = d
+    todo = [r for r in rows if r.player_id not in decided]
+    done = [r for r in rows if r.player_id in decided]
+    return templates.TemplateResponse(request, "queue.html", {"rows": rows, "todo": todo, "done": done, "decided": decided,
+                                                              "status": status, "edt": C.EDT})
 
 
 def _by_id(pid: str) -> engine.PlayerScore:
@@ -337,7 +348,7 @@ async def rules_post(request: Request):
 def dashboard(request: Request):
     rows = scores()
 
-    short = {"urgent": "URGENT", "str": "STR", "aml": "AML context", "safer": "Safer Gambling"}
+    short = {"urgent": "URGENT", "str": "STR", "aml": "AML context", "safer": "Safer Gambling", "new": "Newly added"}
 
     def team_view(key, r):
         """Each group shows its own team's score and next step (review 2026-10-15 #7)."""
@@ -365,6 +376,9 @@ def dashboard(request: Request):
         group("safer", "Safer Gambling", "Safer Gambling score Medium or High: escalation, night play, loss chasing, intensity",
               "Safer Gambling", lambda r: next((c.reason for c in sorted(r.harm_checks, key=lambda c: -c.points) if c.points), None)
               if r.harm_band != "Low" else None),
+        # Owner 2026-10-15: players added during the session (Manual entry or Import) get their own group, whatever their score.
+        group("new", "Newly added (manual entry or import)", "Players created in this demo session, not part of the seed; scored by the same rules",
+              "Data", lambda r: f"Added by {r.source}: {r.top_reason}" if r.source != "seed" else None),
     ]
     # Team feedback 2026-10-15: show when the same player sits in more than one group, so it is not read as two people.
     member = {}

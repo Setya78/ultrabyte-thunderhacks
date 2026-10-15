@@ -249,9 +249,9 @@ def load(conn, res: Result, mode: str) -> dict:
             clash = sorted(p["id"] for p in res.players if p["id"] in existing)
             if clash:
                 raise ValueError(f"player_id already exists: {', '.join(clash[:5])}{'...' if len(clash) > 5 else ''}")
-        with cur.copy("COPY player (id, display_name, occupation, income_band, age_band, region, peer_segment, created_at) FROM STDIN") as cp:
+        with cur.copy("COPY player (id, display_name, occupation, income_band, age_band, region, peer_segment, created_at, entry_source) FROM STDIN") as cp:
             for p in res.players:
-                cp.write_row((p["id"], p["display_name"], p["occupation"], p["income_band"], p["age_band"], p["region"], p["peer_segment"], p["created_at"]))
+                cp.write_row((p["id"], p["display_name"], p["occupation"], p["income_band"], p["age_band"], p["region"], p["peer_segment"], p["created_at"], "import"))
         with cur.copy(f"COPY txn ({', '.join(TXN_COLS)}) FROM STDIN") as cp:
             for t in sorted(res.txns, key=lambda t: t["ts"]):
                 cp.write_row(tuple(t[c] for c in TXN_COLS))

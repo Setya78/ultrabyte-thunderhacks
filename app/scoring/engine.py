@@ -64,6 +64,7 @@ class PlayerScore:
     harm_band: str = "Low"
     harm_checks: list = field(default_factory=list)
     rule_version: int = 1
+    source: str = "seed"  # seed | manual | import (where the player record came from)
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -116,7 +117,7 @@ def load(conn) -> dict:
     """Pull everything the scorer needs in a few queries."""
     q = lambda sql, *a: conn.execute(sql, a).fetchall()
     return {
-        "players": q("SELECT id, display_name, occupation, age_band, income_band, region, peer_segment FROM player"),
+        "players": q("SELECT id, display_name, occupation, age_band, income_band, region, peer_segment, entry_source FROM player"),
         "money": q("SELECT id, player_id, ts, type, amount, method_fingerprint, method_last4, payout_account,"
                    " payout_holder_match FROM txn WHERE type IN ('deposit','withdrawal') ORDER BY ts"),
         "wagers": q("SELECT player_id, ts, amount FROM txn WHERE type = 'wager' AND ts >= %s ORDER BY ts",
@@ -348,7 +349,7 @@ def _score_one(p, months, d30, peer_vals, wdeps, wwds, money, wagers, sessions,
     suggestion, rule = suggest(band, labels, checks, harm_band)
     return PlayerScore(
         suggestion=suggestion, suggestion_rule=rule, harm_score=harm_score, harm_band=harm_band, harm_checks=harm,
-        rule_version=R.version,
+        rule_version=R.version, source=p.get("entry_source") or "seed",
         player_id=pid, display_name=p["display_name"], occupation=p["occupation"], age_band=p["age_band"],
         income_band=p["income_band"], region=p["region"], score=score, band=band, checks=checks, labels=labels,
         caught=caught, top_reason=top, v1_flagged=bool(big), v1_reason="Deposit over limit" if big else "",

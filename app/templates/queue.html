@@ -6,31 +6,94 @@
 {% block content %}
 <div class="head">
   <div><h1>Review queue {{ help("Players ranked by two explainable scores. Every point has a reason; every decision goes to the audit trail. STR = Suspicious Transaction Report (filed with FINTRAC, Canada's financial intelligence agency); AML = anti-money laundering.") }}</h1>
-    <p class="sub">{% if status.db == "ok" %}{{ status.players }} players, {{ status.txns }} transactions, 15 Sep to 14 Oct 2026{% else %}Database: {{ status.db }}{% endif %}</p></div>
+    <p class="sub">Your worklist: alerts that still need a decision, then the ones already decided. {% if status.db == "ok" %}{{ status.players }} players, {{ status.txns }} transactions, 15 Sep to 14 Oct 2026.{% else %}Database: {{ status.db }}{% endif %} For the same players by team, see Overview.</p></div>
   <div class="tools">
+    <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="qsearch" type="search" placeholder="Search name or ID, e.g. Morgan or P-7730" autocomplete="off" aria-label="Search the queue by name or player ID"></label>
     <form method="post" action="/reset"><button class="btn" type="submit">Reset demo data</button></form>
   </div>
 </div>
 
-<div class="panel">
-<h2>Version 2.0 <small>{{ rows|length }} ranked</small> {{ help("Two scores, four checks each, every point with a reason: AML (anti-money laundering) and Safer Gambling (player protection). Labels pin a player near the top: URGENT = possible account takeover; STR candidate = pattern matches a FINTRAC indicator for a Suspicious Transaction Report.") }}</h2>
+<div class="chips" role="group" aria-label="Filter the queue">
+  <span class="chips-l">Band</span>
+  <button type="button" class="chip on" data-f="band" data-v="">All</button>
+  <button type="button" class="chip c-high" data-f="band" data-v="high">High</button>
+  <button type="button" class="chip c-medium" data-f="band" data-v="medium">Medium</button>
+  <button type="button" class="chip c-low" data-f="band" data-v="low">Low</button>
+  <span class="chips-l">Category</span>
+  <button type="button" class="chip on" data-f="cat" data-v="">All</button>
+  <button type="button" class="chip" data-f="cat" data-v="urgent">URGENT</button>
+  <button type="button" class="chip" data-f="cat" data-v="str">STR candidate</button>
+  <button type="button" class="chip" data-f="cat" data-v="sg">Safer Gambling</button>
+  <button type="button" class="chip" data-f="cat" data-v="new">Newly added</button>
+</div>
+{% macro qtable(list, sec, title, sub, hlp) %}
+<div class="panel q-{{ sec }}">
+<h2>{{ title }} <small>{{ list|length }} player{{ "s" if list|length != 1 }}{% if sub %} &middot; {{ sub }}{% endif %}</small> {{ help(hlp) }}</h2>
 <table class="t">
-  <thead><tr><th>#</th><th>Scores {{ help("Left: AML score (anti-money laundering: is money moving through the account rather than being played?). Right: Safer Gambling score (signs of harm to the player). Each arc is one check, up to 25 points.") }}</th><th>Player</th><th class="hide-s">Labels</th><th>Why</th><th class="hide-m">Suggested <span class="tag-rule">rule-based</span></th></tr></thead>
+  <thead><tr><th>#</th><th>Scores {{ help("Left: AML score (anti-money laundering: is money moving through the account rather than being played?). Right: Safer Gambling score (signs of harm to the player). Each arc is one check, up to 25 points.") }}</th><th>Player</th><th class="hide-s">Labels</th><th>Why</th><th class="hide-m">{% if sec == 'done' %}Decision{% else %}Suggested <span class="tag-rule">rule-based</span>{% endif %}</th></tr></thead>
   <tbody>
     {% set prev_grp = {'v': ''} %}
-    {% for r in rows %}
+    {% for r in list %}
     {% set keys = r.labels|map(attribute='key')|list %}{% set grp = 'URGENT: possible account takeover' if 'urgent' in keys else 'STR candidates: possible suspicious transaction report' if 'str' in keys else 'Other alerts, highest score first' %}
-    {% if loop.first or grp != prev_grp.v %}<tr class="grouphead"><td colspan="6">{{ grp }}</td></tr>{% endif %}{% set _ = prev_grp.update({'v': grp}) %}
-    <tr>
+    {% if sec == 'todo' and (loop.first or grp != prev_grp.v) %}<tr class="grouphead"><td colspan="6">{{ grp }}</td></tr>{% endif %}{% set _ = prev_grp.update({'v': grp}) %}
+    <tr data-band="{{ r.band|lower }}" data-sg="{{ r.harm_band|lower }}" data-labels="{{ keys|join(' ') }}" data-source="{{ r.source }}">
       <td class="pid" style="margin:0">{{ loop.index }}</td>
       <td><div class="two-rings"><div>{{ ring(r) }}<div class="ringlbl" title="{{ gloss['AML'] }}">AML</div></div><div>{{ ring(r, kind='sg') }}<div class="ringlbl" title="{{ gloss['SG'] }}">SAFER</div></div></div></td>
-      <td><a class="p" href="/player/{{ r.player_id }}" style="white-space:nowrap">{{ r.display_name }}</a><span class="pid">{{ r.player_id }}</span><div class="src">{{ r.occupation }}, {{ r.age_band }}, {{ r.income_band }}</div></td>
+      <td data-name="{{ r.display_name|lower }}" data-id="{{ r.player_id|lower }}"><a class="p" href="/player/{{ r.player_id }}" style="white-space:nowrap">{{ r.display_name }}</a><span class="pid">{{ r.player_id }}</span>{% if r.source != 'seed' %} <span class="tag-new" title="Added during this demo session by {{ r.source }}; not part of the seed">NEW &middot; {{ r.source }}</span>{% endif %}<div class="src">{{ r.occupation }}, {{ r.age_band }}, {{ r.income_band }}</div></td>
       <td class="hide-s"><span class="band band-{{ r.band|lower }}">{{ r.band }}</span> {% if r.harm_band != 'Low' %}<span class="band band-{{ r.harm_band|lower }}">SG {{ r.harm_band }}</span>{% endif %}{% for l in r.labels|unique(attribute='text') %}<span class="label label-{{ l.key }}" title="{{ gloss['URGENT'] if l.key == 'urgent' else gloss['STR'] }}">{{ l.text }}</span>{% endfor %}</td>
       <td class="reason">{{ r.top_reason }}</td>
-      <td class="hide-m suggest">{{ r.suggestion }}</td>
+      {% if sec == 'done' %}{% set d = decided[r.player_id] %}<td class="hide-m"><span class="band act-{{ d.action }}-t">{{ labels.get(d.action, d.action) }}</span><div class="src">{{ d.actor }}, {{ d.ts.astimezone(edt).strftime('%d %b %H:%M') }}</div></td>
+      {% else %}<td class="hide-m suggest">{{ r.suggestion }}</td>{% endif %}
     </tr>
-    {% else %}<tr><td colspan="6" class="empty">No scored alerts.</td></tr>{% endfor %}
+    {% else %}<tr><td colspan="6" class="empty">{% if sec == 'done' %}No decisions yet. Decide on a player page and it moves here.{% else %}Nothing waiting. Every alert has a decision.{% endif %}</td></tr>{% endfor %}
+    <tr class="qnone" hidden><td colspan="6" class="empty">No player here matches. <span class="qopen"></span></td></tr>
   </tbody>
 </table>
 </div>
+{% endmacro %}
+{{ qtable(todo, 'todo', 'Action required', 'no decision yet, most urgent first', "Your worklist: players the scoring caught and nobody has decided on. URGENT and STR candidates sit on top. Open a player, read why, record Escalate / Monitor / Dismiss, and the row moves to Decided. Overview shows the same players grouped by team instead.") }}
+{{ qtable(done, 'done', 'Decided', 'latest decision from the audit trail', "Players that already have a recorded decision. Kept here so the worklist above stays clean; the audit trail holds every decision with the score at that moment.") }}
+<script>
+// Queue search (owner 2026-10-15): filters the ranked rows by name or player ID as you type; group headers hide when
+// none of their rows match. An ID that is not in the queue (a Low-band player) gets a direct link to its player page.
+(function () {
+  var box = document.getElementById('qsearch'); if (!box) return;
+  var rows = Array.prototype.slice.call(document.querySelectorAll('tbody tr')).filter(function (r) { return r.querySelector('td[data-id]'); });
+  var heads = Array.prototype.slice.call(document.querySelectorAll('tr.grouphead'));
+  var nones = Array.prototype.slice.call(document.querySelectorAll('tr.qnone'));
+  var f = { band: '', cat: '' };
+  function catHit(r) {
+    var v = f.cat; if (!v) return true;
+    if (v === 'new') return r.dataset.source !== 'seed';
+    if (v === 'sg') return r.dataset.sg !== 'low';
+    return (' ' + r.dataset.labels + ' ').indexOf(' ' + v + ' ') >= 0;
+  }
+  function apply() {
+    var q = box.value.trim().toLowerCase(), shown = 0;
+    rows.forEach(function (r) {
+      var c = r.querySelector('td[data-id]'), hit = !q || c.dataset.name.indexOf(q) >= 0 || c.dataset.id.indexOf(q) >= 0 || c.dataset.id.replace('p-', '').replace('m-', '').indexOf(q) >= 0;
+      hit = hit && (!f.band || r.dataset.band === f.band) && catHit(r);
+      r.hidden = !hit; if (hit) shown++;
+    });
+    heads.forEach(function (h) {
+      var n = h.nextElementSibling, any = false;
+      while (n && !n.classList.contains('grouphead') && !n.classList.contains('qnone')) { if (!n.hidden) any = true; n = n.nextElementSibling; }
+      h.hidden = !any;
+    });
+    var m = q.match(/^(p|m)-?(\d{3,4})$/), link = m ? 'Open <a href="/player/' + m[1].toUpperCase() + '-' + m[2] + '">' + m[1].toUpperCase() + '-' + m[2] + '</a> directly.' : '';
+    nones.forEach(function (nn) {
+      var tb = nn.parentNode, vis = Array.prototype.filter.call(tb.querySelectorAll('tr'), function (r) { return r.querySelector('td[data-id]') && !r.hidden; }).length;
+      nn.hidden = !((q || f.band || f.cat) && vis === 0); nn.querySelector('.qopen').innerHTML = link;
+    });
+  }
+  box.addEventListener('input', apply);
+  document.querySelectorAll('.chip').forEach(function (b) {
+    b.addEventListener('click', function () {
+      f[b.dataset.f] = b.dataset.v;
+      document.querySelectorAll('.chip[data-f="' + b.dataset.f + '"]').forEach(function (o) { o.classList.toggle('on', o === b); });
+      apply();
+    });
+  });
+})();
+</script>
 {% endblock %}

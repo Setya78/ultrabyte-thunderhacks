@@ -386,3 +386,21 @@ details.help .pop.flip { left: auto; right: -10px; }
 .ring .arc.peer, .ring .arc.chase { opacity: .6; } .ring .arc.location, .ring .arc.intensity { opacity: .45; }
 .ring.b-high text { fill: #A82424; } .ring.b-medium text { fill: #8A5400; } .ring.b-low text { fill: #146B42; }
 .ring.b-high .track { stroke: #FCE9E9; } .ring.b-medium .track { stroke: #FDF1DC; } .ring.b-low .track { stroke: #E3F4EB; }
+
+/* ---- Queue search + filter chips, NEW tag, Overview 5th tile (owner 2026-10-15 17:23). ---- */
+.search { display: inline-flex; align-items: center; gap: 8px; padding: 0 12px; height: 38px; border: 1px solid #C9D6E3; border-radius: 8px; background: #FFFFFF; min-width: 320px; }
+.search svg { width: 16px; height: 16px; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; flex: none; }
+.search input { border: 0; outline: 0; background: none; font: inherit; font-size: 14px; color: var(--ink); width: 100%; }
+.search:focus-within { border-color: #1A5DB8; box-shadow: 0 0 0 3px rgba(26,93,184,.12); }
+.chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 12px; }
+.chips-l { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 4px 0 8px; }
+.chips-l:first-child { margin-left: 0; }
+.chip { font: inherit; font-size: 13px; font-weight: 600; padding: 5px 11px; border-radius: 999px; border: 1px solid #C9D6E3; background: #FFFFFF; color: var(--ink); cursor: pointer; }
+.chip:hover { border-color: #1A5DB8; }
+.chip.on { background: #102233; color: #FFFFFF; border-color: #102233; }
+.chip.c-high.on { background: #C73636; border-color: #C73636; } .chip.c-medium.on { background: #D99A1E; border-color: #D99A1E; color: #2A1A00; } .chip.c-low.on { background: #1F8052; border-color: #1F8052; }
+.tag-new { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .04em; padding: 1px 6px; border-radius: 4px; background: #E3EEFB; color: #0F4C99; vertical-align: middle; white-space: nowrap; margin-left: 4px; }
+.grid.four { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+@media (max-width: 600px) { .search { min-width: 0; width: 100%; } }
+.panel.q-done { opacity: .92; } .panel.q-done h2 { background: #F3F6FA; }
+.act-escalate-t { background: #FCE9E9; color: #A82424; } .act-monitor-t { background: #FDF1DC; color: #8A5400; } .act-dismiss-t { background: #E8EDF2; color: #3B5163; }
