@@ -19,7 +19,9 @@ a { color: var(--cyan); text-decoration: none; } a:hover { text-decoration: unde
 
 .shell { display: grid; grid-template-columns: var(--sidebar) 1fr; min-height: 100vh; }
 .side { position: sticky; top: 0; height: 100vh; padding: 20px 16px; border-right: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; gap: 22px; }
-.side .brand img { display: block; height: 40px; width: auto; }
+.side .brand { display: flex; align-items: center; gap: 10px; color: var(--ink); font-weight: 800; font-size: 19px; letter-spacing: -0.02em; }
+.side .brand img { display: block; height: 40px; width: 40px; border-radius: 9px; }
+.side .brand:hover { text-decoration: none; }
 .side nav { display: flex; flex-direction: column; gap: 2px; }
 .side nav a { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; color: var(--muted); font-weight: 600; }
 .side nav a svg { width: 18px; height: 18px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
