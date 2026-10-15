@@ -66,3 +66,15 @@ def latest_notes(conn) -> dict:
         " ORDER BY player_id, ts DESC, id DESC").fetchall():
         out[d["player_id"]] = {"note": d["note"], "actor": d["actor"], "ts": d["ts"]}
     return out
+
+
+def case_timeline(conn) -> dict:
+    """Every case step per player, oldest first -> {player_id: [{action, actor, ts, note}]}. Read-only.
+    Feeds the Report page (owner 2026-10-15 19:28, D-2026-10-15-29)."""
+    out: dict = {}
+    for d in conn.execute(
+        "SELECT player_id, action, actor, ts, note FROM audit_event"
+        " WHERE action IN ('escalate','monitor','dismiss','handling','resolve') AND player_id IS NOT NULL"
+        " ORDER BY player_id, ts, id").fetchall():
+        out.setdefault(d["player_id"], []).append(dict(d))
+    return out

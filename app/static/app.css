@@ -492,3 +492,31 @@ main { padding-bottom: 80px; }
 @media (max-width: 420px) { .grid.kpis .kpi { min-height: 116px; } }
 .handed { margin: 14px 2px 0; font-size: 14px; font-weight: 700; }
 .grid.kpis > .panel { margin: 0; }
+
+/* ---- Report page (owner 2026-10-15 19:28, D-2026-10-15-29). ---- */
+.grid.kpis.six { grid-template-columns: repeat(6, 1fr); }
+.grid.kpis.six .kpi { min-height: 112px; }
+.st-card { border-top: 3px solid #C9D6E3; }
+.st-card-todo { border-top-color: #1763C6; } .st-card-escalated { border-top-color: #C73636; } .st-card-monitor, .st-card-handling { border-top-color: #E0A030; }
+.st-card-dismiss { border-top-color: #8A9AA8; } .st-card-resolved { border-top-color: #1F8052; }
+.tag-st.st-todo { background: #E6EFF9; color: #0F4C99; }
+.t.rep th.n, .t.rep td.n { text-align: center; font-variant-numeric: tabular-nums; }
+.times { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 16px 18px; }
+.times .k { font-size: 13px; color: var(--muted); } .times .v { font-size: 30px; font-weight: 800; }
+a.btn { display: inline-flex; align-items: center; text-decoration: none; }
+@media (max-width: 960px) { .grid.kpis.six { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 560px) { .grid.kpis.six { grid-template-columns: repeat(2, 1fr); } }
+@media print {
+  .side, .topbar, .noprint, .dock, details.help, .flash { display: none !important; }
+  .shell { display: block; } main { padding: 0; max-width: none; }
+  body, html { background: #FFFFFF; } .panel { box-shadow: none; break-inside: avoid; }
+  .t { display: table !important; } .hide-s, .hide-m { display: table-cell !important; }
+  .grid.kpis.six { grid-template-columns: repeat(6, 1fr); }
+}
+.grid > .panel + .panel { margin-top: 0; }
+.t.rep td:first-child, .t.rep td.hide-s { white-space: nowrap; }
+@media print {
+  .grid.two { grid-template-columns: 1fr 1fr; } .grid.two .t.rep { font-size: 11px; } .grid.two .t.rep th, .grid.two .t.rep td { padding: 6px 6px; }
+  .panel { break-inside: auto; } .grid .panel, tr { break-inside: avoid; }
+  .t { overflow: visible !important; }
+}

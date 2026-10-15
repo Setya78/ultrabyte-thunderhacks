@@ -26,6 +26,7 @@
       <a href="/rules" title="The thresholds behind every score, set by compliance" class="{{ 'on' if path == '/rules' }}"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="8" cy="17" r="2"/></svg>Score rules</a>
       <a href="/enter" title="Type one transaction and watch the score change" class="{{ 'on' if path == '/enter' }}"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Manual entry</a>
       <a href="/import" title="Upload your own synthetic players from Excel" class="{{ 'on' if path.startswith('/import') }}"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M4 19h16"/></svg>Import test data</a>
+      <a href="/report" title="How many cases are to do, with compliance and resolved; CSV and print" class="{{ 'on' if path == '/report' }}"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Report</a>
     </nav>
     <div class="status">
       {% if not auth_enabled() %}<span class="src" style="color:var(--medium)">Sign-in not configured</span>{% endif %}

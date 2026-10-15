@@ -19,7 +19,7 @@ from app.scoring import engine
 from app.scoring import rules as RL
 
 BASE = Path(__file__).resolve().parent
-VERSION = "0.15.4-handoff"
+VERSION = "0.16.0-report"
 
 app = FastAPI(title="UltraByte Solutions", version=VERSION)
 app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
@@ -525,6 +525,73 @@ def validation_page(request: Request):
     with db.connect() as conn:
         v = validation.build(conn, scores())
     return templates.TemplateResponse(request, "validation.html", {"v": v})
+
+
+# ---- Report (owner 2026-10-15 19:28, D-2026-10-15-29): how many cases are To do, with the investigator, with compliance,
+# resolved, plus handling times. Read-only: built from the scores and the append-only audit trail, nothing stored.
+REPORT_STATUS = [("todo", "To do"), ("escalated", "Escalated, waiting for compliance"), ("monitor", "Monitor"),
+                 ("dismiss", "Dismissed"), ("handling", "In progress, compliance"), ("resolved", "Resolved")]
+
+
+def _report_data() -> dict:
+    with db.connect() as conn:
+        decided = audit.case_status(conn)
+        steps = audit.case_timeline(conn)
+        notes = audit.latest_notes(conn)
+    rows = scores()
+    cases = [r for r in rows if r.caught or r.player_id in decided]
+
+    def first(pid, action):
+        return next((s["ts"] for s in steps.get(pid, []) if s["action"] == action), None)
+
+    def category(r):
+        keys = {l.key for l in r.labels}
+        return "URGENT" if "urgent" in keys else "STR candidate" if "str" in keys else "Safer Gambling" if r.harm_band != "Low" and r.band == "Low" else "AML context"
+
+    out = []
+    for r in sorted(cases, key=lambda r: r.priority):
+        d = decided.get(r.player_id)
+        esc, pick, res = first(r.player_id, "escalate"), first(r.player_id, "handling"), first(r.player_id, "resolve")
+        last = steps.get(r.player_id, [])[-1:] or [None]
+        out.append({"r": r, "state": d["state"] if d else "todo", "label": d["label"] if d else "To do", "category": category(r),
+                    "escalated": esc, "picked": pick, "resolved": res, "last": last[0], "note": notes.get(r.player_id),
+                    "steps": len(steps.get(r.player_id, []))})
+    counts = {k: sum(1 for c in out if c["state"] == k) for k, _ in REPORT_STATUS}
+    cats = ["URGENT", "STR candidate", "AML context", "Safer Gambling"]
+    matrix = {c: {k: sum(1 for x in out if x["category"] == c and x["state"] == k) for k, _ in REPORT_STATUS} for c in cats}
+
+    def avg_hours(pairs):
+        hrs = [(b - a).total_seconds() / 3600 for a, b in pairs if a and b and b >= a]
+        return (round(sum(hrs) / len(hrs), 1), len(hrs)) if hrs else (None, 0)
+
+    times = {"pick": avg_hours((c["escalated"], c["picked"]) for c in out),
+             "resolve": avg_hours((c["escalated"], c["resolved"]) for c in out)}
+    return {"cases": out, "counts": counts, "matrix": matrix, "cats": cats, "times": times, "total": len(out)}
+
+
+@app.get("/report")
+def report_page(request: Request):
+    from datetime import datetime
+    return templates.TemplateResponse(request, "report.html", {**_report_data(), "statuses": REPORT_STATUS, "edt": C.EDT,
+                                                               "now": datetime.now(C.EDT)})
+
+
+@app.get("/report.csv")
+def report_csv():
+    import csv, io
+    data = _report_data()
+    fmt = lambda t: t.astimezone(C.EDT).strftime("%Y-%m-%d %H:%M") if t else ""
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(["player_id", "name", "category", "aml_score", "aml_band", "safer_score", "safer_band", "status",
+                "escalated_at", "picked_up_at", "resolved_at", "last_step_by", "latest_comment", "data"])
+    for c in data["cases"]:
+        r = c["r"]
+        w.writerow([r.player_id, r.display_name, c["category"], r.score, r.band, r.harm_score, r.harm_band, c["label"],
+                    fmt(c["escalated"]), fmt(c["picked"]), fmt(c["resolved"]), c["last"]["actor"] if c["last"] else "",
+                    c["note"]["note"] if c["note"] else "", "SYNTHETIC"])
+    return Response(buf.getvalue(), media_type="text/csv",
+                    headers={"Content-Disposition": 'attachment; filename="ultrabyte-case-report.csv"'})
 
 
 @app.get("/audit")
