@@ -13,18 +13,11 @@
   </div>
 </div>
 
-<div class="chips" role="group" aria-label="Filter the queue">
-  <span class="chips-l">Band</span>
-  <button type="button" class="chip on" data-f="band" data-v="">All</button>
-  <button type="button" class="chip c-high" data-f="band" data-v="high">High</button>
-  <button type="button" class="chip c-medium" data-f="band" data-v="medium">Medium</button>
-  <button type="button" class="chip c-low" data-f="band" data-v="low">Low</button>
-  <span class="chips-l">Category</span>
-  <button type="button" class="chip on" data-f="cat" data-v="">All</button>
-  <button type="button" class="chip" data-f="cat" data-v="urgent">URGENT</button>
-  <button type="button" class="chip" data-f="cat" data-v="str">STR candidate</button>
-  <button type="button" class="chip" data-f="cat" data-v="sg">Safer Gambling</button>
-  <button type="button" class="chip" data-f="cat" data-v="new">Newly added</button>
+<div class="filters" role="group" aria-label="Filter the queue">
+  <label>Band<select id="f-band"><option value="">All</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label>
+  <label>Category<select id="f-cat"><option value="">All</option><option value="urgent">URGENT</option><option value="str">STR candidate</option><option value="sg">Safer Gambling</option><option value="new">Newly added</option></select></label>
+  <label>Status<select id="f-state"><option value="">All</option><option value="todo">Action required</option><option value="escalated">Escalated, waiting</option><option value="handling">In progress</option><option value="monitor">Monitor</option><option value="dismiss">Dismissed</option><option value="resolved">Resolved</option></select></label>
+  <button type="button" class="btn" id="f-clear" hidden>Clear</button>
 </div>
 {% macro qtable(list, sec, title, sub, hlp) %}
 <div class="panel q-{{ sec }}">
@@ -37,10 +30,10 @@
     {% set keys = r.labels|map(attribute='key')|list %}{% set grp = 'URGENT: possible account takeover' if 'urgent' in keys else 'STR candidates: possible suspicious transaction report' if 'str' in keys else 'Other alerts, highest score first' %}
     {% if sec == 'done' %}{% set grp = decided[r.player_id].label %}{% endif %}
     {% if loop.first or grp != prev_grp.v %}<tr class="grouphead{{ ' st-' ~ decided[r.player_id].state if sec == 'done' }}"><td colspan="6">{{ grp }}</td></tr>{% endif %}{% set _ = prev_grp.update({'v': grp}) %}
-    <tr data-band="{{ r.band|lower }}" data-sg="{{ r.harm_band|lower }}" data-labels="{{ keys|join(' ') }}" data-source="{{ r.source }}">
+    <tr data-band="{{ r.band|lower }}" data-sg="{{ r.harm_band|lower }}" data-labels="{{ keys|join(' ') }}" data-source="{{ r.source }}" data-state="{{ decided[r.player_id].state if sec == 'done' else 'todo' }}">
       <td class="pid" style="margin:0">{{ loop.index }}</td>
       <td><div class="two-rings"><div>{{ ring(r) }}<div class="ringlbl" title="{{ gloss['AML'] }}">AML</div></div><div>{{ ring(r, kind='sg') }}<div class="ringlbl" title="{{ gloss['SG'] }}">SAFER</div></div></div></td>
-      <td data-name="{{ r.display_name|lower }}" data-id="{{ r.player_id|lower }}"><a class="p" href="/player/{{ r.player_id }}" style="white-space:nowrap">{{ r.display_name }}</a><span class="pid">{{ r.player_id }}</span>{% if r.source != 'seed' %} <span class="tag-new" title="Added during this demo session by {{ r.source }}; not part of the seed">NEW &middot; {{ r.source }}</span>{% endif %}<div class="src">{{ r.occupation }}, {{ r.age_band }}, {{ r.income_band }}</div></td>
+      <td data-name="{{ r.display_name|lower }}" data-id="{{ r.player_id|lower }}"><a class="p" href="/player/{{ r.player_id }}" style="white-space:nowrap">{{ r.display_name }}</a><span class="pid">{{ r.player_id }}</span>{% if r.source != 'seed' %} <span class="tag-new" title="Added during this demo session by {{ r.source }}; not part of the seed">NEW &middot; {{ r.source }}</span>{% endif %}{% if sec == 'done' %} <span class="tag-st st-{{ decided[r.player_id].state }}">{{ decided[r.player_id].label }}</span>{% endif %}<div class="src">{{ r.occupation }}, {{ r.age_band }}, {{ r.income_band }}</div></td>
       <td class="hide-s"><span class="band band-{{ r.band|lower }}">{{ r.band }}</span> {% if r.harm_band != 'Low' %}<span class="band band-{{ r.harm_band|lower }}">SG {{ r.harm_band }}</span>{% endif %}{% for l in r.labels|unique(attribute='text') %}<span class="label label-{{ l.key }}" title="{{ gloss['URGENT'] if l.key == 'urgent' else gloss['STR'] }}">{{ l.text }}</span>{% endfor %}</td>
       <td class="reason">{{ r.top_reason }}</td>
       {% if sec == 'done' %}{% set d = decided[r.player_id] %}<td class="hide-m"><span class="band st-{{ d.state }}">{{ d.label }}</span><div class="src">{{ labels.get(d.action, d.action) }} by {{ d.actor }}, {{ d.ts.astimezone(edt).strftime('%d %b %H:%M') }}</div></td>
@@ -62,7 +55,8 @@
   var rows = Array.prototype.slice.call(document.querySelectorAll('tbody tr')).filter(function (r) { return r.querySelector('td[data-id]'); });
   var heads = Array.prototype.slice.call(document.querySelectorAll('tr.grouphead'));
   var nones = Array.prototype.slice.call(document.querySelectorAll('tr.qnone'));
-  var f = { band: '', cat: '' };
+  var f = { band: '', cat: '', state: '' };
+  var sel = { band: document.getElementById('f-band'), cat: document.getElementById('f-cat'), state: document.getElementById('f-state') }, clear = document.getElementById('f-clear');
   function catHit(r) {
     var v = f.cat; if (!v) return true;
     if (v === 'new') return r.dataset.source !== 'seed';
@@ -73,7 +67,7 @@
     var q = box.value.trim().toLowerCase(), shown = 0;
     rows.forEach(function (r) {
       var c = r.querySelector('td[data-id]'), hit = !q || c.dataset.name.indexOf(q) >= 0 || c.dataset.id.indexOf(q) >= 0 || c.dataset.id.replace('p-', '').replace('m-', '').indexOf(q) >= 0;
-      hit = hit && (!f.band || r.dataset.band === f.band) && catHit(r);
+      hit = hit && (!f.band || r.dataset.band === f.band) && catHit(r) && (!f.state || r.dataset.state === f.state);
       r.hidden = !hit; if (hit) shown++;
     });
     heads.forEach(function (h) {
@@ -84,17 +78,12 @@
     var m = q.match(/^(p|m)-?(\d{3,4})$/), link = m ? 'Open <a href="/player/' + m[1].toUpperCase() + '-' + m[2] + '">' + m[1].toUpperCase() + '-' + m[2] + '</a> directly.' : '';
     nones.forEach(function (nn) {
       var tb = nn.parentNode, vis = Array.prototype.filter.call(tb.querySelectorAll('tr'), function (r) { return r.querySelector('td[data-id]') && !r.hidden; }).length;
-      nn.hidden = !((q || f.band || f.cat) && vis === 0); nn.querySelector('.qopen').innerHTML = link;
+      nn.hidden = !((q || f.band || f.cat || f.state) && vis === 0); nn.querySelector('.qopen').innerHTML = link;
     });
   }
   box.addEventListener('input', apply);
-  document.querySelectorAll('.chip').forEach(function (b) {
-    b.addEventListener('click', function () {
-      f[b.dataset.f] = b.dataset.v;
-      document.querySelectorAll('.chip[data-f="' + b.dataset.f + '"]').forEach(function (o) { o.classList.toggle('on', o === b); });
-      apply();
-    });
-  });
+  Object.keys(sel).forEach(function (k) { sel[k].addEventListener('change', function () { f[k] = sel[k].value; clear.hidden = !(f.band || f.cat || f.state); apply(); }); });
+  clear.addEventListener('click', function () { Object.keys(sel).forEach(function (k) { sel[k].value = ''; f[k] = ''; }); box.value = ''; clear.hidden = true; apply(); });
 })();
 </script>
 {% endblock %}

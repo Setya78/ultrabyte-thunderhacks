@@ -363,6 +363,8 @@ async def rules_post(request: Request):
 @app.get("/dashboard")
 def dashboard(request: Request):
     rows = scores()
+    with db.connect() as conn:
+        decided = audit.case_status(conn)
 
     short = {"urgent": "URGENT", "str": "STR", "aml": "AML context", "safer": "Safer Gambling", "new": "Newly added"}
 
@@ -401,7 +403,7 @@ def dashboard(request: Request):
     for g in groups:
         for r, *_ in g["players"]:
             member.setdefault(r.player_id, []).append(g["short"])
-    return templates.TemplateResponse(request, "dashboard.html", {"groups": groups, "member": member})
+    return templates.TemplateResponse(request, "dashboard.html", {"groups": groups, "decided": decided, "member": member})
 
 
 @app.get("/network")

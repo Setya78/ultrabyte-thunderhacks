@@ -412,3 +412,12 @@ details.help .pop.flip { left: auto; right: -10px; }
 .handoff { border-bottom: 1px solid var(--line); background: #F8FAFD; }
 .btn.act-resolve { background: #1F8052; color: #FFFFFF; border-color: #1F8052; } .btn.act-resolve:hover { background: #146B42; border-color: #146B42; color: #FFFFFF; }
 .panel h2 .band { font-size: 12px; }
+
+/* ---- Queue filters as dropdowns (owner 2026-10-15 18:20): band, category, status in one row. ---- */
+.filters { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; margin: 0 0 12px; }
+.filters label { display: grid; gap: 3px; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.filters select { font: inherit; font-size: 14px; font-weight: 600; color: var(--ink); padding: 7px 32px 7px 10px; border: 1px solid #C9D6E3; border-radius: 8px; background: #FFFFFF url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234E6578' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 8px center/16px; appearance: none; min-width: 150px; }
+.filters select:focus { outline: 0; border-color: #1A5DB8; box-shadow: 0 0 0 3px rgba(26,93,184,.12); }
+.filters .btn { padding: 7px 12px; }
+.chips, .chip, .chips-l { display: none; }
+.tag-st { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .04em; padding: 1px 6px; border-radius: 4px; vertical-align: middle; white-space: nowrap; margin-left: 4px; }

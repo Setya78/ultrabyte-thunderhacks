@@ -18,7 +18,7 @@
     <tbody>
       {% for r, why, team_score, step in g.players %}
       <tr><td><div class="score">{% if g.key == "safer" %}<div>{{ ring(r, kind="sg") }}<div class="ringlbl" title="{{ gloss['SG'] }}">SAFER</div></div><span class="band band-{{ r.harm_band|lower }}">{{ r.harm_band }}</span>{% else %}<div>{{ ring(r) }}<div class="ringlbl" title="{{ gloss['AML'] }}">AML</div></div><span class="band band-{{ r.band|lower }}">{{ r.band }}</span>{% endif %}</div></td>
-          <td><a class="p" href="/player/{{ r.player_id }}">{{ r.display_name }}</a><span class="pid">{{ r.player_id }}</span>{% set others = member[r.player_id]|reject("equalto", g.short)|list %}{% if others %}<div class="src">also in {{ others|join(", ") }}</div>{% endif %}</td>
+          <td><a class="p" href="/player/{{ r.player_id }}">{{ r.display_name }}</a><span class="pid">{{ r.player_id }}</span>{% if r.source != 'seed' %} <span class="tag-new">NEW &middot; {{ r.source }}</span>{% endif %}{% if decided.get(r.player_id) %} <span class="tag-st st-{{ decided[r.player_id].state }}">{{ decided[r.player_id].label }}</span>{% endif %}{% set others = member[r.player_id]|reject("equalto", g.short)|list %}{% if others %}<div class="src">also in {{ others|join(", ") }}</div>{% endif %}</td>
           <td class="reason">{{ why }}</td><td class="hide-m suggest">{{ step }}</td></tr>
       {% else %}<tr><td colspan="4" class="empty">None.</td></tr>{% endfor %}
     </tbody>
