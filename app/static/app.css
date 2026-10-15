@@ -322,3 +322,24 @@ tr.evidence td { background: #EAF2FD; }
 .steps-v2 .steps-v { background: #CFE3FA; }
 @keyframes pulse-red { 0%, 100% { box-shadow: 0 0 0 0 rgba(199,54,54,.45); } 50% { box-shadow: 0 0 0 6px rgba(199,54,54,0); } }
 .loginbox img { background: #0B1B2A; border-radius: 20px; padding: 6px; box-sizing: content-box; }
+
+/* ---- Theme A "Sapphire sidebar" (owner choice 2026-10-15 16:05): navy sidebar where the logo sits natively, ice-white workspace. ---- */
+:root { --bg:#F3F6FA; --surface:#FFFFFF; --raised:#EEF3F9; --line:#E1E8F0; --line-2:#C9D6E3; --ink:#0E2033; --muted:#4E6578; --dim:#71879A;
+  --cyan:#1A5DB8; --orange:#1A5DB8; --c-income:#1F6FD1; --c-history:#5FA0EC; --c-peer:#A7C3E2; --c-location:#4B3FC4; }
+.side { background: radial-gradient(120% 60% at 50% 0%, #1B3A57 0, #0E2236 55%, #0A1828 100%); border-right: 0; }
+.side .brand img { background: none; padding: 0; border-radius: 0; filter: drop-shadow(0 6px 18px rgba(80,150,230,.35)); }
+.side .brand b { background: linear-gradient(180deg,#FFFFFF,#BFD3E6); -webkit-background-clip:text; background-clip:text; color: transparent; }
+.side .brand small { color: #7E9CB6; }
+.side nav a { color: #A9C1D6; }
+.side nav a:hover { background: rgba(255,255,255,.06); color: #FFFFFF; }
+.side nav a.on { background: linear-gradient(90deg, rgba(111,182,255,.22), rgba(111,182,255,.05)); color: #FFFFFF; box-shadow: inset 3px 0 0 #8ED4FF; }
+.side .status, .side .status a { color: #8FA9BF; } .side .status a { color: #BFE3FF; }
+.synthetic { background: rgba(142,212,255,.14); color: #BFE3FF; } .synthetic i { background: #8ED4FF; }
+main { background: radial-gradient(900px 300px at 100% 0, #E4EEF9 0, rgba(228,238,249,0) 70%); }
+h1 { color: #0B1B2A; }
+.panel { border: 1px solid #E3EAF2; box-shadow: 0 1px 2px rgba(14,32,51,.04), 0 8px 24px rgba(14,32,51,.05); border-radius: 14px; overflow: hidden; }
+.panel h2 { background: linear-gradient(180deg,#FFFFFF,#F8FAFD); }
+.t tr.grouphead td { background: #F1F5FA; color: #1A5DB8; border-top: 1px solid #E1E8F0; }
+.btn { background: #FFFFFF; border-color: #C9D6E3; } .btn:hover { border-color: #1A5DB8; color: #1A5DB8; }
+.tools .btn { background: linear-gradient(180deg,#1F6FD1,#1857AA); color: #fff; border-color: #1857AA; }
+.label-str { background: #0E2236; }

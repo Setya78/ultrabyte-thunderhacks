@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}UltraByte Solutions{% endblock %}</title>
-  <link rel="stylesheet" href="/static/app.css">
-  <link rel="stylesheet" href="/static/steps.css">
+  <link rel="stylesheet" href="/static/app.css?v={{ version }}">
+  <link rel="stylesheet" href="/static/steps.css?v={{ version }}">
   <link rel="icon" type="image/png" sizes="64x64" href="/static/brand/team/favicon-64.png">
   <link rel="apple-touch-icon" href="/static/brand/team/favicon-192.png">
 </head>
@@ -100,7 +100,7 @@ document.querySelectorAll('table.t').forEach(function (t) {
   });
 });
 </script>
-{% if request.state.user %}<script src="/static/steps.js"></script>{% endif %}
+{% if request.state.user %}<script src="/static/steps.js?v={{ version }}"></script>{% endif %}
 </div>
 </body>
 </html>

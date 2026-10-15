@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Alert Console{% endblock %} - Version 1.0 (reconstruction)</title>
-  <link rel="stylesheet" href="/static/steps.css">
+  <link rel="stylesheet" href="/static/steps.css?v={{ version }}">
   <style>
     /* Deliberately plain: a generic back-office console, not the UltraByte look. */
     body { margin: 0; font: 14px/1.45 Tahoma, Verdana, Arial, sans-serif; background: #E9EBEE; color: #1D232A; }
@@ -50,6 +50,6 @@
 </div>
 <div class="banner"><strong>Version 1.0, illustrative reconstruction</strong> of a typical threshold-alert routine, built by the team for comparison. Not OLG's system. Same synthetic data as Version 2.0.</div>
 <main>{% block content %}{% endblock %}</main>
-<script src="/static/steps.js"></script>
+<script src="/static/steps.js?v={{ version }}"></script>
 </body>
 </html>
