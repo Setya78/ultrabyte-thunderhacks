@@ -127,7 +127,7 @@ def save(conn, e: Entry) -> str:
     return pid
 
 
-def record(conn, pid: str, e: Entry, before: dict | None, after: dict) -> None:
+def record(conn, pid: str, e: Entry, before: dict | None, after: dict, actor: str = ACTOR) -> None:
     what = f"{e.ptype} ${e.amount:,.2f} in {e.city} on {e.when:%Y-%m-%d %H:%M}"
     if e.wagered:
         what += f", played ${e.wagered:,.2f}"
@@ -138,7 +138,7 @@ def record(conn, pid: str, e: Entry, before: dict | None, after: dict) -> None:
     score = f"score {before['score'] if before else 'new'} -> {after['score']}"
     conn.execute(
         "INSERT INTO audit_event (actor, player_id, action, note, score_snapshot) VALUES (%s, %s, 'manual_entry', %s, %s)",
-        (ACTOR, pid, f"Manual entry: {what} ({score})", Jsonb(after)))
+        (actor, pid, f"Manual entry: {what} ({score})", Jsonb(after)))
     conn.commit()
 
 

@@ -8,20 +8,80 @@ from psycopg.types.json import Jsonb
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse, RedirectResponse, Response
+from urllib.parse import quote
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app import db, importer, judge, llm, validation
+from app import auth, db, importer, judge, llm, validation
 from app.audit import log as audit
 from app.scoring import config as C
 from app.scoring import engine
 from app.scoring import rules as RL
 
 BASE = Path(__file__).resolve().parent
-VERSION = "0.10.0-rules"
+VERSION = "0.11.0-login"
 
 app = FastAPI(title="UltraByte Solutions", version=VERSION)
 app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
+
+
+@app.middleware("http")
+async def require_login(request: Request, call_next):
+    """Every page needs a signed session when OPERATOR_ACCOUNTS is set (D-2026-10-15-20)."""
+    request.state.user, request.state.role = None, None
+    path = request.url.path
+    if auth.enabled():
+        who = auth.read_cookie(request.cookies.get(auth.COOKIE))
+        if who:
+            request.state.user, request.state.role = who
+        elif not path.startswith(auth.PUBLIC):
+            if request.method == "GET":
+                return RedirectResponse(f"/login?next={quote(path)}", status_code=303)
+            return JSONResponse({"error": "sign in required"}, status_code=401)
+    return await call_next(request)
+
+
+def _actor(request: Request) -> str:
+    return request.state.user or audit.ACTOR
+
+
+def _require_role(request: Request, role: str):
+    if auth.enabled() and request.state.role != role:
+        raise HTTPException(403, f"{role} role required")
+
+
+@app.get("/login")
+def login_page(request: Request, next: str = "/"):
+    if not auth.enabled():
+        return RedirectResponse("/", status_code=303)
+    if request.state.user:
+        return RedirectResponse(next if next.startswith("/") else "/", status_code=303)
+    return templates.TemplateResponse(request, "login.html", {"error": "", "next": next})
+
+
+@app.post("/login")
+def login_post(request: Request, username: str = Form(""), password: str = Form(""), next: str = Form("/")):
+    role = auth.check(username.strip(), password)
+    if not role:
+        return templates.TemplateResponse(request, "login.html", {"error": "Wrong username or password.", "next": next}, status_code=401)
+    with db.connect() as conn:
+        conn.execute("INSERT INTO audit_event (actor, action, note) VALUES (%s, 'login', %s)", (username.strip(), f"Signed in as {role}"))
+        conn.commit()
+    resp = RedirectResponse(next if next.startswith("/") and not next.startswith("//") else "/", status_code=303)
+    resp.set_cookie(auth.COOKIE, auth.make_cookie(username.strip(), role), max_age=auth.TTL_S, httponly=True, samesite="lax",
+                    secure=request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https")
+    return resp
+
+
+@app.post("/logout")
+def logout(request: Request):
+    if request.state.user:
+        with db.connect() as conn:
+            conn.execute("INSERT INTO audit_event (actor, action, note) VALUES (%s, 'logout', 'Signed out')", (request.state.user,))
+            conn.commit()
+    resp = RedirectResponse("/login", status_code=303)
+    resp.delete_cookie(auth.COOKIE)
+    return resp
 templates = Jinja2Templates(directory=BASE / "templates")
 # One-time form tokens: a second click (or a browser retry) with the same token is not saved twice.
 from collections import deque
@@ -51,7 +111,7 @@ GLOSSARY = {
     "V1": "Version 1.0: the old rule. Any single deposit of $10,000 or more raises an alert, with no ranking and no reasons.",
     "V2": "Version 2.0: this app. Two scores with reasons, labels with evidence, and an audit trail.",
 }
-templates.env.globals.update(version=VERSION, llm_enabled=llm.enabled(), labels=audit.LABELS, gloss=GLOSSARY, form_token=_fresh_token)
+templates.env.globals.update(version=VERSION, llm_enabled=llm.enabled(), labels=audit.LABELS, gloss=GLOSSARY, form_token=_fresh_token, auth_enabled=auth.enabled)
 
 _cache: dict = {}
 
@@ -137,7 +197,7 @@ def _summary_for(r: engine.PlayerScore) -> dict | None:
 
 
 @app.post("/player/{pid}/summary")
-def summary(pid: str, tok: str = Form("", alias="_tok")):
+def summary(request: Request, pid: str, tok: str = Form("", alias="_tok")):
     if _already_used(tok):
         return RedirectResponse(f"/player/{pid}?ok=Already+requested#summary", status_code=303)
     r = _by_id(pid)
@@ -148,18 +208,18 @@ def summary(pid: str, tok: str = Form("", alias="_tok")):
         with db.connect() as conn:
             conn.execute(
                 "INSERT INTO audit_event (actor, player_id, action, note, score_snapshot) VALUES (%s, %s, 'ai_summary', %s, %s)",
-                (f"AI summary ({res['model']} via n8n)", pid, res["text"], Jsonb(d)))
+                (f"AI summary ({res['model']} via n8n), requested by {_actor(request)}", pid, res["text"], Jsonb(d)))
             conn.commit()
     return RedirectResponse(f"/player/{pid}?ok=Summary+{'generated' if res['source'] == 'ai' else 'unavailable,+rule+text+shown'}#summary", status_code=303)
 
 
 @app.post("/player/{pid}/decision")
-def decision(pid: str, action: str = Form(...), note: str = Form(""), tok: str = Form("", alias="_tok")):
+def decision(request: Request, pid: str, action: str = Form(...), note: str = Form(""), tok: str = Form("", alias="_tok")):
     if _already_used(tok):
         return RedirectResponse(f"/player/{pid}?ok=Already+saved+(duplicate+click+ignored)#audit", status_code=303)
     r = _by_id(pid)
     with db.connect() as conn:
-        audit.record(conn, pid, action, note, r.to_dict())
+        audit.record(conn, pid, action, note, r.to_dict(), actor=_actor(request))
     return RedirectResponse(f"/player/{pid}?ok=Decision+saved+to+the+audit+trail#audit", status_code=303)
 
 
@@ -193,7 +253,7 @@ async def enter_post(request: Request):
         pid = judge.save(conn, entry)
         _cache.clear()
         after = _by_id(pid).to_dict()
-        judge.record(conn, pid, entry, before, after)
+        judge.record(conn, pid, entry, before, after, actor=_actor(request))
     tok = secrets.token_urlsafe(8)
     if len(_entries) > 50:
         _entries.clear()
@@ -209,11 +269,13 @@ def rules_page(request: Request, saved: int = 0):
         hist = RL.history(conn)
     return templates.TemplateResponse(request, "rules.html", {
         "spec": RL.SPEC, "values": cur.values, "rule_version": cur.version, "defaults": RL.DEFAULTS,
-        "history": hist, "errors": [], "saved": saved, "edt": C.EDT})
+        "history": hist, "errors": [], "saved": saved, "edt": C.EDT,
+        "can_edit": (not auth.enabled()) or request.state.role == "compliance"})
 
 
 @app.post("/rules")
 async def rules_post(request: Request):
+    _require_role(request, "compliance")
     form = {k: str(v) for k, v in (await request.form()).items()}
     if _already_used(form.get("_tok", "")):
         return RedirectResponse("/rules?ok=Already+saved+(duplicate+click+ignored)", status_code=303)
@@ -234,8 +296,8 @@ async def rules_post(request: Request):
             return templates.TemplateResponse(request, "rules.html", {
                 "spec": RL.SPEC, "values": {**prev.values, **{k: form.get(k, v) for k, v in prev.values.items()}},
                 "rule_version": prev.version, "defaults": RL.DEFAULTS, "history": hist, "errors": errors, "saved": 0,
-                "edt": C.EDT}, status_code=400)
-        vid = RL.save(conn, values, "compliance operator (demo)", note, prev)
+                "edt": C.EDT, "can_edit": True}, status_code=400)
+        vid = RL.save(conn, values, _actor(request), note, prev)
     _cache.clear()
     llm.clear()
     return RedirectResponse(f"/rules?saved={vid}&ok=Saved+as+rules+version+{vid}.+All+players+rescored.", status_code=303)
@@ -360,7 +422,8 @@ def reset(request: Request):
     with db.connect() as conn:
         counts = load(conn)
         conn.execute(
-            "INSERT INTO audit_event (actor, action, note) VALUES ('system', 'reset', 'Demo data restored to synthetic seed')"
+            "INSERT INTO audit_event (actor, action, note) VALUES (%s, 'reset', 'Demo data restored to synthetic seed')",
+            (_actor(request) if request.state.user else "system",)
         )
         conn.commit()
     _cache.clear()

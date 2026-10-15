@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in - UltraByte Solutions</title><link rel="stylesheet" href="/static/app.css">
+<link rel="icon" type="image/png" sizes="64x64" href="/static/brand/team/favicon-64.png"></head>
+<body class="login">
+<main class="loginbox">
+  <img src="/static/brand/team/umark-256.png" alt="" width="96" height="96">
+  <h1>UltraByte <small>Solutions</small></h1>
+  <p class="sub">Operator sign-in</p>
+  {% if error %}<p class="loginerr">{{ error }}</p>{% endif %}
+  <form method="post" action="/login" class="form">
+    <input type="hidden" name="next" value="{{ next }}">
+    <label>Username<input name="username" autocomplete="username" autofocus required></label>
+    <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
+    <button class="btn act-escalate" type="submit" style="width:100%">Sign in</button>
+  </form>
+  <p class="src">Demo sign-in: two roles, investigator and compliance. Synthetic data only.</p>
+</main>
+<script>
+document.addEventListener('submit', function (e) { var b = e.target.querySelector('button'); setTimeout(function () { b.disabled = true; b.textContent = 'Signing in…'; }, 0); });
+</script>
+</body></html>

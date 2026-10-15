@@ -24,6 +24,8 @@
       <a href="/audit" class="{{ 'on' if path == '/audit' }}"><svg viewBox="0 0 24 24"><path d="M6 3h9l5 5v13H6z"/><path d="M14 3v6h6M9 13h7M9 17h7"/></svg>Audit trail</a>
     </nav>
     <div class="status">
+      {% if request.state.user %}<div class="who"><span><b>{{ request.state.user }}</b> <span class="role">{{ request.state.role }}</span></span><form method="post" action="/logout"><button class="btn" type="submit">Sign out</button></form></div>
+      {% elif not auth_enabled() %}<span class="src" style="color:var(--medium)">Sign-in not configured</span>{% endif %}
       <span class="synthetic"><i></i>Synthetic data</span>
       <span>v{{ version }} &middot; AI summary {{ "on" if llm_enabled else "off" }}</span>
       <span>Built during ThunderHacks II</span>

@@ -181,3 +181,12 @@ button.busy { opacity: .7; cursor: progress; }
 .errbox { border-color: var(--high) !important; }
 .errbox h2 { color: var(--high); }
 [title] { cursor: help; }
+body.login { display: grid; place-items: center; min-height: 100vh; }
+.loginbox { width: min(380px, 92vw); padding: 32px 28px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; text-align: center; }
+.loginbox img { display: block; margin: 0 auto 8px; }
+.loginbox h1 { font-size: 24px; } .loginbox h1 small { display: block; font-size: 11px; letter-spacing: .16em; color: var(--dim); font-weight: 700; }
+.loginbox .form { text-align: left; margin-top: 18px; }
+.loginerr { color: var(--high); font-weight: 600; font-size: 14px; margin: 12px 0 0; }
+.side .who { font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.side .who b { color: var(--ink); } .side .who form button { font-size: 12px; padding: 4px 8px; }
+.role { font-size: 10px; font-weight: 800; letter-spacing: .08em; padding: 1px 6px; border-radius: 4px; background: var(--raised); color: var(--muted); text-transform: uppercase; }

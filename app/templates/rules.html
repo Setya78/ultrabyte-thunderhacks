@@ -4,7 +4,8 @@
 {% block content %}
 <div class="head">
   <div><h1>Rules <span class="pid">version {{ rule_version }}</span> {{ help("Every threshold the score uses, owned by compliance, not by developers. Saving creates a new version; old versions are never changed. Each score snapshot records the version that produced it.") }}</h1></div>
-  <form method="post" action="/rules" class="tools"><input type="hidden" name="_tok" value="{{ form_token() }}"><button class="btn" name="step" value="defaults" type="submit">Reset to defaults</button></form>
+  {% if can_edit %}<form method="post" action="/rules" class="tools"><input type="hidden" name="_tok" value="{{ form_token() }}"><button class="btn" name="step" value="defaults" type="submit">Reset to defaults</button></form>
+  {% else %}<span class="src">Read-only: only the compliance role can change rules.</span>{% endif %}
 </div>
 
 {% if errors %}<section class="panel errbox"><h2>Not saved. Fix these first</h2><div class="body"><ul class="reason" style="max-width:none;margin:0;padding-left:18px">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div></section>{% endif %}
@@ -16,16 +17,16 @@
   <div class="body form">
   {% for k, d, label, g, hlp in spec if g == grp %}
     <label><span class="lt">{{ label }}{% if hlp %} {{ help(hlp) }}{% endif %}</span>
-      <input name="{{ k }}" value="{{ values[k] }}" inputmode="decimal" {% if values[k] != defaults[k] %}class="changed"{% endif %}></label>
+      <input name="{{ k }}" value="{{ values[k] }}" inputmode="decimal" {% if values[k] != defaults[k] %}class="changed"{% endif %} {% if not can_edit %}disabled{% endif %}></label>
   {% endfor %}
   </div>
 </section>
 {% endfor %}
 </div>
-<section class="panel"><div class="body form">
+{% if can_edit %}<section class="panel"><div class="body form">
   <label>Why this change? <small>required, saved to the audit trail</small><input name="note" maxlength="200" placeholder="e.g. Calibration after Q3 review"></label>
   <div class="btns"><button class="btn act-escalate" type="submit" name="step" value="save">Save as new version and rescore</button></div>
-</div></section>
+</div></section>{% endif %}
 </form>
 
 <section class="panel">

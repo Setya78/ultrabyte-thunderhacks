@@ -2,16 +2,16 @@
 from psycopg.types.json import Jsonb
 
 ACTIONS = {"escalate": "Escalate", "monitor": "Monitor", "dismiss": "Dismiss"}
-LABELS = {**ACTIONS, "manual_entry": "Manual entry", "ai_summary": "AI summary", "reset": "Reset", "note": "Note", "rule_change": "Rule change"}
+LABELS = {**ACTIONS, "manual_entry": "Manual entry", "ai_summary": "AI summary", "reset": "Reset", "note": "Note", "rule_change": "Rule change", "login": "Signed in", "logout": "Signed out"}
 ACTOR = "investigator (demo)"  # no authentication in the demo; disclosed in README
 
 
-def record(conn, player_id: str, action: str, note: str, snapshot: dict) -> None:
+def record(conn, player_id: str, action: str, note: str, snapshot: dict, actor: str = ACTOR) -> None:
     if action not in ACTIONS:
         raise ValueError(f"unknown action {action!r}")
     conn.execute(
         "INSERT INTO audit_event (actor, player_id, action, note, score_snapshot) VALUES (%s, %s, %s, %s, %s)",
-        (ACTOR, player_id, action, (note or "").strip()[:1000] or None, Jsonb(snapshot)),
+        (actor, player_id, action, (note or "").strip()[:1000] or None, Jsonb(snapshot)),
     )
     conn.commit()
 
