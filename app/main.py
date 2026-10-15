@@ -2,18 +2,20 @@
 import os
 from pathlib import Path
 
-from fastapi import FastAPI, Form, HTTPException, Request
-from fastapi.responses import JSONResponse, RedirectResponse
+import secrets
+
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app import db, validation
+from app import db, importer, validation
 from app.audit import log as audit
 from app.scoring import config as C
 from app.scoring import engine
 
 BASE = Path(__file__).resolve().parent
-VERSION = "0.6.0-c1"
+VERSION = "0.8.0-import"
 
 app = FastAPI(title="UltraByte", version=VERSION)
 app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
@@ -142,6 +144,52 @@ def network(request: Request):
     links = [{"kind": r["kind"], "ref": r["ref"][:9] + "...", "last4": r["last4"], "uses": r["uses"],
               "players": [by_id[p] for p in r["players"]]} for r in rows]
     return templates.TemplateResponse(request, "network.html", {"links": links})
+
+
+_pending: dict[str, importer.Result] = {}
+
+
+@app.get("/import")
+def import_page(request: Request):
+    return templates.TemplateResponse(request, "import.html", {"result": None, "loaded": None})
+
+
+@app.get("/import/template.xlsx")
+def import_template():
+    return Response(importer.template_xlsx(), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    headers={"Content-Disposition": 'attachment; filename="ultrabyte-import-template.xlsx"'})
+
+
+@app.post("/import")
+async def import_post(request: Request, step: str = Form("check"), mode: str = Form("replace"),
+                      token: str = Form(""), file: UploadFile | None = File(None)):
+    mode = "append" if mode == "append" else "replace"
+    if step == "load":
+        res = _pending.pop(token, None)
+        if res is None or not res.ok:
+            raise HTTPException(400, "Nothing to load: check the file first")
+        with db.connect() as conn:
+            try:
+                counts = importer.load(conn, res, mode)
+            except ValueError as exc:
+                return templates.TemplateResponse(request, "import.html",
+                                                  {"result": importer.Result(errors=[str(exc)]), "loaded": None, "filename": ""})
+        _cache.clear()
+        return templates.TemplateResponse(request, "import.html", {"result": None, "loaded": counts})
+    if file is None or not file.filename:
+        raise HTTPException(400, "Choose a file")
+    data = await file.read()
+    if len(data) > 5_000_000:
+        res = importer.Result(errors=["File is larger than 5 MB"])
+    else:
+        res = importer.parse(file.filename, data)
+    tok = ""
+    if res.ok:
+        tok = secrets.token_urlsafe(12)
+        _pending.clear()  # single-user demo: keep only the latest checked file
+        _pending[tok] = res
+    return templates.TemplateResponse(request, "import.html",
+                                      {"result": res, "loaded": None, "filename": file.filename, "token": tok, "mode": mode})
 
 
 @app.get("/validation")

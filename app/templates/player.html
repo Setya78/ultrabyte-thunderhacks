@@ -1,113 +1,103 @@
 {% extends "base.html" %}
+{% from "_ring.html" import ring %}
 {% block title %}{{ r.display_name }} ({{ r.player_id }}) - UltraByte{% endblock %}
 {% block content %}
-<p class="crumb"><a href="/?mode={{ mode }}">&larr; Review queue</a></p>
+<p class="sub" style="margin:0 0 12px"><a href="/?mode={{ mode }}">&larr; Review queue</a></p>
 
-<section class="phead">
-  <div>
+<section class="panel hero">
+  {{ ring(r, large=True) }}
+  <div class="who">
     <h1>{{ r.display_name }} <span class="pid">{{ r.player_id }}</span></h1>
-    <p class="meta">{{ r.occupation }} &middot; aged {{ r.age_band }} &middot; income band {{ r.income_band }} &middot; home {{ r.region }}</p>
+    <div class="meta">{{ r.occupation }}, aged {{ r.age_band }}, income {{ r.income_band }}, home {{ r.region }}</div>
+    <div class="tags"><span class="band band-{{ r.band|lower }}">{{ r.band }} risk</span> {% for l in r.labels|unique(attribute='text') %}<span class="label label-{{ l.key }}">{{ l.text }}</span>{% endfor %}</div>
   </div>
-  <div class="bigscore">
-    <span class="num">{{ r.score }}</span><span class="of">/100</span>
-    <span class="band band-{{ r.band|lower }}">{{ r.band }} risk</span>
-    <div>{% for l in r.labels|unique(attribute='text') %}<span class="label label-{{ l.key }}">{{ l.text }}</span> {% endfor %}</div>
-  </div>
+  <div class="act"><div class="src">Suggested</div><div style="font-weight:700;max-width:26ch">{{ r.suggestion }}</div></div>
 </section>
 
-<section class="card">
+<div class="grid two">
+<section class="panel">
   <h2>Why {{ r.score }}?</h2>
-  <table class="why">
-    <tbody>
-      {% for c in r.checks %}
-      <tr class="{{ 'zero' if not c.points }}">
-        <td class="pts"><span class="seg-dot seg-{{ c.key }}"></span>{{ c.points }}<span class="of">/25</span></td>
-        <td><strong>{{ c.name }}</strong><br>{{ c.reason }}<div class="src">Source: {{ c.source }}</div></td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% if r.labels %}
-  <h3>Labels (no points)</h3>
-  <ul class="labels">
-    {% for l in r.labels %}
-    <li><span class="label label-{{ l.key }}">{{ l.text }}</span> {{ l.reason }}<div class="src">Source: {{ l.source }}</div></li>
+  <div class="why">
+    {% for c in r.checks %}
+    <div class="row {{ 'zero' if not c.points }}">
+      <div class="pts"><i class="dot {{ c.key }}"></i>{{ c.points }}<small>/25</small></div>
+      <div><div class="t1">{{ c.name }}</div><div class="t2">{{ c.reason }}</div><div class="src">{{ c.source }}</div></div>
+    </div>
     {% endfor %}
-  </ul>
-  {% endif %}
-  {% if r.v1_flagged %}<p class="note">Version 1.0 also alerted on this player: "{{ r.v1_reason }}", with no reason or context.</p>{% endif %}
+    {% for l in r.labels %}
+    <div class="row">
+      <div><span class="label label-{{ l.key }}">{{ l.text }}</span></div>
+      <div><div class="t2" style="color:var(--ink)">{{ l.reason }}</div><div class="src">{{ l.source }}</div></div>
+    </div>
+    {% endfor %}
+  </div>
+  {% if r.v1_flagged %}<p class="note" style="margin:12px 18px 16px">Version 1.0 also alerted on this player ("{{ r.v1_reason }}"), with no reason or context.</p>{% endif %}
 </section>
 
-<section class="card">
-  <h2>Deposits per month vs peers</h2>
-  <p class="meta">Bars: this player's deposits. Shaded: normal range (10th-90th percentile) for players aged {{ r.age_band }} earning {{ r.income_band }}.</p>
+<section class="panel">
+  <h2>Deposits per month <small>bars: this player; shaded: peers' normal range</small></h2>
+  <div class="body">
   <svg viewBox="0 0 {{ chart.w }} {{ chart.h }}" class="chart" role="img" aria-label="Monthly deposits compared with peer range">
     {% for b in chart.bars %}
     <rect x="{{ b.band_x }}" y="{{ b.band_y }}" width="{{ b.band_w }}" height="{{ b.band_h }}" class="peerband"></rect>
-    <rect x="{{ b.x }}" y="{{ b.y }}" width="{{ b.bw }}" height="{{ b.bh }}" class="{{ 'barcur' if b.current else 'bar' }}"></rect>
+    <rect x="{{ b.x }}" y="{{ b.y }}" width="{{ b.bw }}" height="{{ b.bh }}" rx="2" class="{{ 'barcur' if b.current else 'bar' }}"></rect>
     <text x="{{ b.x + b.bw / 2 }}" y="{{ b.y - 4 }}" text-anchor="middle" class="val">${{ '{:,.0f}'.format(b.value) }}</text>
     <text x="{{ b.x + b.bw / 2 }}" y="{{ chart.h - 8 }}" text-anchor="middle" class="axis">{{ b.label }}</text>
     {% endfor %}
     <line x1="20" x2="{{ chart.w }}" y1="{{ chart.base }}" y2="{{ chart.base }}" class="baseline"></line>
   </svg>
-</section>
-
-<div class="cols">
-<section class="card">
-  <h2>Deposits and withdrawals, last 30 days</h2>
-  <table class="queue small">
-    <thead><tr><th>When (EDT)</th><th>Type</th><th>Amount</th><th>Where</th><th>Detail</th></tr></thead>
-    <tbody>
-      {% for t in txns %}
-      <tr class="{{ 'evidence' if t.id in evidence }}">
-        <td>{{ t.ts.astimezone(edt).strftime('%d %b %H:%M') }}</td>
-        <td>{{ t.type }}</td>
-        <td>${{ '{:,.2f}'.format(t.amount) }}</td>
-        <td>{{ t.location_region }}</td>
-        <td>{% if t.method_last4 %}card {{ t.method_last4 }}{% endif %}{% if t.payout_holder_match == false %}<strong>payout to another person's account</strong>{% endif %}{% if t.id in evidence %} <span class="ev">evidence</span>{% endif %}</td>
-      </tr>
-      {% else %}
-      <tr><td colspan="5" class="empty">No deposits or withdrawals in the last 30 days.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</section>
-
-<section class="card">
-  <h2>Where they played, last 30 days</h2>
-  <table class="queue small">
+  <p class="src">Peers: players aged {{ r.age_band }} earning {{ r.income_band }} (10th to 90th percentile).</p>
+  </div>
+  <h2 style="border-top:1px solid var(--line)">Where they played <small>last 30 days</small></h2>
+  <table class="t">
     <thead><tr><th>City</th><th>Sessions</th><th>First</th><th>Last</th></tr></thead>
     <tbody>
       {% for p in places %}
       <tr><td>{{ p.city }}{% if p.city == r.region %} <span class="pid">home</span>{% endif %}</td><td>{{ p.sessions }}</td>
           <td>{{ p.first.astimezone(edt).strftime('%d %b %H:%M') }}</td><td>{{ p.last.astimezone(edt).strftime('%d %b %H:%M') }}</td></tr>
-      {% else %}
-      <tr><td colspan="4" class="empty">No sessions.</td></tr>
-      {% endfor %}
+      {% else %}<tr><td colspan="4" class="empty">No sessions.</td></tr>{% endfor %}
     </tbody>
   </table>
 </section>
 </div>
 
-<section class="card" id="audit">
+<section class="panel">
+  <h2>Deposits and withdrawals <small>last 30 days; highlighted rows are evidence for the labels</small></h2>
+  <table class="t">
+    <thead><tr><th>When (EDT)</th><th>Type</th><th>Amount</th><th>Where</th><th>Detail</th></tr></thead>
+    <tbody>
+      {% for t in txns %}
+      <tr class="{{ 'evidence' if t.id in evidence }}">
+        <td>{{ t.ts.astimezone(edt).strftime('%d %b %H:%M') }}</td>
+        <td>{{ t.type.replace('_', ' ') }}</td>
+        <td>${{ '{:,.2f}'.format(t.amount) }}</td>
+        <td>{{ t.location_region }}</td>
+        <td>{% if t.method_last4 %}card {{ t.method_last4 }}{% endif %}{% if t.payout_holder_match == false %}<strong>payout to another person's account</strong>{% endif %}{% if t.id in evidence %}<span class="ev">evidence</span>{% endif %}</td>
+      </tr>
+      {% else %}<tr><td colspan="5" class="empty">No deposits or withdrawals in the last 30 days.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="panel" id="audit">
   <h2>Decision</h2>
-  <p class="suggestbox"><strong>Suggested:</strong> {{ r.suggestion }}<span class="src">Rule: {{ r.suggestion_rule }}. A suggestion only; the investigator decides.</span></p>
-  <form method="post" action="/player/{{ r.player_id }}/decision" class="decide">
-    <textarea name="note" rows="2" placeholder="Why? (saved to the audit trail with the full score at this moment)"></textarea>
-    <div class="btns">
-      {% for key, name in actions.items() %}<button type="submit" name="action" value="{{ key }}" class="act act-{{ key }}">{{ name }}</button>{% endfor %}
-    </div>
-  </form>
-  <h3>Audit trail <span class="pid">append-only</span></h3>
-  <table class="queue small">
+  <div class="body">
+    <div class="suggestbox"><strong>Suggested:</strong> {{ r.suggestion }}<span class="src">Rule: {{ r.suggestion_rule }}. A suggestion only; you decide.</span></div>
+    <form method="post" action="/player/{{ r.player_id }}/decision" class="decide">
+      <textarea name="note" rows="2" placeholder="Why? Saved to the audit trail with the full score at this moment."></textarea>
+      <div class="btns">
+        {% for key, name in actions.items() %}<button type="submit" name="action" value="{{ key }}" class="btn act-{{ key }}">{{ name }}</button>{% endfor %}
+      </div>
+    </form>
+  </div>
+  <h2 style="border-top:1px solid var(--line)">Audit trail <small>append-only</small></h2>
+  <table class="t">
     <thead><tr><th>When (EDT)</th><th>Who</th><th>Action</th><th>Score then</th><th>Note</th></tr></thead>
     <tbody>
       {% for h in history %}
       <tr><td>{{ h.ts.astimezone(edt).strftime('%d %b %H:%M:%S') }}</td><td>{{ h.actor }}</td><td>{{ actions.get(h.action, h.action) }}</td>
           <td>{{ h.score }} {{ h.band }}</td><td>{{ h.note or '' }}</td></tr>
-      {% else %}
-      <tr><td colspan="5" class="empty">No decisions yet.</td></tr>
-      {% endfor %}
+      {% else %}<tr><td colspan="5" class="empty">No decisions yet.</td></tr>{% endfor %}
     </tbody>
   </table>
 </section>

@@ -1,52 +1,41 @@
 {% extends "base.html" %}
 {% block title %}Validation - UltraByte{% endblock %}
 {% block content %}
-<section class="bar"><h1>Validation: Version 1.0 vs 2.0</h1></section>
-<p class="note">The planted cases were <strong>designed by the team</strong> to exercise each check. Catching them shows the logic does
-what it says; it is <strong>not evidence of real-world performance</strong>. False positives are counted over the whole normal population.</p>
-
 {% set s = v.summary %}
-<div class="kpis">
-  <div class="kpi"><div class="k">Risky players caught</div>
-    <div class="vv"><span class="old">V1 {{ s.v1_risky_caught }} of {{ s.risky_total }}</span><span class="new">V2 {{ s.v2_risky_caught }} of {{ s.risky_total }}</span></div></div>
-  <div class="kpi"><div class="k">Normal controls wrongly flagged</div>
-    <div class="vv"><span class="old">V1 {{ s.v1_controls_flagged }} of {{ s.controls_total }}</span><span class="new">V2 {{ s.v2_controls_flagged }} of {{ s.controls_total }}</span></div></div>
-  <div class="kpi"><div class="k">Background players in the queue</div>
-    <div class="vv"><span class="old">V1 {{ s.v1_normal_flagged }} of {{ s.normal_total }}</span><span class="new">V2 {{ s.v2_normal_flagged }} of {{ s.normal_total }}</span></div>
-    <div class="sub">V2: {{ s.v2_normal_high }} High, the rest Medium</div></div>
-  <div class="kpi"><div class="k">Alerts with a reason</div>
-    <div class="vv"><span class="old">V1 0 of {{ s.v1_alerts_total }}</span><span class="new">V2 {{ s.v2_alerts_total }} of {{ s.v2_alerts_total }}</span></div></div>
+<div class="head"><div><h1>Version 1.0 vs 2.0</h1><p class="sub">Planted cases were designed by the team to exercise each check. This is a logic test, not evidence of real-world performance.</p></div></div>
+<div class="grid four">
+  <div class="panel kpi"><div class="k">Risky players caught</div><div class="v">{{ s.v2_risky_caught }} of {{ s.risky_total }}</div><div class="cmp">Version 1.0: <b>{{ s.v1_risky_caught }} of {{ s.risky_total }}</b></div></div>
+  <div class="panel kpi"><div class="k">Normal controls wrongly flagged</div><div class="v">{{ s.v2_controls_flagged }} of {{ s.controls_total }}</div><div class="cmp">Version 1.0: <b>{{ s.v1_controls_flagged }} of {{ s.controls_total }}</b></div></div>
+  <div class="panel kpi"><div class="k">Background players in the queue</div><div class="v">{{ s.v2_normal_flagged }} of {{ s.normal_total }}</div><div class="cmp">{{ s.v2_normal_high }} High, rest Medium. Version 1.0: <b>{{ s.v1_normal_flagged }}</b></div></div>
+  <div class="panel kpi"><div class="k">Alerts with a reason</div><div class="v">{{ s.v2_alerts_total }} of {{ s.v2_alerts_total }}</div><div class="cmp">Version 1.0: <b>0 of {{ s.v1_alerts_total }}</b></div></div>
 </div>
-<p class="meta">"Caught" in Version 2.0 means: {{ v.caught_rule }}. Version 1.0 is a simplified stand-in rule (any single deposit of $10,000 or more), not OLG's actual rule.</p>
+<p class="note" style="margin-top:16px">Caught means: {{ v.caught_rule }}. Version 1.0 is a simplified stand-in (any single deposit of $10,000 or more), not OLG's actual rule.</p>
 
-<table class="queue small">
+<div class="panel"><table class="t">
   <thead><tr><th>Case</th><th>Player</th><th>What was planted</th><th>Expected</th><th>Version 1.0</th><th>Version 2.0</th><th>Queue #</th></tr></thead>
   <tbody>
     {% for r in v.rows %}
     <tr>
       <td><strong>{{ r.case }}</strong></td>
-      <td><a href="/player/{{ r.player_id }}">{{ r.name }}</a> <span class="pid">{{ r.player_id }}</span></td>
-      <td>{{ r.label }}</td>
-      <td>{{ r.expected }}{% if r.category == 'harm' %} <span class="pid">player protection</span>{% endif %}</td>
+      <td><a class="p" href="/player/{{ r.player_id }}">{{ r.name }}</a><span class="pid">{{ r.player_id }}</span></td>
+      <td class="reason">{{ r.label }}</td>
+      <td>{{ r.expected }}{% if r.category == 'harm' %}<span class="pid">player protection</span>{% endif %}</td>
       <td class="{{ 'ok' if r.v1_ok else 'miss' }}">{{ 'Alert' if r.v1 else 'No alert' }} {{ '✓' if r.v1_ok else '✗' }}</td>
-      <td class="{{ 'ok' if r.v2_ok else 'miss' }}">{{ r.score }} {{ r.band }}{% for l in r.labels %} &middot; {{ l }}{% endfor %} {{ '✓' if r.v2_ok else '✗' }}</td>
+      <td class="{{ 'ok' if r.v2_ok else 'miss' }}">{{ r.score }} {{ r.band }}{% for l in r.labels %}, {{ l }}{% endfor %} {{ '✓' if r.v2_ok else '✗' }}</td>
       <td>{{ r.rank or '-' }}</td>
     </tr>
     {% endfor %}
   </tbody>
-</table>
+</table></div>
 
-<section class="card">
-  <h2>Background players Version 2.0 puts in the queue ({{ s.v2_normal_flagged }} of {{ s.normal_total }})</h2>
-  <p class="meta">Shown, not hidden. All come from the peer check: these players deposit more than everyone else in their age band and income band.</p>
-  <table class="queue small">
+<section class="panel">
+  <h2>Background players in the Version 2.0 queue <small>{{ s.v2_normal_flagged }} of {{ s.normal_total }}, shown, not hidden</small></h2>
+  <table class="t">
     <thead><tr><th>Player</th><th>Score</th><th>Why</th></tr></thead>
     <tbody>
       {% for f in v.fp_examples %}
-      <tr><td><a href="/player/{{ f.player_id }}">{{ f.display_name }}</a> <span class="pid">{{ f.player_id }}</span></td><td>{{ f.score }} {{ f.band }}</td><td>{{ f.top_reason }}</td></tr>
-      {% else %}
-      <tr><td colspan="3" class="empty">None.</td></tr>
-      {% endfor %}
+      <tr><td><a class="p" href="/player/{{ f.player_id }}">{{ f.display_name }}</a><span class="pid">{{ f.player_id }}</span></td><td>{{ f.score }} <span class="band band-{{ f.band|lower }}">{{ f.band }}</span></td><td class="reason">{{ f.top_reason }}</td></tr>
+      {% else %}<tr><td colspan="3" class="empty">None.</td></tr>{% endfor %}
     </tbody>
   </table>
 </section>

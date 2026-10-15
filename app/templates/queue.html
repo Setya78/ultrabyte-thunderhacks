@@ -1,55 +1,47 @@
 {% extends "base.html" %}
+{% from "_ring.html" import ring %}
 {% block title %}Review queue - UltraByte{% endblock %}
 {% block content %}
-<section class="bar">
-  <h1>Review queue</h1>
-  <div class="switch" role="group" aria-label="Alerting version">
-    <a href="/?mode=v1" class="{{ 'on' if mode == 'v1' }}">Version 1.0 &middot; old rule</a>
-    <a href="/?mode=v2" class="{{ 'on' if mode == 'v2' }}">Version 2.0 &middot; UltraByte</a>
+<div class="head">
+  <div><h1>Review queue</h1>
+    <p class="sub">{% if status.db == "ok" %}{{ status.players }} players, {{ status.txns }} transactions, 15 Sep to 14 Oct 2026{% else %}Database: {{ status.db }}{% endif %}</p></div>
+  <div class="tools">
+    <div class="switch" role="group" aria-label="Alerting version">
+      <a href="/?mode=v1" class="{{ 'on old' if mode == 'v1' }}">Version 1.0</a>
+      <a href="/?mode=v2" class="{{ 'on' if mode == 'v2' }}">Version 2.0</a>
+    </div>
+    <form method="post" action="/reset"><button class="btn" type="submit">Reset demo data</button></form>
   </div>
-  <form method="post" action="/reset"><button type="submit">Reset demo data</button></form>
-</section>
-
-<p class="meta">
-  {% if status.db == "ok" %}{{ status.players }} players &middot; {{ status.txns }} transactions &middot; window 15 Sep - 14 Oct 2026{% else %}Database: {{ status.db }}{% endif %}
-</p>
+</div>
 
 {% if mode == "v1" %}
-<p class="note">Version 1.0 is a simplified stand-in for a threshold rule (any single deposit of $10,000 or more), not OLG's actual rule.</p>
-<table class="queue">
+<p class="note">Version 1.0: any single deposit of $10,000 or more raises an alert. A simplified stand-in for a threshold rule, not OLG's actual rule. No ranking, no reasons.</p>
+<div class="panel"><table class="t">
   <thead><tr><th>Player</th><th>Alert</th></tr></thead>
   <tbody>
     {% for r in rows %}
-    <tr><td><a href="/player/{{ r.player_id }}?mode=v1">{{ r.display_name }}</a> <span class="pid">{{ r.player_id }}</span></td><td>{{ r.v1_reason }}</td></tr>
-    {% else %}
-    <tr><td colspan="2" class="empty">No alerts.</td></tr>
-    {% endfor %}
+    <tr><td><a class="p" href="/player/{{ r.player_id }}?mode=v1">{{ r.display_name }}</a><span class="pid">{{ r.player_id }}</span></td><td class="reason">{{ r.v1_reason }}</td></tr>
+    {% else %}<tr><td colspan="2" class="empty">No alerts.</td></tr>{% endfor %}
   </tbody>
-</table>
+</table></div>
 {% else %}
-<table class="queue">
-  <thead>
-    <tr><th>#</th><th>Player</th><th>Score</th><th>Breakdown</th><th>Labels</th><th>Top reason</th></tr>
-  </thead>
+<div class="panel">
+<table class="t">
+  <thead><tr><th>#</th><th>Score</th><th>Player</th><th>Labels</th><th>Why</th><th class="hide-m">Suggested</th></tr></thead>
   <tbody>
     {% for r in rows %}
     <tr>
-      <td>{{ loop.index }}</td>
-      <td><a href="/player/{{ r.player_id }}?mode=v2">{{ r.display_name }}</a> <span class="pid">{{ r.player_id }}</span></td>
-      <td><strong>{{ r.score }}</strong> <span class="band band-{{ r.band|lower }}">{{ r.band }} risk</span></td>
-      <td>
-        <div class="bar4" title="{% for c in r.checks %}{{ c.name }} {{ c.points }}/25; {% endfor %}">
-          {% for c in r.checks %}<span class="seg seg-{{ c.key }}" style="width: {{ c.points }}%"></span>{% endfor %}
-        </div>
-        <div class="legend">{% for c in r.checks %}{{ c.name }} {{ c.points }}{% if not loop.last %} &middot; {% endif %}{% endfor %}</div>
-      </td>
-      <td>{% for l in r.labels|unique(attribute='text') %}<span class="label label-{{ l.key }}">{{ l.text }}</span> {% endfor %}</td>
-      <td>{{ r.top_reason }}<div class="suggest">Suggested: {{ r.suggestion }}</div></td>
+      <td class="pid" style="margin:0">{{ loop.index }}</td>
+      <td><div class="score">{{ ring(r) }}<span class="band band-{{ r.band|lower }}">{{ r.band }}</span></div></td>
+      <td><a class="p" href="/player/{{ r.player_id }}?mode=v2">{{ r.display_name }}</a><span class="pid">{{ r.player_id }}</span><div class="src">{{ r.occupation }}, {{ r.age_band }}, {{ r.income_band }}</div></td>
+      <td>{% for l in r.labels|unique(attribute='text') %}<span class="label label-{{ l.key }}">{{ l.text }}</span>{% endfor %}</td>
+      <td class="reason">{{ r.top_reason }}</td>
+      <td class="hide-m suggest">{{ r.suggestion }}</td>
     </tr>
-    {% else %}
-    <tr><td colspan="6" class="empty">No scored alerts.</td></tr>
-    {% endfor %}
+    {% else %}<tr><td colspan="6" class="empty">No scored alerts.</td></tr>{% endfor %}
   </tbody>
 </table>
+<div class="body legend"><span><i class="dot income"></i>Income fit</span><span><i class="dot history"></i>Own history</span><span><i class="dot peer"></i>Peers</span><span><i class="dot location"></i>Location</span><span>Each arc is one check, up to 25 points.</span></div>
+</div>
 {% endif %}
 {% endblock %}

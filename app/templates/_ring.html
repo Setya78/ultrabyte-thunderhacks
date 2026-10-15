@@ -1,0 +1,13 @@
+{# Score ring: one arc per check, each a quarter of the circle at most. #}
+{% macro ring(r, large=False) -%}
+{% set C = 138.23 %}
+<svg class="ring{{ ' lg' if large }}" viewBox="0 0 50 50" role="img" aria-label="Score {{ r.score }} of 100: {% for c in r.checks %}{{ c.name }} {{ c.points }}{% if not loop.last %}, {% endif %}{% endfor %}">
+  <circle class="track" cx="25" cy="25" r="22"></circle>
+  {% for c in r.checks %}{% if c.points %}
+  <circle class="arc {{ c.key }}" cx="25" cy="25" r="22" transform="rotate(-90 25 25)"
+          stroke-dasharray="{{ '%.2f' % (c.points / 100 * C) }} {{ '%.2f' % (C - c.points / 100 * C) }}"
+          stroke-dashoffset="{{ '%.2f' % (-loop.index0 * C / 4) }}"><title>{{ c.name }}: {{ c.points }} of 25</title></circle>
+  {% endif %}{% endfor %}
+  <text x="25" y="25">{{ r.score }}</text>
+</svg>
+{%- endmacro %}

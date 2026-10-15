@@ -21,8 +21,9 @@ UltraByte flags unusual player activity, compares it against each player's own h
 | S2 | Suggested next step per alert, rule-based, with the rule shown (advice only; the investigator decides) | done |
 | S3 | Dashboard by category: URGENT, STR candidates, context risk, Safer Gambling | done |
 | C1 | Network view: cards and payout bank accounts shared by more than one player | done |
+| Import | Bring your own synthetic data: Excel template (players, transactions, sessions) or CSV; every row validated; sensitive columns rejected; load replaces or adds; scores recomputed | done |
 
-Pages: `/` queue (switch `?mode=v1`), `/player/{id}`, `/dashboard`, `/network`, `/validation`, `/audit`. Health: `/health`. Demo reset: `POST /reset`.
+Pages: `/` queue (switch `?mode=v1`), `/player/{id}`, `/dashboard`, `/network`, `/validation`, `/import`, `/audit`. Health: `/health`. Demo reset: `POST /reset`.
 
 ## Architecture
 
@@ -100,6 +101,7 @@ No CI and no secrets in the repo. `scripts/deploy.sh` calls a script on the serv
 - All locations are inside Ontario (assumption: online play requires being in Ontario).
 - No authentication: this is a single-user demo, so every decision is recorded as "investigator (demo)".
 - Suggested actions are fixed rules in `app/scoring/engine.py` (`suggest`); no LLM is used (`LLM_ENABLED=false`).
+- Import "replace" mode clears the audit trail together with the data (same demo-only path as reset); "add" mode keeps it.
 - The demo date is fixed: "last 30 days" means 15 Sep - 14 Oct 2026, so the data never changes between resets.
 
 ## Assets and licences

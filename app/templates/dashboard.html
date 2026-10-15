@@ -1,25 +1,24 @@
 {% extends "base.html" %}
-{% block title %}Dashboard - UltraByte{% endblock %}
+{% from "_ring.html" import ring %}
+{% block title %}Overview - UltraByte{% endblock %}
 {% block content %}
-<section class="bar"><h1>Overview by category</h1></section>
-<p class="meta">One view for compliance and player protection. Last 30 days (15 Sep - 14 Oct 2026). A player can appear in more than one group.</p>
-<div class="kpis">
+<div class="head"><div><h1>Overview</h1><p class="sub">Compliance and player protection in one view, last 30 days. A player can appear in more than one group.</p></div></div>
+<div class="grid four">
   {% for g in groups %}
-  <a class="kpi kpilink" href="#{{ g.key }}"><div class="k">{{ g.title }}</div><div class="vv"><span class="new">{{ g.players|length }}</span></div><div class="sub">{{ g.desc }}</div></a>
+  <a class="panel kpi" href="#{{ g.key }}"><div class="k">{{ g.title }}</div><div class="v">{{ g.players|length }}</div><div class="cmp">{{ g.desc }}</div></a>
   {% endfor %}
 </div>
 {% for g in groups %}
-<section class="card" id="{{ g.key }}">
-  <h2>{{ g.title }} <span class="pid">{{ g.players|length }} players &middot; owner: {{ g.team }}</span></h2>
-  <table class="queue small">
-    <thead><tr><th>Player</th><th>Score</th><th>Reason</th><th>Suggested</th></tr></thead>
+<section class="panel" id="{{ g.key }}">
+  <h2>{{ g.title }} <small>{{ g.players|length }} players, owner: {{ g.team }}</small></h2>
+  <table class="t">
+    <thead><tr><th>Score</th><th>Player</th><th>Why</th><th class="hide-m">Suggested</th></tr></thead>
     <tbody>
       {% for r, why in g.players %}
-      <tr><td><a href="/player/{{ r.player_id }}">{{ r.display_name }}</a> <span class="pid">{{ r.player_id }}</span></td>
-          <td>{{ r.score }} <span class="band band-{{ r.band|lower }}">{{ r.band }}</span></td><td>{{ why }}</td><td>{{ r.suggestion }}</td></tr>
-      {% else %}
-      <tr><td colspan="4" class="empty">None.</td></tr>
-      {% endfor %}
+      <tr><td><div class="score">{{ ring(r) }}<span class="band band-{{ r.band|lower }}">{{ r.band }}</span></div></td>
+          <td><a class="p" href="/player/{{ r.player_id }}">{{ r.display_name }}</a><span class="pid">{{ r.player_id }}</span></td>
+          <td class="reason">{{ why }}</td><td class="hide-m suggest">{{ r.suggestion }}</td></tr>
+      {% else %}<tr><td colspan="4" class="empty">None.</td></tr>{% endfor %}
     </tbody>
   </table>
 </section>

@@ -1,27 +1,25 @@
 {% extends "base.html" %}
-{% block title %}Network - UltraByte{% endblock %}
+{% block title %}Shared accounts - UltraByte{% endblock %}
 {% block content %}
-<section class="bar"><h1>Shared cards and bank accounts</h1></section>
-<p class="meta">Funding cards and payout bank accounts used by more than one player (all time). Instruments are shown masked; data is synthetic.</p>
+<div class="head"><div><h1>Shared cards and bank accounts</h1><p class="sub">Funding cards and payout accounts used by more than one player. Instruments are masked.</p></div></div>
 {% for g in links %}
-<section class="card">
-  <h2>{{ g.kind }}{% if g.last4 %} ending {{ g.last4 }}{% endif %} <span class="pid">{{ g.ref }} &middot; {{ g.players|length }} players &middot; {{ g.uses }} transactions</span></h2>
+<section class="panel">
+  <h2>{{ g.kind }}{% if g.last4 %} ending {{ g.last4 }}{% endif %} <small>{{ g.players|length }} players, {{ g.uses }} transactions</small></h2>
+  <div class="body">
   <svg viewBox="0 0 {{ 160 * g.players|length + 40 }} 120" class="net" role="img" aria-label="Players linked by a shared instrument">
     <rect x="{{ (160 * g.players|length + 40) / 2 - 70 }}" y="6" width="140" height="30" rx="6" class="inst"></rect>
     <text x="{{ (160 * g.players|length + 40) / 2 }}" y="26" text-anchor="middle" class="instt">{{ g.kind }}{% if g.last4 %} ..{{ g.last4 }}{% endif %}</text>
-    {% for p in g.players %}
-    {% set cx = 40 + 160 * loop.index0 + 60 %}
+    {% for p in g.players %}{% set cx = 40 + 160 * loop.index0 + 60 %}
     <line x1="{{ (160 * g.players|length + 40) / 2 }}" y1="36" x2="{{ cx }}" y2="76" class="edge"></line>
     <rect x="{{ cx - 60 }}" y="76" width="120" height="34" rx="6" class="pnode"></rect>
     <text x="{{ cx }}" y="97" text-anchor="middle" class="pnodet">{{ p.player_id }}</text>
     {% endfor %}
   </svg>
-  <table class="queue small">
+  </div>
+  <table class="t">
     <thead><tr><th>Player</th><th>Score</th><th>Labels</th></tr></thead>
-    <tbody>{% for p in g.players %}<tr><td><a href="/player/{{ p.player_id }}">{{ p.display_name }}</a> <span class="pid">{{ p.player_id }}</span></td><td>{{ p.score }} {{ p.band }}</td><td>{% for l in p.labels|unique(attribute='text') %}<span class="label label-{{ l.key }}">{{ l.text }}</span> {% endfor %}</td></tr>{% endfor %}</tbody>
+    <tbody>{% for p in g.players %}<tr><td><a class="p" href="/player/{{ p.player_id }}">{{ p.display_name }}</a><span class="pid">{{ p.player_id }}</span></td><td>{{ p.score }} <span class="band band-{{ p.band|lower }}">{{ p.band }}</span></td><td>{% for l in p.labels|unique(attribute='text') %}<span class="label label-{{ l.key }}">{{ l.text }}</span>{% endfor %}</td></tr>{% endfor %}</tbody>
   </table>
 </section>
-{% else %}
-<p class="empty">No shared instruments.</p>
-{% endfor %}
+{% else %}<div class="panel"><p class="empty">No shared instruments.</p></div>{% endfor %}
 {% endblock %}

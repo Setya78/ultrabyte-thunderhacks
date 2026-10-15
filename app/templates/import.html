@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Import data - UltraByte{% endblock %}
+{% block content %}
+<div class="head">
+  <div><h1>Import data</h1><p class="sub">Bring your own synthetic players and transactions. Every row is checked first; a file with errors loads nothing.</p></div>
+  <div class="tools"><a class="btn" href="/import/template.xlsx">Download Excel template</a></div>
+</div>
+
+<div class="grid two">
+<section class="panel">
+  <h2>1. Fill the template</h2>
+  <div class="body">
+    <p class="reason" style="max-width:none">Three sheets: <strong>players</strong>, <strong>transactions</strong>, <strong>sessions</strong>. Example rows are included; replace them with your own. Any tool works, including asking an AI assistant to generate the rows.</p>
+    <ul class="reason" style="max-width:none;padding-left:18px">
+      <li>Bands only: income band and age band. Columns such as gender, ethnicity, exact age or account holder names are rejected.</li>
+      <li>Dates between 2026-04-15 and 2026-10-14. The last 30 days (from 15 Sep) are what gets scored.</li>
+      <li>Use the same <code>card_ref</code> or <code>payout_account_ref</code> on two players to simulate a shared card or account.</li>
+    </ul>
+  </div>
+</section>
+<section class="panel">
+  <h2>2. Upload and check</h2>
+  <div class="body">
+    <form method="post" action="/import" enctype="multipart/form-data" class="decide">
+      <input type="file" name="file" accept=".xlsx,.csv" required class="btn" style="width:100%">
+      <div class="btns">
+        <label class="reason"><input type="radio" name="mode" value="replace" checked> Replace the current data</label>
+        <label class="reason"><input type="radio" name="mode" value="append"> Add to the current data</label>
+      </div>
+      <div class="src">Tip: "Add" keeps the 490 background players, so the peer check has enough comparable players. "Replace" scores only your file (peer check needs 20+ peers per band).</div>
+      <div class="btns"><button class="btn" type="submit" name="step" value="check">Check file</button></div>
+    </form>
+  </div>
+</section>
+</div>
+
+{% if result %}
+<section class="panel">
+  <h2>{{ 'Ready to load' if result.ok else 'Fix these first' }} <small>{{ filename }}</small></h2>
+  <div class="body">
+    <div class="grid four">
+      <div class="panel kpi"><div class="k">Players</div><div class="v">{{ result.players|length }}</div></div>
+      <div class="panel kpi"><div class="k">Transactions</div><div class="v">{{ result.txns|length }}</div></div>
+      <div class="panel kpi"><div class="k">Sessions</div><div class="v">{{ result.sessions|length }}</div></div>
+      <div class="panel kpi"><div class="k">Errors</div><div class="v" style="color:{{ 'var(--high)' if result.errors else 'var(--low)' }}">{{ result.errors|length }}</div></div>
+    </div>
+    {% if result.errors %}
+    <ul class="reason" style="max-width:none;margin-top:14px;padding-left:18px">{% for e in result.errors[:40] %}<li>{{ e }}</li>{% endfor %}{% if result.errors|length > 40 %}<li>... and {{ result.errors|length - 40 }} more</li>{% endif %}</ul>
+    {% else %}
+    {% for w in result.warnings %}<p class="note" style="margin-top:14px">{{ w }}</p>{% endfor %}
+    <form method="post" action="/import" enctype="multipart/form-data" class="decide" style="margin-top:14px">
+      <input type="hidden" name="token" value="{{ token }}"><input type="hidden" name="mode" value="{{ mode }}">
+      <div class="btns"><button class="btn act-escalate" type="submit" name="step" value="load">Load and rescore</button>
+      <span class="reason">{{ 'Replaces' if mode == 'replace' else 'Adds to' }} the current data. "Reset demo data" on the queue brings the seed back.</span></div>
+    </form>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+{% if loaded %}
+<section class="panel"><div class="body"><strong>Loaded.</strong> {{ loaded.players }} players, {{ loaded.txns }} transactions, {{ loaded.sessions }} sessions. Scores recomputed. <a href="/">Open the review queue</a>.</div></section>
+{% endif %}
+{% endblock %}
