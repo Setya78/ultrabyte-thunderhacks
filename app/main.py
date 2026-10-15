@@ -15,9 +15,10 @@ from app import db, importer, judge, llm, validation
 from app.audit import log as audit
 from app.scoring import config as C
 from app.scoring import engine
+from app.scoring import rules as RL
 
 BASE = Path(__file__).resolve().parent
-VERSION = "0.9.0-judge"
+VERSION = "0.10.0-rules"
 
 app = FastAPI(title="UltraByte Solutions", version=VERSION)
 app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
@@ -31,7 +32,7 @@ def scores() -> list[engine.PlayerScore]:
     """Score everyone once and keep it until the data is reset (data is static between resets)."""
     if "scores" not in _cache:
         with db.connect() as conn:
-            _cache["scores"] = engine.score_all(engine.load(conn))
+            _cache["scores"] = engine.score_all(engine.load(conn), RL.current(conn))
     return _cache["scores"]
 
 
@@ -167,6 +168,43 @@ async def enter_post(request: Request):
     return RedirectResponse(f"/enter?r={tok}&pid={pid}", status_code=303)
 
 
+@app.get("/rules")
+def rules_page(request: Request, saved: int = 0):
+    with db.connect() as conn:
+        cur = RL.current(conn)
+        hist = RL.history(conn)
+    return templates.TemplateResponse(request, "rules.html", {
+        "spec": RL.SPEC, "values": cur.values, "rule_version": cur.version, "defaults": RL.DEFAULTS,
+        "history": hist, "errors": [], "saved": saved, "edt": C.EDT})
+
+
+@app.post("/rules")
+async def rules_post(request: Request):
+    form = {k: str(v) for k, v in (await request.form()).items()}
+    if form.get("step") == "defaults":
+        values, errors = dict(RL.DEFAULTS), []
+        note = "Reset to defaults (version 1)"
+    else:
+        values, errors = RL.validate(form)
+        note = (form.get("note") or "").strip()[:200]
+        if not note:
+            errors.append("A reason is required: it goes into the audit trail with the change.")
+    with db.connect() as conn:
+        prev = RL.current(conn)
+        if not errors and not RL.changed_keys(prev.values, values):
+            errors.append("Nothing changed.")
+        if errors:
+            hist = RL.history(conn)
+            return templates.TemplateResponse(request, "rules.html", {
+                "spec": RL.SPEC, "values": {**prev.values, **{k: form.get(k, v) for k, v in prev.values.items()}},
+                "rule_version": prev.version, "defaults": RL.DEFAULTS, "history": hist, "errors": errors, "saved": 0,
+                "edt": C.EDT}, status_code=400)
+        vid = RL.save(conn, values, "compliance operator (demo)", note, prev)
+    _cache.clear()
+    llm.clear()
+    return RedirectResponse(f"/rules?saved={vid}", status_code=303)
+
+
 @app.get("/dashboard")
 def dashboard(request: Request):
     rows = scores()
@@ -185,8 +223,9 @@ def dashboard(request: Request):
               "AML", label_reason("str")),
         group("aml", "Context risk (no label)", "Medium or High score from the four checks, no STR / URGENT label",
               "AML", lambda r: r.top_reason if r.band != "Low" and not any(l.key in ("str", "urgent") for l in r.labels) else None),
-        group("safer", "Safer Gambling", "Rising deposits or mostly night play",
-              "Safer Gambling", label_reason("safer")),
+        group("safer", "Safer Gambling", "Safer Gambling score Medium or High: escalation, night play, loss chasing, intensity",
+              "Safer Gambling", lambda r: next((c.reason for c in sorted(r.harm_checks, key=lambda c: -c.points) if c.points), None)
+              if r.harm_band != "Low" else None),
     ]
     return templates.TemplateResponse(request, "dashboard.html", {"groups": groups})
 

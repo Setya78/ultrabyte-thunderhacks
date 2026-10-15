@@ -30,16 +30,16 @@
 </div>
 {% endif %}
 <div class="panel">
-<h2><span class="vtag">{{ 'AFTER' if mode == 'split' else 'NOW' }}</span> Version 2.0 <small>{{ rows|length }} ranked</small> {{ help("Four checks, 25 points each, every point with a reason. Labels (URGENT, STR candidate, Safer Gambling) pin a player near the top. Each arc of the ring is one check.") }}</h2>
+<h2><span class="vtag">{{ 'AFTER' if mode == 'split' else 'NOW' }}</span> Version 2.0 <small>{{ rows|length }} ranked</small> {{ help("Two scores, four checks each, every point with a reason: context / AML and Safer Gambling. Labels (URGENT, STR candidate) pin a player near the top.") }}</h2>
 <table class="t">
-  <thead><tr><th>#</th><th>Score</th><th>Player</th><th class="hide-s">Labels</th><th>Why</th>{% if mode != 'split' %}<th class="hide-m">Suggested</th>{% endif %}</tr></thead>
+  <thead><tr><th>#</th><th>Scores {{ help("Left: context / AML score. Right: Safer Gambling score. Each arc is one check, up to 25 points.") }}</th><th>Player</th><th class="hide-s">Labels</th><th>Why</th>{% if mode != 'split' %}<th class="hide-m">Suggested</th>{% endif %}</tr></thead>
   <tbody>
     {% for r in rows %}
     <tr>
       <td class="pid" style="margin:0">{{ loop.index }}</td>
-      <td><div class="score">{{ ring(r) }}<span class="band band-{{ r.band|lower }}">{{ r.band }}</span></div></td>
+      <td><div class="two-rings"><div>{{ ring(r) }}<div class="ringlbl">AML</div></div><div>{{ ring(r, kind='sg') }}<div class="ringlbl">SG</div></div></div></td>
       <td><a class="p" href="/player/{{ r.player_id }}?mode=v2" style="white-space:nowrap">{{ r.display_name }}</a><span class="pid">{{ r.player_id }}</span><div class="src">{{ r.occupation }}, {{ r.age_band }}, {{ r.income_band }}{% if mode == 'split' and not r.v1_flagged %}<span class="tag-new">missed by 1.0</span>{% endif %}</div></td>
-      <td class="hide-s">{% for l in r.labels|unique(attribute='text') %}<span class="label label-{{ l.key }}">{{ l.text }}</span>{% endfor %}</td>
+      <td class="hide-s"><span class="band band-{{ r.band|lower }}">{{ r.band }}</span> {% if r.harm_band != 'Low' %}<span class="band band-{{ r.harm_band|lower }}">SG {{ r.harm_band }}</span>{% endif %}{% for l in r.labels|unique(attribute='text') %}<span class="label label-{{ l.key }}">{{ l.text }}</span>{% endfor %}</td>
       <td class="reason">{{ r.top_reason }}</td>
       {% if mode != 'split' %}<td class="hide-m suggest">{{ r.suggestion }}</td>{% endif %}
     </tr>

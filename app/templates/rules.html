@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% from "_help.html" import help %}
+{% block title %}Rules - UltraByte Solutions{% endblock %}
+{% block content %}
+<div class="head">
+  <div><h1>Rules <span class="pid">version {{ rule_version }}</span> {{ help("Every threshold the score uses, owned by compliance, not by developers. Saving creates a new version; old versions are never changed. Each score snapshot records the version that produced it.") }}</h1></div>
+  <form method="post" action="/rules" class="tools"><button class="btn" name="step" value="defaults" type="submit">Reset to defaults</button></form>
+</div>
+
+{% if saved %}<p class="src" style="margin:0 0 12px;color:var(--low)">Saved as version {{ saved }}. All players rescored.</p>{% endif %}
+{% if errors %}<section class="panel"><h2>Fix these first</h2><div class="body"><ul class="reason" style="max-width:none;margin:0;padding-left:18px">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div></section>{% endif %}
+
+<form method="post" action="/rules" class="decide">
+<div class="grid three">
+{% for grp in ['Context score', 'STR labels', 'Safer Gambling'] %}
+<section class="panel"><h2>{{ grp }}</h2>
+  <div class="body form">
+  {% for k, d, label, g, hlp in spec if g == grp %}
+    <label><span class="lt">{{ label }}{% if hlp %} {{ help(hlp) }}{% endif %}</span>
+      <input name="{{ k }}" value="{{ values[k] }}" inputmode="decimal" {% if values[k] != defaults[k] %}class="changed"{% endif %}></label>
+  {% endfor %}
+  </div>
+</section>
+{% endfor %}
+</div>
+<section class="panel"><div class="body form">
+  <label>Why this change? <small>required, saved to the audit trail</small><input name="note" maxlength="200" placeholder="e.g. Calibration after Q3 review"></label>
+  <div class="btns"><button class="btn act-escalate" type="submit" name="step" value="save">Save as new version and rescore</button></div>
+</div></section>
+</form>
+
+<section class="panel">
+  <h2>Version history {{ help("Append-only. The audit trail lists each change with the values before and after.") }}</h2>
+  <table class="t"><thead><tr><th>Version</th><th>When (EDT)</th><th>Who</th><th>Reason</th></tr></thead>
+  <tbody>
+    {% for h in history %}<tr><td>{{ h.id }}</td><td>{{ h.created_at.astimezone(edt).strftime('%d %b %H:%M') }}</td><td>{{ h.actor }}</td><td class="reason" style="max-width:none">{{ h.note }}</td></tr>
+    {% else %}<tr><td colspan="4" class="empty">Version 1 (defaults). No changes yet.</td></tr>{% endfor %}
+  </tbody></table>
+</section>
+{% endblock %}

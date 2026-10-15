@@ -6,11 +6,11 @@
 <p class="sub" style="margin:0 0 12px"><a href="/?mode={{ mode }}">&larr; Review queue</a></p>
 
 <section class="panel hero">
-  {{ ring(r, large=True) }}
+  <div class="two-rings"><div>{{ ring(r, large=True) }}<div class="ringlbl">AML</div></div><div>{{ ring(r, large=True, kind='sg') }}<div class="ringlbl">SAFER GAMBLING</div></div></div>
   <div class="who">
     <h1>{{ r.display_name }} <span class="pid">{{ r.player_id }}</span></h1>
     <div class="meta">{{ r.occupation }}, aged {{ r.age_band }}, income {{ r.income_band }}, home {{ r.region }}</div>
-    <div class="tags"><span class="band band-{{ r.band|lower }}">{{ r.band }} risk</span> {% for l in r.labels|unique(attribute='text') %}<span class="label label-{{ l.key }}">{{ l.text }}</span>{% endfor %}</div>
+    <div class="tags"><span class="band band-{{ r.band|lower }}">AML {{ r.band }}</span> <span class="band band-{{ r.harm_band|lower }}">Safer Gambling {{ r.harm_band }}</span> {% for l in r.labels|unique(attribute='text') %}<span class="label label-{{ l.key }}">{{ l.text }}</span>{% endfor %}</div>
   </div>
   <div class="act"><div class="src">Suggested {{ help("Rule: " ~ r.suggestion_rule.rstrip(".") ~ ". A suggestion only; the investigator decides.") }}</div><div style="font-weight:700;max-width:26ch">{{ r.suggestion }}</div></div>
 </section>
@@ -30,7 +30,7 @@
 
 <div class="grid two">
 <section class="panel">
-  <h2>Why {{ r.score }}?</h2>
+  <h2>Why {{ r.score }}? <small>rules v{{ r.rule_version }}</small></h2>
   <div class="why">
     {% for c in r.checks %}
     <div class="row {{ 'zero' if not c.points }}">
@@ -42,6 +42,15 @@
     <div class="row">
       <div><span class="label label-{{ l.key }}">{{ l.text }}</span></div>
       <div><div class="t2" style="color:var(--ink)">{{ l.reason }} {{ help("Source: " ~ l.source) }}</div></div>
+    </div>
+    {% endfor %}
+  </div>
+  <h2 style="border-top:1px solid var(--line)">Safer Gambling {{ r.harm_score }} <small>{{ r.harm_band }}</small> {{ help("Four player-protection checks, separate from the AML score, so harm is not hidden behind money laundering risk. Thresholds are on the Rules page.") }}</h2>
+  <div class="why">
+    {% for c in r.harm_checks %}
+    <div class="row {{ 'zero' if not c.points }}">
+      <div class="pts"><i class="dot {{ c.key }}"></i>{{ c.points }}<small>/25</small></div>
+      <div><div class="t1">{{ c.name }} {{ help("Source: " ~ c.source) }}</div><div class="t2">{{ c.reason }}</div></div>
     </div>
     {% endfor %}
   </div>

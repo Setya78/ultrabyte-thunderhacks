@@ -4,7 +4,7 @@ This is the only place that reads `planted_case`. The scorer never does.
 """
 from app.scoring.engine import PlayerScore
 
-CAUGHT_RULE = "band Medium or High, or an STR candidate / URGENT label"
+CAUGHT_RULE = "AML band Medium or High, Safer Gambling band Medium or High, or an STR candidate / URGENT label"
 
 
 def build(conn, scores: list[PlayerScore]) -> dict:

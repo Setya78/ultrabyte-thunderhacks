@@ -166,3 +166,11 @@ details.help .pop { position: absolute; z-index: 20; top: 26px; left: -10px; wid
 .tag-new { font-size: 10px; font-weight: 800; color: var(--cyan); margin-left: 6px; white-space: nowrap; }
 .split .hide-s { display: none; }
 @media (max-width: 960px) { .split { grid-template-columns: 1fr; } }
+.grid.three { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 960px) { .grid.three { grid-template-columns: 1fr; } }
+.form input.changed { border-color: var(--medium); }
+.ring.sg .arc.escalation { stroke: #63CF9A; } .ring.sg .arc.night { stroke: #8EE3B8; } .ring.sg .arc.chase { stroke: #B8F0D1; } .ring.sg .arc.intensity { stroke: #3FAE7C; }
+.dot.escalation { background: #63CF9A; } .dot.night { background: #8EE3B8; } .dot.chase { background: #B8F0D1; } .dot.intensity { background: #3FAE7C; }
+.two-rings { display: flex; gap: 14px; align-items: center; }
+.ringlbl { font-size: 10px; color: var(--dim); text-align: center; margin-top: 2px; font-weight: 700; letter-spacing: .06em; }
+.form .lt { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }

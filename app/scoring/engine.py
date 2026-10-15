@@ -60,6 +60,10 @@ class PlayerScore:
     evidence_txn_ids: list[int] = field(default_factory=list)
     suggestion: str = ""
     suggestion_rule: str = ""
+    harm_score: int = 0
+    harm_band: str = "Low"
+    harm_checks: list = field(default_factory=list)
+    rule_version: int = 1
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -67,13 +71,13 @@ class PlayerScore:
     @property
     def priority(self) -> tuple:
         keys = {l.key for l in self.labels}
-        return ("urgent" not in keys, "str" not in keys, -self.score)
+        return ("urgent" not in keys, "str" not in keys, -max(self.score, self.harm_score if self.harm_band == "High" else 0), -self.score)
 
 
-def suggest(band: str, labels: list[Label], checks: list[Check] | None = None) -> tuple[str, str]:
+def suggest(band: str, labels: list[Label], checks: list[Check] | None = None, harm_band: str = "Low") -> tuple[str, str]:
     """Suggested next step (S2). Advice only: the investigator decides and records the decision."""
     keys = {l.key for l in labels}
-    safer = " + Safer Gambling check-in" if "safer" in keys else ""
+    safer = " + Safer Gambling check-in" if harm_band != "Low" else ""
     if "urgent" in keys:
         return ("Escalate - Fraud: lock account, verify identity" + safer,
                 "URGENT label: unusual locations with a new card or bank account")
@@ -87,12 +91,15 @@ def suggest(band: str, labels: list[Label], checks: list[Check] | None = None) -
     if band == "Medium" and income and income.points == income.max:
         return ("Escalate - AML: request source of funds" + safer,
                 "Band Medium and 30-day deposits at or above estimated monthly income")
-    if band == "Medium" and "safer" in keys:
-        return ("Monitor - refer to Safer Gambling", "Band Medium with a Safer Gambling label")
+    if harm_band == "High":
+        return ("Escalate - Safer Gambling: proactive outreach, consider limits",
+                "Safer Gambling band High (score >= 50)")
+    if band == "Medium" and harm_band == "Medium":
+        return ("Monitor - refer to Safer Gambling", "Band Medium and Safer Gambling band Medium")
     if band == "Medium":
-        return ("Monitor - review again if the pattern continues", "Band Medium (score 25-49), no label")
-    if "safer" in keys:
-        return ("Monitor - refer to Safer Gambling", "Safer Gambling label, band Low")
+        return ("Monitor - review again if the pattern continues", "Band Medium, no label")
+    if harm_band == "Medium":
+        return ("Monitor - refer to Safer Gambling", "Safer Gambling band Medium, context band Low")
     return ("Dismiss - consistent with income, own history and peers", "Band Low, no label")
 
 
@@ -112,12 +119,15 @@ def load(conn) -> dict:
                    " payout_holder_match FROM txn WHERE type IN ('deposit','withdrawal') ORDER BY ts"),
         "wagers": q("SELECT player_id, ts, amount FROM txn WHERE type = 'wager' AND ts >= %s ORDER BY ts",
                     C.WIN_START - timedelta(days=7)),
-        "sessions": q("SELECT player_id, start_ts, location_region FROM session WHERE start_ts >= %s AND start_ts < %s"
-                      " ORDER BY start_ts", C.WIN_START, C.WIN_END),
+        "sessions": q("SELECT player_id, start_ts, end_ts, net_result, location_region FROM session"
+                      " WHERE start_ts >= %s AND start_ts < %s ORDER BY start_ts", C.WIN_START, C.WIN_END),
     }
 
 
-def score_all(data: dict) -> list[PlayerScore]:
+def score_all(data: dict, rules=None) -> list[PlayerScore]:
+    from app.scoring.rules import Rules, DEFAULTS
+
+    R = rules or Rules(1, dict(DEFAULTS))
     players = {p["id"]: p for p in data["players"]}
     monthly = defaultdict(lambda: [0.0] * (len(C.MONTH_STARTS) - 1))
     win_deposits, win_withdrawals, all_money = defaultdict(list), defaultdict(list), defaultdict(list)
@@ -148,7 +158,7 @@ def score_all(data: dict) -> list[PlayerScore]:
         wagers[w["player_id"]].append((w["ts"], float(w["amount"])))
     sessions = defaultdict(list)
     for s in data["sessions"]:
-        sessions[s["player_id"]].append((s["start_ts"], s["location_region"]))
+        sessions[s["player_id"]].append((s["start_ts"], s["location_region"], s["end_ts"], float(s["net_result"])))
 
     dep30 = {pid: monthly[pid][C.HIST_MONTHS] for pid in players}
     peers = defaultdict(list)
@@ -175,7 +185,7 @@ def score_all(data: dict) -> list[PlayerScore]:
     for pid, p in players.items():
         results.append(_score_one(p, monthly[pid], dep30[pid], peers[p["peer_segment"]], win_deposits[pid],
                                   win_withdrawals[pid], all_money[pid], wagers[pid], sessions[pid],
-                                  card_users, acct_users, first_seen_card, first_seen_acct))
+                                  card_users, acct_users, first_seen_card, first_seen_acct, R))
     for r in results:
         r.metrics["peer_range_monthly"] = peer_range[players[r.player_id]["peer_segment"]]
     results.sort(key=lambda r: r.priority)
@@ -183,7 +193,7 @@ def score_all(data: dict) -> list[PlayerScore]:
 
 
 def _score_one(p, months, d30, peer_vals, wdeps, wwds, money, wagers, sessions,
-               card_users, acct_users, first_card, first_acct) -> PlayerScore:
+               card_users, acct_users, first_card, first_acct, R) -> PlayerScore:
     pid = p["id"]
     hist_avg = sum(months[: C.HIST_MONTHS]) / C.HIST_MONTHS
     est_monthly = C.INCOME_MIDPOINT[p["income_band"]] / 12
@@ -191,15 +201,15 @@ def _score_one(p, months, d30, peer_vals, wdeps, wwds, money, wagers, sessions,
 
     # (a) Income fit
     r = d30 / est_monthly
-    pts = 0 if r < C.INCOME_FIT_FLOOR else min(25, _round(25 * (r - C.INCOME_FIT_FLOOR) / C.INCOME_FIT_SPAN))
+    pts = 0 if r < R.income_fit_floor else min(25, _round(25 * (r - R.income_fit_floor) / R.income_fit_span))
     reason = (f"Deposits of {_money(d30)} in 30 days are {r:.0%} of estimated monthly income "
               f"for the {p['income_band']} band ({p['occupation']}).")
     checks.append(Check("income", "Income fit", pts, reason, C.SOURCES["income"]))
 
     # (b) Own history
-    base = max(C.HISTORY_MIN_BASE, hist_avg)
+    base = max(R.history_min_base, hist_avg)
     r = d30 / base
-    pts = 0 if r < C.HISTORY_FLOOR else min(25, _round(25 * (r - C.HISTORY_FLOOR) / C.HISTORY_SPAN))
+    pts = 0 if r < R.history_floor else min(25, _round(25 * (r - R.history_floor) / R.history_span))
     if pts:
         reason = f"Deposits rose from about {_money(hist_avg)} a month to {_money(d30)} in the last 30 days, {r:.0f} times usual."
     else:
@@ -210,21 +220,21 @@ def _score_one(p, months, d30, peer_vals, wdeps, wwds, money, wagers, sessions,
     others = list(peer_vals)
     others.remove(d30)
     pct = bisect_left(others, d30) / len(others) if others else 0.0
-    pts = 25 if pct > C.PEER_P99 else 15 if pct >= C.PEER_P95 else 0
+    pts = 25 if pct > R.peer_p99 else 15 if pct >= R.peer_p95 else 0
     reason = (f"Higher than {pct:.0%} of {len(others)} players aged {p['age_band']} "
               f"earning {p['income_band']}.")
-    if C.PEER_MIN_GROUP and len(others) < C.PEER_MIN_GROUP:
+    if R.peer_min_group and len(others) < R.peer_min_group:
         pts = 0
         reason = (f"Not scored: only {len(others)} comparable players (aged {p['age_band']}, earning "
-                  f"{p['income_band']}); at least {C.PEER_MIN_GROUP} are needed for a fair comparison.")
+                  f"{p['income_band']}); at least {R.peer_min_group} are needed for a fair comparison.")
     checks.append(Check("peer", "Peers", pts, reason, C.SOURCES["peer"]))
 
     # (d) Location: sessions from 3+ different cities within 24 hours.
     pts, reason = 0, "No unusual locations in the last 30 days."
-    for i, (t0, _) in enumerate(sessions):
-        cities = {c for t, c in sessions[i:] if t - t0 <= timedelta(hours=C.LOCATION_HOURS)}
-        if len(cities) >= C.LOCATION_CITIES:
-            span = [t for t, c in sessions[i:] if t - t0 <= timedelta(hours=C.LOCATION_HOURS)]
+    for i, (t0, _, _, _) in enumerate(sessions):
+        cities = {c for t, c, _, _ in sessions[i:] if t - t0 <= timedelta(hours=R.location_hours)}
+        if len(cities) >= R.location_cities:
+            span = [t for t, c, _, _ in sessions[i:] if t - t0 <= timedelta(hours=R.location_hours)]
             hours = (max(span) - t0).total_seconds() / 3600
             pts = 25
             reason = f"Sessions from {', '.join(sorted(cities))} within {hours:.1f} hours."
@@ -233,10 +243,10 @@ def _score_one(p, months, d30, peer_vals, wdeps, wwds, money, wagers, sessions,
 
     # ---- labels (no points) ----
     str_reasons = []
-    near = [t for t in wdeps if C.STRUCTURING_LOW <= float(t["amount"]) <= C.STRUCTURING_HIGH]
-    if len(near) >= C.STRUCTURING_MIN:
+    near = [t for t in wdeps if R.structuring_low <= float(t["amount"]) <= R.structuring_high]
+    if len(near) >= R.structuring_min:
         evidence += [t["id"] for t in near]
-        str_reasons.append((f"{len(near)} deposits of {_money(C.STRUCTURING_LOW)}-{_money(10_000 - 1)} in 30 days, "
+        str_reasons.append((f"{len(near)} deposits of {_money(R.structuring_low)}-{_money(10_000 - 1)} in 30 days, "
                             f"each just under $10,000 ({_money(sum(float(t['amount']) for t in near))} total).",
                             C.SOURCES["structuring"]))
     for wd in wwds:
@@ -246,7 +256,7 @@ def _score_one(p, months, d30, peer_vals, wdeps, wwds, money, wagers, sessions,
         deps = [t for t in money if t["type"] == "deposit" and since <= t["ts"] < wd["ts"]]
         dep_sum = sum(float(t["amount"]) for t in deps)
         wag_sum = sum(a for ts, a in wagers if since <= ts < wd["ts"])
-        if dep_sum >= 100 and float(wd["amount"]) >= 0.5 * dep_sum and wag_sum < C.MINIMAL_PLAY_RATIO * dep_sum:
+        if dep_sum >= 100 and float(wd["amount"]) >= 0.5 * dep_sum and wag_sum < R.minimal_play_ratio * dep_sum:
             evidence += [t["id"] for t in deps] + [wd["id"]]
             str_reasons.append((f"Deposited {_money(dep_sum)}, wagered {_money(wag_sum)} ({wag_sum / dep_sum:.0%}), "
                                 f"withdrew {_money(float(wd['amount']))}.", C.SOURCES["minimal_play"]))
@@ -280,32 +290,59 @@ def _score_one(p, months, d30, peer_vals, wdeps, wwds, money, wagers, sessions,
             labels.append(Label("urgent", "URGENT", f"Unusual locations together with {' and '.join(parts)}: "
                                 f"possible account takeover.", C.SOURCES["location"]))
 
-    # Safer Gambling: rising deposits for 4+ months in a row, or mostly night play.
+    # ---- Safer Gambling score: four checks x 25, separate from the AML score (D-2026-10-15-19) ----
+    harm = []
     run = best = 0
     for a, b in zip(months, months[1:]):
         run = run + 1 if b > a and a > 0 else 0
         best = max(best, run)
-    if best >= C.ESCALATING_MONTHS:
-        labels.append(Label("safer", "Safer Gambling", f"Deposits have risen {best} months in a row.", C.SOURCES["safer"]))
-    if len(sessions) >= C.NIGHT_MIN_SESSIONS:
-        night = sum(1 for t, _ in sessions if C.NIGHT_START_H <= t.astimezone(C.EDT).hour < C.NIGHT_END_H)
-        share = night / len(sessions)
-        if share >= C.NIGHT_SHARE:
-            labels.append(Label("safer", "Safer Gambling",
-                                f"{share:.0%} of recent sessions were between midnight and 4 a.m.", C.SOURCES["safer"]))
+    pts = 25 if best >= R.sg_escalating_months else 15 if best >= R.sg_escalating_months - 1 else 0
+    reason = (f"Deposits have risen {best} months in a row." if best >= 2
+              else "No sustained rise in monthly deposits.")
+    harm.append(Check("escalation", "Escalation", pts, reason, C.SOURCES["safer"]))
+
+    n_sess = len(sessions)
+    night = sum(1 for t, _, _, _ in sessions if C.NIGHT_START_H <= t.astimezone(C.EDT).hour < C.NIGHT_END_H)
+    share = night / n_sess if n_sess else 0.0
+    if n_sess < R.sg_night_min_sessions:
+        pts, reason = 0, f"Not scored: only {n_sess} sessions in the last 30 days."
+    else:
+        pts = 25 if share >= R.sg_night_share else 15 if share >= R.sg_night_share * 2 / 3 else 0
+        reason = f"{share:.0%} of {n_sess} sessions were between midnight and 4 a.m."
+    harm.append(Check("night", "Night play", pts, reason, C.SOURCES["night"]))
+
+    chase = 0
+    losing_ends = [e for _, _, e, net in sessions if net < 0]
+    for t in wdeps:
+        if any(0 <= (t["ts"] - e).total_seconds() <= R.sg_chase_minutes * 60 for e in losing_ends):
+            chase += 1
+    pts = 25 if chase >= R.sg_chase_count else 15 if chase >= R.sg_chase_count - 1 else 5 if chase >= 1 else 0
+    reason = (f"{chase} deposits within {R.sg_chase_minutes} minutes of a losing session in 30 days."
+              if chase else "No deposits made right after a losing session.")
+    harm.append(Check("chase", "Loss chasing", pts, reason, C.SOURCES["chase"]))
+
+    days = len({t.astimezone(C.EDT).date() for t, _, _, _ in sessions})
+    pts = 25 if days >= R.sg_days_played else 15 if days >= 14 else 0
+    reason = f"Played on {days} of the last 30 days."
+    harm.append(Check("intensity", "Intensity", pts, reason, C.SOURCES["intensity"]))
+
+    harm_score = sum(c.points for c in harm)
+    harm_band = "High" if harm_score >= R.sg_band_high else "Medium" if harm_score >= R.sg_band_medium else "Low"
 
     score = sum(c.points for c in checks)
-    band = "High" if score >= C.BAND_HIGH else "Medium" if score >= C.BAND_MEDIUM else "Low"
+    band = "High" if score >= R.band_high else "Medium" if score >= R.band_medium else "Low"
     keys = {l.key for l in labels}
-    caught = band != "Low" or bool(keys & {"str", "urgent"})
-    scored = sorted((c for c in checks if c.points), key=lambda c: -c.points)
-    pinned = [l for l in labels if l.key in ("urgent", "str")] or [l for l in labels if l.key == "safer"]
+    caught = band != "Low" or bool(keys & {"str", "urgent"}) or harm_band != "Low"
+    scored = sorted((c for c in checks + (harm if harm_band != "Low" else [])
+                     if c.points), key=lambda c: -c.points)
+    pinned = [l for l in labels if l.key in ("urgent", "str")]
     top = pinned[0].reason if pinned else scored[0].reason if scored else "No unusual activity."
 
-    big = [t for t in wdeps if float(t["amount"]) >= C.V1_THRESHOLD]
-    suggestion, rule = suggest(band, labels, checks)
+    big = [t for t in wdeps if float(t["amount"]) >= R.v1_threshold]
+    suggestion, rule = suggest(band, labels, checks, harm_band)
     return PlayerScore(
-        suggestion=suggestion, suggestion_rule=rule,
+        suggestion=suggestion, suggestion_rule=rule, harm_score=harm_score, harm_band=harm_band, harm_checks=harm,
+        rule_version=R.version,
         player_id=pid, display_name=p["display_name"], occupation=p["occupation"], age_band=p["age_band"],
         income_band=p["income_band"], region=p["region"], score=score, band=band, checks=checks, labels=labels,
         caught=caught, top_reason=top, v1_flagged=bool(big), v1_reason="Deposit over limit" if big else "",

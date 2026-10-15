@@ -16,7 +16,8 @@ INCOME_MIDPOINT = {"<20k": 15_000, "20-50k": 35_000, "50-100k": 75_000, "100-200
 
 BAND_HIGH, BAND_MEDIUM = 50, 25
 
-# Check thresholds (team spec IN-07 section 5).
+# Defaults below are version 1 of the operator rules (app/scoring/rules.py). The scorer reads rule_version, not these.
+# They remain here for the synthetic generator and as documentation of the team spec (IN-07 section 5).
 INCOME_FIT_FLOOR, INCOME_FIT_SPAN = 0.25, 0.75
 HISTORY_FLOOR, HISTORY_SPAN, HISTORY_MIN_BASE = 2.0, 8.0, 50.0
 PEER_P95, PEER_P99 = 0.95, 0.99
@@ -40,7 +41,10 @@ SOURCES = {
     "minimal_play": "FINTRAC-2024-SB001: little play before withdrawal",
     "shared": "FINTRAC-2024-SB001: one card or account used by several players",
     "third_party": "FINTRAC ML/TF indicators, casinos: winnings sent to another person's account",
-    "safer": "OLG brief: player protection",
+    "safer": "OLG brief: player protection; deposit trajectory as a harm marker",
+    "night": "OLG brief: player protection; late-night play as a harm marker",
+    "chase": "OLG brief: player protection; chasing losses as a harm marker",
+    "intensity": "OLG brief: player protection; frequency of play as a harm marker",
 }
 
 # Peer check needs enough peers for a percentile to mean anything (amendment to team spec IN-07).

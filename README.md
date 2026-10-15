@@ -24,9 +24,11 @@ UltraByte flags unusual player activity, compares it against each player's own h
 | Import | Bring your own synthetic data: Excel template (players, transactions, sessions) or CSV; every row validated; sensitive columns rejected; load replaces or adds; scores recomputed | done |
 | Judge input | `/enter`: type one deposit or withdrawal (existing player or a new one, bands only, name generated); the player is rescored at once and the page shows each check before and after, new labels and the suggested step; every entry is an audit event (`manual_entry`); `/reset` removes judge rows | done |
 | Before / After | `/` shows Version 1.0 (threshold alerts) beside Version 2.0 (ranked, explained) on the same data; "cleared by 2.0" and "missed by 1.0" tags | done |
+| Rules | `/rules`: every threshold the two scores use, editable by a compliance operator; each save is a new append-only `rule_version` row with a required reason and an audit event listing before/after values; all players are rescored; each score snapshot records its rule version. Version 1 = team spec defaults | done |
+| Safer Gambling score | Second score, 0-100, four checks x 25 (escalation of monthly deposits, night play, loss chasing, intensity), own band and ring, separate from the AML score; Safer Gambling band Medium or High puts the player in the queue and routes the suggestion to the Safer Gambling team | done |
 | AI summary | Optional, behind `LLM_ENABLED`: a 3-sentence investigator summary written by Claude via an n8n webhook from the computed reasons only; checked before display; cached; written to the audit trail (`ai_summary`). The score never depends on it | done |
 
-Pages: `/` queue (`?mode=v2` for Version 2.0 alone), `/player/{id}`, `/enter`, `/dashboard`, `/network`, `/validation`, `/import`, `/audit`. Health: `/health`. Demo reset: `POST /reset`. Explanations sit behind the small "?" buttons so screens stay clean.
+Pages: `/` queue (`?mode=v2` for Version 2.0 alone), `/player/{id}`, `/enter`, `/rules`, `/dashboard`, `/network`, `/validation`, `/import`, `/audit`. Health: `/health`. Demo reset: `POST /reset`. Explanations sit behind the small "?" buttons so screens stay clean.
 
 ## Architecture
 
@@ -114,6 +116,13 @@ No CI and no secrets in the repo. `scripts/deploy.sh` calls a script on the serv
 - Suggested actions are fixed rules in `app/scoring/engine.py` (`suggest`); no LLM is involved in scoring, labels or suggestions.
 - The AI summary (when `LLM_ENABLED=true`) is prose only; it cannot change a score, label or suggestion. Its number check
   is a safeguard against invented figures, not a guarantee of faithful wording; the computed reasons stay on screen beside it.
+- Thresholds are operator defaults, not calibrated values. Version 1 is the team spec; calibration on real data is the
+  operator's job, and the Rules page plus `rule_version` history exist so that job is auditable. Safer Gambling band
+  Medium starts at 30 by default so that one marker alone (max 25) does not raise an alert.
+- Safer Gambling markers (deposit trajectory, late-night play, chasing losses, frequency of play) follow the OLG brief's
+  player-protection theme and commonly cited behavioural harm markers; the primary references are listed as a to-do for
+  the team (lane d) and marked ASSUMED until verified.
+- No operator authentication: rule changes are recorded as "compliance operator (demo)".
 - Judge input: a typed deposit also creates a 30-minute session at the same city and time (so the location check can see
   it), and the same card "last 4" on two judge players counts as a shared card. Judge players get a generated name and
   the id prefix `J-`. Judge rows are tagged `entry_source = 'judge'`.
