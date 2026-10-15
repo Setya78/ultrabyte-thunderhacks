@@ -121,7 +121,23 @@
 </section>
 
 <section class="panel" id="audit">
-  <h2>Decision</h2>
+  <h2>Decision {% if case %}<span class="band st-{{ case.state }}" style="margin-left:6px">{{ case.label }}</span><small>{{ labels.get(case.action, case.action) }} by {{ case.actor }}, {{ case.ts.astimezone(edt).strftime('%d %b %H:%M') }}</small>{% else %}<small>no decision yet</small>{% endif %} {{ help(gloss['STATUS']) }}</h2>
+  {% if case and case.state in ('escalated', 'handling') %}
+  <div class="body handoff">
+    {% if can_status %}
+    <form method="post" action="/player/{{ r.player_id }}/status" class="decide"><input type="hidden" name="_tok" value="{{ form_token() }}">
+      <div class="src">Compliance hand-off: {% if case.state == 'escalated' %}this case was escalated and nobody has picked it up.{% else %}you are handling this case; close it when done.{% endif %}</div>
+      <textarea name="note" rows="1" placeholder="Note for the audit trail (optional)"></textarea>
+      <div class="btns">
+        {% if case.state == 'escalated' %}<button type="submit" name="action" value="handling" class="btn act-monitor">Mark as handling</button>{% endif %}
+        <button type="submit" name="action" value="resolve" class="btn act-resolve">Mark resolved</button>
+      </div>
+    </form>
+    {% else %}
+    <div class="src">{% if case.state == 'escalated' %}Escalated. Waiting for compliance to pick it up; you will see "In progress" here when they do.{% else %}Compliance is handling this case ({{ case.actor }}). It will show "Resolved" here when closed.{% endif %}</div>
+    {% endif %}
+  </div>
+  {% endif %}
   <div class="body">
     <div class="suggestbox"><strong>Suggested:</strong> {{ r.suggestion }} <span class="tag-rule">rule-based, not AI</span> {{ help("Rule: " ~ r.suggestion_rule.rstrip(".") ~ ". A suggestion only; you decide.") }}</div>
     <form method="post" action="/player/{{ r.player_id }}/decision" class="decide"><input type="hidden" name="_tok" value="{{ form_token() }}">

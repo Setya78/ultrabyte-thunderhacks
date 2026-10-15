@@ -135,7 +135,8 @@ GLOSSARY = {
     "V1": "Version 1.0: today's routine. A threshold alarm (any single deposit of $10,000 or more) with no ranking and no reason; the investigator opens separate screens and keeps the decision outside the system.",
     "V2": "Version 2.0: this app. Two scores with reasons, labels with evidence, and an audit trail.",
     "ROLE_investigator": "Reviews the queue, records decisions, enters transactions, requests AI summaries. Sees rules read-only.",
-    "ROLE_compliance": "Everything an investigator can do, plus changing the rule thresholds (each change is versioned and audited).",
+    "ROLE_compliance": "Everything an investigator can do, plus changing the rule thresholds and closing escalated cases (Mark as handling / Mark resolved); each step is versioned and audited.",
+    "STATUS": "Case status = the latest decision or hand-off step in the audit trail. Investigators escalate; compliance marks the case In progress, then Resolved. Both roles see the same status; nothing is edited in place.",
 }
 templates.env.globals.update(version=VERSION, llm_enabled=llm.enabled(), labels=audit.LABELS, gloss=GLOSSARY, form_token=_fresh_token, auth_enabled=auth.enabled)
 
@@ -166,12 +167,10 @@ def queue(request: Request):
         # Owner 2026-10-15: the queue is the worklist. A player with a recorded decision moves to "Decided" below the
         # players that still need one; the latest decision per player comes from the append-only audit trail.
         with db.connect() as conn:
-            for d in conn.execute("SELECT DISTINCT ON (player_id) player_id, action, actor, ts FROM audit_event"
-                                  " WHERE action IN ('escalate','monitor','dismiss') AND player_id IS NOT NULL"
-                                  " ORDER BY player_id, ts DESC").fetchall():
-                decided[d["player_id"]] = d
+            decided = audit.case_status(conn)
     todo = [r for r in rows if r.player_id not in decided]
-    done = [r for r in rows if r.player_id in decided]
+    order = {s: i for i, s in enumerate(audit.STATE_ORDER)}
+    done = sorted((r for r in rows if r.player_id in decided), key=lambda r: (order[decided[r.player_id]["state"]], r.priority()))
     return templates.TemplateResponse(request, "queue.html", {"rows": rows, "todo": todo, "done": done, "decided": decided,
                                                               "status": status, "edt": C.EDT})
 
@@ -218,9 +217,12 @@ def player(request: Request, pid: str):
             " FROM session WHERE player_id = %s AND start_ts >= %s AND start_ts < %s GROUP BY 1 ORDER BY 3",
             (pid, C.WIN_START, C.WIN_END)).fetchall()
         history = audit.for_player(conn, pid)
+        case = audit.case_status(conn).get(pid)
+    can_status = (not auth.enabled()) or request.state.role == "compliance"
     return templates.TemplateResponse(request, "player.html", {
         "r": r, "txns": txns, "places": places, "history": history, "chart": _chart(r),
         "evidence": set(r.evidence_txn_ids), "edt": C.EDT, "actions": audit.ACTIONS,
+        "case": case, "status_actions": audit.STATUS_ACTIONS, "can_status": can_status,
         "summary": _summary_for(r)})
 
 
@@ -261,6 +263,20 @@ def decision(request: Request, pid: str, action: str = Form(...), note: str = Fo
     with db.connect() as conn:
         audit.record(conn, pid, action, note, r.to_dict(), actor=_actor(request))
     return RedirectResponse(f"/player/{pid}?ok=Decision+saved+to+the+audit+trail#audit", status_code=303)
+
+
+@app.post("/player/{pid}/status")
+def case_status_post(request: Request, pid: str, action: str = Form(...), note: str = Form(""), tok: str = Form("", alias="_tok")):
+    """Compliance-only hand-off: 'handling' (picked up) or 'resolve' (closed). Append-only, like a decision."""
+    _require_role(request, "compliance")
+    if action not in audit.STATUS_ACTIONS:
+        raise HTTPException(400, "unknown status")
+    if _already_used(tok):
+        return RedirectResponse(f"/player/{pid}?ok=Already+saved+(duplicate+click+ignored)#audit", status_code=303)
+    r = _by_id(pid)
+    with db.connect() as conn:
+        audit.record(conn, pid, action, note, r.to_dict(), actor=_actor(request))
+    return RedirectResponse(f"/player/{pid}?ok=Case+status+saved+to+the+audit+trail#audit", status_code=303)
 
 
 _entries: dict[str, dict] = {}

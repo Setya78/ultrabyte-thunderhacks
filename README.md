@@ -20,6 +20,7 @@ UltraByte flags unusual player activity, compares it against each player's own h
 | S1 | Validation page: planted cases expected vs actual, Version 1.0 vs 2.0, false positives over the whole population | done |
 | S2 | Suggested next step per alert, rule-based, with the rule shown (advice only; the investigator decides) | done |
 | S3 | Dashboard by category: URGENT, STR candidates, context risk, Safer Gambling, Newly added (manual entry or import) | done |
+| Case hand-off | Investigator escalates; compliance opens the player page and clicks **Mark as handling**, then **Mark resolved** (compliance role only, note optional). Two more append-only audit actions (`handling`, `resolve`); the case status is the latest decision-or-status row per player and is shown on the player page and in the Decided table (escalated, in progress, monitor, dismissed, resolved). Migration `006_case_status.sql` | done |
 | Worklist split | Review queue = worklist: "Action required" (caught players with no recorded decision, most urgent first) and "Decided" (latest decision from the audit trail, with who and when). Overview = the same players grouped by team | done |
 | Queue search | Search by name or player ID and filter chips (band High / Medium / Low; category URGENT, STR, Safer Gambling, Newly added) on the review queue, in the browser; players added during the session carry a NEW tag with their source | done |
 | C1 | Network view: cards and payout bank accounts shared by more than one player | done |
@@ -118,6 +119,9 @@ scripts/smoke.sh http://127.0.0.1:3110
 ## Deploy
 
 No CI and no secrets in the repo. `scripts/deploy.sh` calls a script on the server over SSH; that script pulls `main`, rebuilds the container and checks health. Credentials exist only as environment variables on the server (`.env`, never committed).
+
+- v0.15.0 needs `db/migrations/006_case_status.sql` (adds two audit actions; `scripts/migrate.sh ... apply`). No data change, no reset needed.
+- nginx in front of the app: `client_max_body_size 20m;` in the server block, or the Excel import (1.5 MB) is refused with 413.
 
 ## Known simplifications (disclosed)
 

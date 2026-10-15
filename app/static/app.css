@@ -404,3 +404,11 @@ details.help .pop.flip { left: auto; right: -10px; }
 @media (max-width: 600px) { .search { min-width: 0; width: 100%; } }
 .panel.q-done { opacity: .92; } .panel.q-done h2 { background: #F3F6FA; }
 .act-escalate-t { background: #FCE9E9; color: #A82424; } .act-monitor-t { background: #FDF1DC; color: #8A5400; } .act-dismiss-t { background: #E8EDF2; color: #3B5163; }
+
+/* ---- Case status chips (owner 2026-10-15 17:32): escalated / in progress / monitor / dismissed / resolved. ---- */
+.st-escalated { background: #FCE9E9; color: #A82424; } .st-handling { background: #FDF1DC; color: #8A5400; }
+.st-monitor { background: #FDF1DC; color: #8A5400; } .st-dismiss { background: #E8EDF2; color: #3B5163; } .st-resolved { background: #E3F4EB; color: #146B42; }
+.t tr.grouphead.st-escalated td { color: #A82424; } .t tr.grouphead.st-handling td, .t tr.grouphead.st-monitor td { color: #8A5400; } .t tr.grouphead.st-resolved td { color: #146B42; }
+.handoff { border-bottom: 1px solid var(--line); background: #F8FAFD; }
+.btn.act-resolve { background: #1F8052; color: #FFFFFF; border-color: #1F8052; } .btn.act-resolve:hover { background: #146B42; border-color: #146B42; color: #FFFFFF; }
+.panel h2 .band { font-size: 12px; }
