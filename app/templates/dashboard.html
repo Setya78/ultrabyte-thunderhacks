@@ -3,7 +3,8 @@
 {% from "_ring.html" import ring %}
 {% block title %}Overview - UltraByte Solutions{% endblock %}
 {% block content %}
-<div class="head"><div><h1>Overview {{ help('Compliance and player protection in one view, last 30 days. A player can appear in more than one group.') }}</h1></div></div>
+<div class="head"><div><h1>Overview {{ help('Compliance and player protection in one view, last 30 days. A player can appear in more than one group.') }}</h1>
+  <p class="sub">The same players as the review queue, sorted by the team that handles them: Fraud (URGENT), AML (STR candidates, AML context risk), Safer Gambling. One player can sit in two groups; the player ID is the person.</p></div></div>
 <div class="grid four">
   {% for g in groups %}
   <a class="panel kpi" href="#{{ g.key }}"><div class="k">{{ g.title }}</div><div class="v">{{ g.players|length }}</div><div class="cmp">{{ g.desc }}</div></a>
@@ -17,7 +18,7 @@
     <tbody>
       {% for r, why in g.players %}
       <tr><td><div class="score">{{ ring(r) }}<span class="band band-{{ r.band|lower }}">{{ r.band }}</span></div></td>
-          <td><a class="p" href="/player/{{ r.player_id }}">{{ r.display_name }}</a><span class="pid">{{ r.player_id }}</span></td>
+          <td><a class="p" href="/player/{{ r.player_id }}">{{ r.display_name }}</a><span class="pid">{{ r.player_id }}</span>{% set others = member[r.player_id]|reject("equalto", g.short)|list %}{% if others %}<div class="src">also in {{ others|join(", ") }}</div>{% endif %}</td>
           <td class="reason">{{ why }}</td><td class="hide-m suggest">{{ r.suggestion }}</td></tr>
       {% else %}<tr><td colspan="4" class="empty">None.</td></tr>{% endfor %}
     </tbody>

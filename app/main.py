@@ -331,9 +331,11 @@ async def rules_post(request: Request):
 def dashboard(request: Request):
     rows = scores()
 
+    short = {"urgent": "URGENT", "str": "STR", "aml": "AML context", "safer": "Safer Gambling"}
+
     def group(key, title, desc, team, pick):
         players = [(r, why) for r in rows for why in [pick(r)] if why]
-        return {"key": key, "title": title, "desc": desc, "team": team, "players": players}
+        return {"key": key, "title": title, "desc": desc, "team": team, "players": players, "short": short[key]}
 
     def label_reason(key):
         return lambda r: next((l.reason for l in r.labels if l.key == key), None)
@@ -349,7 +351,12 @@ def dashboard(request: Request):
               "Safer Gambling", lambda r: next((c.reason for c in sorted(r.harm_checks, key=lambda c: -c.points) if c.points), None)
               if r.harm_band != "Low" else None),
     ]
-    return templates.TemplateResponse(request, "dashboard.html", {"groups": groups})
+    # Team feedback 2026-10-15: show when the same player sits in more than one group, so it is not read as two people.
+    member = {}
+    for g in groups:
+        for r, _ in g["players"]:
+            member.setdefault(r.player_id, []).append(g["short"])
+    return templates.TemplateResponse(request, "dashboard.html", {"groups": groups, "member": member})
 
 
 @app.get("/network")

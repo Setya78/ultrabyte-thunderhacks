@@ -156,6 +156,25 @@ def _background(rng, p: Player):
         _normal_month(rng, p, k, actual_monthly * rate * rng.uniform(0.7, 1.3))
 
 
+def _unique_names(players: list, keep_first: set) -> None:
+    """One display name per player (team feedback 2026-10-15: two "Logan V." with different IDs looked like one person).
+
+    Planted-case players keep their names (pitch and personas use them). A later duplicate takes the next unused
+    "First L." in a fixed order, then "First L.M." once those run out. No random draws, so scores and validation
+    are unchanged; names are synthetic and display-only (the player ID is the identifier).
+    """
+    combos = [f"{f} {l}." for f in FIRST for l in LAST_INITIAL]
+    combos += [f"{f} {a}.{b}." for f in FIRST for a in LAST_INITIAL for b in LAST_INITIAL]
+    used = set()
+    planted_first = {p.display_name.split()[0] for p in players if p.id in keep_first}
+    for p in sorted(players, key=lambda p: (p.id not in keep_first, p.id)):
+        if p.display_name in used:
+            # a renamed planted player also avoids first names other planted cases use, so cases stay easy to tell apart
+            avoid = planted_first if p.id in keep_first else set()
+            p.display_name = next(n for n in combos if n not in used and n.split()[0] not in avoid)
+        used.add(p.display_name)
+
+
 def build(rng: random.Random | None = None):
     rng = rng or random.Random(SEED)
     planted_ids = {"P-1042", "P-2217", "P-3378", "P-4501", "P-5120", "P-6011", "P-6012",
@@ -292,6 +311,7 @@ def build(rng: random.Random | None = None):
     add("J", j, "Wins $4,000; payout requested to a bank account in another person's name", "flag", "fraud_aml",
         "FINTRAC: winnings transferred to another person")
 
+    _unique_names(players, {pid for _, pid, *_ in planted})
     return players, planted
 
 

@@ -83,6 +83,15 @@ for _ in range(3):
     d = W0 + timedelta(days=rng.randrange(25)); dep(p, ts(d,19), 10500, method="debit"); sess(p, d+timedelta(hours=19.2), 3, -3000); wager(p, ts(d,19.3), 7000)
 wb = Workbook(); wb.remove(wb.active)
 ws = wb.create_sheet("players"); ws.append(SHEETS["players"])
+# One display name per player, none shared with the built-in seed (team feedback 2026-10-15). Fixed order, no random
+# draws, so every transaction and score is unchanged.
+from db.seed.generate import FIRST as SEED_FIRST
+_combos = [f"{f} {l}." for f in FIRST if f not in SEED_FIRST for l in "ABCDEFGHJKLMNPRSTVW"]
+_used = set()
+for p in players:
+    if p["name"] in _used or p["name"].split()[0] in SEED_FIRST:
+        p["name"] = next(c for c in _combos if c not in _used)
+    _used.add(p["name"])
 for p in players: ws.append([p["id"], p["name"], p["occ"], p["inc"], p["age"], p["city"]])
 ws = wb.create_sheet("transactions"); ws.append(SHEETS["transactions"])
 for t in sorted(txns, key=lambda t: t[1]): ws.append(t)
