@@ -19,7 +19,7 @@ from app.scoring import engine
 from app.scoring import rules as RL
 
 BASE = Path(__file__).resolve().parent
-VERSION = "0.15.3-comments"
+VERSION = "0.15.4-handoff"
 
 app = FastAPI(title="UltraByte Solutions", version=VERSION)
 app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
@@ -187,14 +187,17 @@ def queue(request: Request):
     todo = [r for r in rows if r.player_id not in decided]
     order = {s: i for i, s in enumerate(audit.STATE_ORDER)}
     done = sorted((r for r in rows if r.player_id in decided), key=lambda r: (order[decided[r.player_id]["state"]], r.priority))
-    # Owner 2026-10-15 18:53: inbox view. "In progress" = still open (escalated, handling, monitor); "Done" = closed.
-    # Owner 2026-10-15 19:09: open cases with a comment are pinned on top ("With comment"), newest comment first.
-    commented = sorted((r for r in done if decided[r.player_id]["state"] in ("escalated", "handling", "monitor") and r.player_id in notes),
+    # Owner 2026-10-15 19:23: the queue is the investigator's list only. Once compliance responds (In progress or
+    # Resolved) the case leaves the queue and is tracked on Overview. Investigator-side lists:
+    # With comment (escalated/monitor with a comment) > To do > Escalated & monitor > Dismissed (collapsed).
+    with_compliance = [r for r in done if decided[r.player_id]["state"] in ("handling", "resolved")]
+    open_states = ("escalated", "monitor")
+    commented = sorted((r for r in done if decided[r.player_id]["state"] in open_states and r.player_id in notes),
                        key=lambda r: notes[r.player_id]["ts"], reverse=True)
-    progress = [r for r in done if decided[r.player_id]["state"] in ("escalated", "handling", "monitor") and r.player_id not in notes]
-    closed = [r for r in done if decided[r.player_id]["state"] not in ("escalated", "handling", "monitor")]
+    progress = [r for r in done if decided[r.player_id]["state"] in open_states and r.player_id not in notes]
+    closed = [r for r in done if decided[r.player_id]["state"] == "dismiss"]
     return templates.TemplateResponse(request, "queue.html", {"rows": rows, "todo": todo, "done": done, "progress": progress,
-                                                              "closed": closed, "commented": commented, "notes": notes, "decided": decided,
+                                                              "closed": closed, "commented": commented, "with_compliance": len(with_compliance), "notes": notes, "decided": decided,
                                                               "status": status, "edt": C.EDT})
 
 
@@ -389,10 +392,22 @@ def dashboard(request: Request):
     with db.connect() as conn:
         decided = audit.case_status(conn)
 
-    short = {"urgent": "URGENT", "str": "STR", "aml": "AML context", "safer": "Safer Gambling", "new": "Newly added"}
+    short = {"urgent": "URGENT", "str": "STR", "aml": "AML context", "safer": "Safer Gambling", "new": "Newly added",
+             "handling": "In progress", "resolved": "Resolved"}
+    with db.connect() as conn:
+        notes = audit.latest_notes(conn)
+
+    def case_line(r):
+        d, n = decided[r.player_id], notes.get(r.player_id)
+        when = d["ts"].astimezone(C.EDT).strftime("%d %b %H:%M")
+        return f"{d['label']} by {d['actor']}, {when}" + (f'. Comment: "{n["note"]}"' if n else "")
 
     def team_view(key, r):
         """Each group shows its own team's score and next step (review 2026-10-15 #7)."""
+        if key == "handling":
+            return r.score, "Compliance: finish the review, then Mark resolved on the player page"
+        if key == "resolved":
+            return r.score, "Closed. Reopen with Mark as handling if new activity appears"
         if key == "safer":
             step = ("Escalate - Safer Gambling: proactive outreach, consider limits" if r.harm_band == "High"
                     else "Monitor - refer to Safer Gambling")
@@ -417,6 +432,11 @@ def dashboard(request: Request):
         group("safer", "Safer Gambling", "Safer Gambling score Medium or High: escalation, night play, loss chasing, intensity",
               "Safer Gambling", lambda r: next((c.reason for c in sorted(r.harm_checks, key=lambda c: -c.points) if c.points), None)
               if r.harm_band != "Low" else None),
+        # Owner 2026-10-15 19:23: cases compliance has responded to leave the review queue and are tracked here.
+        group("handling", "In progress (compliance)", "Cases compliance has picked up after an investigator escalated them; they no longer sit in the review queue",
+              "Compliance", lambda r: case_line(r) if decided.get(r.player_id, {}).get("state") == "handling" else None),
+        group("resolved", "Resolved", "Cases compliance has closed; the audit trail keeps every step with the score at that moment",
+              "Compliance", lambda r: case_line(r) if decided.get(r.player_id, {}).get("state") == "resolved" else None),
         # Owner 2026-10-15: players added during the session (Manual entry or Import) get their own group, whatever their score.
         group("new", "Newly added (manual entry or import)", "Players created in this demo session, not part of the seed; scored by the same rules",
               "Data", lambda r: f"Added by {r.source}: {r.top_reason}" if r.source != "seed" else None),

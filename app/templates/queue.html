@@ -17,7 +17,7 @@
 <div class="filters" role="group" aria-label="Filter the queue">
   <label>Band<select id="f-band"><option value="">All</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label>
   <label>Category<select id="f-cat"><option value="">All</option><option value="urgent">URGENT</option><option value="str">STR candidate</option><option value="sg">Safer Gambling</option><option value="new">Newly added</option></select></label>
-  <label>Status<select id="f-state"><option value="">All</option><option value="todo">To do</option><option value="escalated">Escalated, waiting</option><option value="handling">In progress</option><option value="monitor">Monitor</option><option value="dismiss">Dismissed</option><option value="resolved">Resolved</option></select></label>
+  <label>Status<select id="f-state"><option value="">All</option><option value="todo">To do</option><option value="escalated">Escalated, waiting</option><option value="monitor">Monitor</option><option value="dismiss">Dismissed</option></select></label>
   <button type="button" class="btn" id="f-clear" hidden>Clear</button>
 </div>
 
@@ -42,12 +42,13 @@
 </section>
 {% endmacro %}
 
-{% if commented %}{{ inbox(commented, 'comment', 'With comment', "Open cases where the investigator or compliance wrote a comment with the decision. Newest comment first. Read it on the player page and pick the case up.", "") }}{% endif %}
+{% if commented %}{{ inbox(commented, 'comment', 'With comment', "Escalated or monitored cases where the investigator wrote a comment with the decision, newest first. They stay here until compliance responds.", "") }}{% endif %}
 {{ inbox(todo, 'todo', 'To do', "Players the scoring caught that nobody has decided on yet. URGENT and STR candidates on top, then highest score. Open one, read why, record Escalate / Monitor / Dismiss, and it leaves this list.", "Nothing waiting. Every alert has a decision.") }}
-{{ inbox(progress, 'progress', 'In progress', "Decided but still open: Escalated (waiting for compliance), In progress (compliance picked it up), Monitor (watching).", "Nothing in progress.") }}
-<details class="done-wrap"{% if not closed %} hidden{% endif %}><summary>Done <span class="cnt">{{ closed|length }}</span> <small>dismissed or resolved</small></summary>
-{{ inbox(closed, 'done', 'Done', "Closed cases: dismissed by the investigator or resolved by compliance. The audit trail keeps every step with the score at that moment.", "Nothing closed yet.") }}
+{{ inbox(progress, 'progress', 'Escalated &amp; monitor', "Decided by the investigator and still open: Escalated (waiting for compliance) or Monitor (watching). When compliance picks a case up or resolves it, it leaves the review queue and appears on Overview.", "Nothing waiting for compliance.") }}
+<details class="done-wrap"{% if not closed %} hidden{% endif %}><summary>Dismissed <span class="cnt">{{ closed|length }}</span> <small>no further action</small></summary>
+{{ inbox(closed, 'done', 'Dismissed', "Alerts the investigator dismissed. The audit trail keeps the decision with the score at that moment.", "Nothing dismissed.") }}
 </details>
+{% if with_compliance %}<p class="handed"><a href="/dashboard#handling">{{ with_compliance }} case{{ "s" if with_compliance != 1 }} with compliance (in progress or resolved) &rarr; Overview</a></p>{% endif %}
 
 <script>
 // Inbox behaviour (owner 2026-10-15 18:53): whole row opens the player; search + dropdown filters hide rows; a section

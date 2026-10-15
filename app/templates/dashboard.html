@@ -10,7 +10,7 @@
     <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="osearch" type="search" placeholder="Search name or ID, e.g. Morgan or P-7730" autocomplete="off" aria-label="Search Overview by name or player ID"></label>
   </div>
 </div>
-<div class="grid four">
+<div class="grid kpis">
   {% for g in groups %}
   <div class="panel kpi"><div class="k"><a href="#{{ g.key }}">{{ g.title }}</a> {{ help(g.desc ~ ". Owner: " ~ g.team ~ ".") }}</div><a class="v" href="#{{ g.key }}">{{ g.players|length }}</a></div>
   {% endfor %}
