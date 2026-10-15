@@ -53,7 +53,8 @@ Single navigation entry-point untuk folder A4-PER-THX-01. Semua artefak project 
 | WD-02 | `DEVPOST_Draft_2026-10-14.md` → UBP-17 | draft | 2026-10-14 20:35 | Belum memuat sign-in, Rules, SG, AI summary, About, `/v1`; final sesi berikutnya |
 | WD-03 | `HANDOFF_Thu_Feedback_2026-10-14.md` → sesi Kamis | SUPERSEDED | 2026-10-15 08:15 | digantikan WD-04 |
 | WD-04 | `HANDOFF_Thu_Session2_2026-10-15.md` → sesi 2 Kamis | SUPERSEDED | 2026-10-15 08:55 | D-21; digantikan WD-05 (demo script §5 langkah 2 tidak berlaku lagi) |
-| WD-05 | `HANDOFF_Thu_Session3_2026-10-15.md` → sesi 3 Kamis | handoff (sebagian dieksekusi) | 2026-10-15 10:15 | D-24; demo script §4 SUPERSEDED oleh Demo Guide skrip v2 (D-27); README/Devpost final belum |
+| WD-06 | `HANDOFF_Thu_Session4_2026-10-15.md` → sesi evaluasi (Kam malam / Jum pagi) | handoff | 2026-10-15 18:45 | D-28; posisi live, verify-by list, urutan kerja sampai submit |
+| WD-05 | `HANDOFF_Thu_Session3_2026-10-15.md` → sesi 3 Kamis | SUPERSEDED | 2026-10-15 10:15 | D-24; demo script §4 SUPERSEDED oleh Demo Guide skrip v2 (D-27); README/Devpost final belum |
 
 ## 6. Inputs (03_inputs/)
 
@@ -109,5 +110,6 @@ Single navigation entry-point untuk folder A4-PER-THX-01. Semua artefak project 
 | v1.1 | 2026-10-14 19:12 | K0 v0.7 (D-07); IN-07; WD-01 rev | Claude for Owner |
 | v1.1 | 2026-10-14 21:45 | D-15 session lock: logo mark (D-14), IN-08, WD-02/03, repo HEAD + Jira pointers, BL §7 superseded; folder lokal disinkronkan | Claude for Owner |
 | v1.1 | 2026-10-15 08:55 | D-21 session lock: DEMO-XLSX, WD-04 (WD-03 superseded), IN-09, LOCK-REGISTER + D-16…D-21, pointers HEAD `f4bf7b9` / v0.11.0 / n8n / Jira UBP-35, open items folder lokal + harm references | Claude for Owner |
+| v1.1 | 2026-10-15 18:45 | D-28 (PART3 addendum): hand-off box every player page, dropdown filters + status, status chips; live 0.15.0 verified; LOCK-REGISTER row D-28; WD-06 handoff NEW | Claude for Owner |
 | v1.1 | 2026-10-15 18:05 | D-25 + D-26 + D-27 (shard PART3): DEMO-GUIDE NEW, SKILL-LOOP NEW, DEMO-XLSX Project-files copy STALE, WD-05 demo script superseded, IN-12/13/14, LOCK-REGISTER AMEND, pointers v0.15.0-worklist / docs/governance mirror / UBP-22 comments, open items 006 + hand-off smoke + workbook replace | Claude for Owner |
 | v1.1 | 2026-10-15 10:15 | D-22 + D-24 (shard PART2): DECK-V1V2 NEW, DEMO-XLSX AMEND (nama unik), WD-05 NEW (WD-04 superseded), IN-10/IN-11, LOCK-REGISTER AMEND, K0 note (toggle superseded), pointers HEAD `9a98c30` / v0.13.0-review / Jira UBP-36 / Confluence unchanged, open items V1 routine + tautan V2→/v1 | Claude for Owner |

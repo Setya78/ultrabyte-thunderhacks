@@ -57,3 +57,21 @@
 **Next / Lanjutan:** owner: rebuild/smoke done → record video from Demo Guide; agent next session: live check of hand-off, README final, Devpost final (UBP-17), tag `v1.0-demo` at freeze, secret scan, repo public (HS3).
 
 ---
+
+## D-2026-10-15-28 — Lock 18:42: hand-off box untuk compliance di semua player page, filter dropdown + status, chip status di nama; evaluasi di sesi baru
+
+**Decision / Keputusan:** [ID] Owner mengunci tambahan setelah D-27 dan menunda evaluasi ke sesi baru: (1) kotak hand-off (Mark as handling / Mark resolved) tampil untuk compliance di setiap player page tanpa perlu Escalate dulu; investigator hanya melihat baris status; (2) filter Review queue menjadi tiga dropdown (Band, Category, Status: Action required / Escalated / In progress / Monitor / Dismissed / Resolved) + Clear, menggantikan baris chip; (3) chip status di samping nama pemain di tabel Decided dan di Overview (plus tag NEW di Overview); (4) migrasi 006 diterapkan di VPS 18:07 (perlu `bash scripts/migrate.sh`, bit eksekusi hilang dari checkout Windows), README Deploy diperbarui; (5) tidak ada fitur baru lagi; sesi berikut = evaluasi + README/Devpost final + rekaman. / [EN] Owner locks the post-D-27 additions and defers evaluation to a new session: compliance hand-off box on every player page; dropdown filters incl. case status; status chip beside the name on queue and Overview; migration 006 applied on the VPS; no further features.
+**Trigger / Pemicu:** Owner 18:16, 18:20 (dua pesan), 18:42 "ok lock dulu dan kita evaluasi lagi di sesi baru".
+**Framework / Kerangka:** PI §3 (wording/UI tanpa gate; D-26 sudah HS4); P4 (status bernama dan berwaktu di setiap tampilan); P6 (append-only, Reset mengosongkan status).
+**Anchor / Jangkar:** L2-02 P4, P6; D-26, D-27.
+**Classification:** INTERNAL.
+**Artefacts:** repo `app/templates/{player,queue,dashboard}.html`, `app/main.py` (dashboard membaca `case_status`), `app/static/app.css`, `README.md` (Deploy: `bash scripts/migrate.sh`), `BUILD-LOG.md` rows 18:20, 18:30; shard ini (PART3 addendum); LOCK-REGISTER row D-28; index changelog.
+**Verification / Verifikasi:**
+  - Live `app.css` carries "Queue filters as dropdowns" block; `/health` 0.15.0-worklist, audit_events 1 (owner reset) — VERIFIED-AGAINST-SoR (curl 18:43).
+  - Migration 006 on VPS — RECONCILED (was ASSUMED in D-26; owner psql output 18:07 lists handling/resolve).
+  - Hand-off end to end — RECONCILED (was ASSUMED; owner screenshot 18:19: P-4501 "In progress, compliance").
+  - Hand-off box on every player page + status chips live — ASSUMED → verify-by: SoR=owner opens P-4501 as compliance without a prior Escalate and sees the box; Overview shows the chip; agent=owner; by=next session start.
+  - Repo HEAD hash — ASSUMED → verify-by: SoR=`git log -1`; agent=owner; by=next session (write into handoff).
+  - VERSION not bumped for the 18:20–18:30 CSS change (still 0.15.0-worklist) — known; browsers may need Ctrl+F5 once → verify-by: bump to 0.15.1 at the next deploy; agent=A4-PER-THX-01; by=next session.
+**Open items / Item terbuka:** evaluasi sesi baru (apa yang dipotong untuk video 5 menit); Demo Guide adegan 8 (hand-off 10 detik) belum ditulis; Demo Guide belum di-share ke tim; README/Devpost final (UBP-16/17); salinan Project-files workbook STALE; V1 layar 3–6 ASSUMED; freeze Jum 09:00.
+**Next / Lanjutan:** sesi baru dimulai dengan: `/health`, `git log -1`, bump 0.15.1 bila ada CSS, lalu evaluasi dari Demo Guide; tidak ada fitur baru (D-27, D-28).
