@@ -22,7 +22,7 @@ Single navigation entry-point untuk folder A4-PER-THX-01. Semua artefak project 
 | `01_artefacts/` | Final deliverable | LOCK-REGISTER, logo mark, workbook demo, deck V1 vs V2, retro 1 halaman |
 | `02_working/` | Draft | Handoff, Devpost draft, demo script |
 | `03_inputs/` | Raw input, nama asli | Spawn package, brief, transkrip, IN-07, logo tim, review Gina |
-| `04_decision_log/` | Keputusan level project | `decision-A4-PER-THX-01.md` + shard PART2, PART3 2026-10-15 |
+| `04_decision_log/` | Keputusan level project | `decision-A4-PER-THX-01.md` + shard PART2, PART3 2026-10-15, PART4 2026-10-16 |
 | `05_index/` | Manifest ini | `index-A4-PER-THX-01.md` |
 
 ## 3. Baselines (00_baselines/)
@@ -37,23 +37,29 @@ Single navigation entry-point untuk folder A4-PER-THX-01. Semua artefak project 
 
 | Artefact ID | Title | Date | Status | Notes |
 |---|---|---|---|---|
-| LOCK-REGISTER | `LOCK-REGISTER_A4-PER-THX-01.md` | 2026-10-15 | ACTIVE (mirror) | AMEND 18:05: + D-25, D-26, D-27; notes D-07, D-11, D-15, D-16, D-20, D-22, Overview-groups |
+| LOCK-REGISTER | `LOCK-REGISTER_A4-PER-THX-01.md` | 2026-10-16 | ACTIVE (mirror) | AMEND 00:45: + D-29, D-30, D-31, D-32, D-2026-10-16-01 (earlier: D-25…D-28) |
 | LOGO-MARK | `THX_logo-mark-U_2026-10-14.png` — mark "U" dari logo tim (512 px) | 2026-10-14 | FINAL | D-14; AI-generated (Gemini), disclosed di README repo |
 | LOGO-DRAFT | `THX_logo-v1_2026-10-14.svg`, `THX_logo-v2_2026-10-14.svg` — draft "Eight Bits" | 2026-10-14 | SUPERSEDED | Project docs only; tidak dipakai |
 | DEMO-XLSX | `UltraByte_demo_300_players.xlsx` — 308 pemain sintetis, skenario tertanam | 2026-10-15 | FINAL (mirror) | AMEND D-24: owner of record = repo `demo/` (308/308 nama unik, VERIFIED 15:22 dari salinan repo). Salinan Project files = **STALE** (dicek 15:13: 210 nama unik, 77 duplikat) → owner ganti sebelum Jum 09:00 (D-27 verify-by) |
 | DECK-V1V2 | `UltraByte_V1_vs_V2_explainer_draft.pptx` — 11 slide, speaker notes | 2026-10-15 | DRAFT (review tim) | D-24; NEW; Main 4 syarat, V1 rutinitas, 7 vs 2 langkah, rubrik OLG, migrasi, batasan; input UBP-24 |
 | DEMO-GUIDE | "UltraByte Demo Guide" — Claude Doc (artifact `a1ea67a8-ae34-4f7a-a9e9-e7e950d52210`): manual investigator & compliance, kasus, skrip video 5 menit v2 (9 adegan), kebutuhan juri Main vs OLG, aturan rekaman | 2026-10-15 | ACTIVE (owner of record = Claude Doc; privat sampai di-share) | D-27; NEW; location = Claude Docs (bukan folder); export .docx/PDF tersedia; adegan 8 hand-off belum ditambahkan (owner) |
 | SKILL-LOOP | `laptop-repo-change-loop` — user skill: stage → edit → verify → write back → BUILD-LOG → commit message → verify live | 2026-10-15 | ACTIVE | D-27; NEW; location = user skills (bukan folder project); pelajaran 17:55: tes render wajib memakai objek engine asli |
+| PITCH-DECK | "UltraByte pitch (OLG + Main Track)": Claude Slides artifact, 13 slides, speaker notes + timing, export PPTX/PDF | 2026-10-15 | DRAFT (team names, speaker split open) | D-2026-10-16-01; NEW; location = Claude artifact (privat); Jira UBP-24 |
+| VIDEO-SCRIPT | "UltraByte Demo Video Script (5 min)": Claude Doc, 10 scenes, menu + click + voice-over, rubric map | 2026-10-16 | ACTIVE | D-2026-10-16-01; NEW; location = Claude Docs (privat); supersedes Demo Guide skrip v2 for the video; Jira UBP-18 |
+| DEVPOST-STORY | `devpost_story.md`: About the project text (5,457 chars) | 2026-10-15 | FINAL (entered in Devpost) | D-2026-10-16-01; NEW; supersedes WD-02 draft; location = chat file + Devpost draft 1237964 (Save ASSUMED) |
+| GALLERY | repo `demo/gallery/`: 11 PNG 1500×1000 screenshots + captions in Devpost | 2026-10-15 | FINAL | D-2026-10-16-01; NEW; synthetic data, local v0.16.0 |
+| THUMBNAIL | repo `app/static/brand/team/UltraByte_thumbnail_1500x1000.png` | 2026-10-15 | FINAL | NEW; from team logo (D-14) |
 
 ## 5. Working Drafts (02_working/)
 
 | Draft ID | Linked Artefact / Input | Stage | Last Updated | Notes |
 |---|---|---|---|---|
 | WD-01 | `HANDOFF_M0_Build_2026-10-14.md` → sesi build M0 | DONE (dieksekusi) | 2026-10-14 19:12 | D-07 rev |
-| WD-02 | `DEVPOST_Draft_2026-10-14.md` → UBP-17 | draft | 2026-10-14 20:35 | Belum memuat sign-in, Rules, SG, AI summary, About, `/v1`; final sesi berikutnya |
+| WD-02 | `DEVPOST_Draft_2026-10-14.md` → UBP-17 | SUPERSEDED | 2026-10-15 20:06 | digantikan DEVPOST-STORY (D-2026-10-16-01) |
 | WD-03 | `HANDOFF_Thu_Feedback_2026-10-14.md` → sesi Kamis | SUPERSEDED | 2026-10-15 08:15 | digantikan WD-04 |
 | WD-04 | `HANDOFF_Thu_Session2_2026-10-15.md` → sesi 2 Kamis | SUPERSEDED | 2026-10-15 08:55 | D-21; digantikan WD-05 (demo script §5 langkah 2 tidak berlaku lagi) |
-| WD-06 | `HANDOFF_Thu_Session4_2026-10-15.md` → sesi evaluasi (Kam malam / Jum pagi) | handoff | 2026-10-15 18:45 | D-28; posisi live, verify-by list, urutan kerja sampai submit |
+| WD-06 | `HANDOFF_Thu_Session4_2026-10-15.md` → sesi evaluasi (Kam malam / Jum pagi) | SUPERSEDED | 2026-10-15 18:45 | D-28; digantikan WD-07 |
+| WD-07 | `HANDOFF_Fri_Session5_2026-10-16.md` → sesi Jumat pagi (freeze, video, submit, pitch) | handoff | 2026-10-16 00:45 | D-2026-10-16-01; NEW |
 | WD-05 | `HANDOFF_Thu_Session3_2026-10-15.md` → sesi 3 Kamis | SUPERSEDED | 2026-10-15 10:15 | D-24; demo script §4 SUPERSEDED oleh Demo Guide skrip v2 (D-27); README/Devpost final belum |
 
 ## 6. Inputs (03_inputs/)
@@ -78,11 +84,11 @@ Single navigation entry-point untuk folder A4-PER-THX-01. Semua artefak project 
 
 ## 7. Decision Log & External Pointers
 
-- Decision log project: `04_decision_log/decision-A4-PER-THX-01.md` (D-04…D-07, D-15, D-16, D-19, D-20, D-21) + shard PART2 (D-22, D-24) + shard `decision-A4-PER-THX-01_2026-10-15_PART3_thu-afternoon-mentor-ui-worklist_for-local-append_v1.0.md` (D-25, D-26, D-27); keduanya tunggu append ke master lokal
+- Decision log project: `04_decision_log/decision-A4-PER-THX-01.md` (D-04…D-07, D-15, D-16, D-19, D-20, D-21) + shard PART2 (D-22, D-24) + shard `decision-A4-PER-THX-01_2026-10-15_PART3_thu-afternoon-mentor-ui-worklist_for-local-append_v1.0.md` (D-25…D-28) + shard `decision-A4-PER-THX-01_2026-10-16_PART4_thu-evening-inbox-report-judges-lock_for-local-append_v1.0.md` (D-29…D-32, D-2026-10-16-01); semua tunggu append ke master lokal
 - Decision log sprint: `BUILD-LOG.md` di repo (D-08…D-14, D-16…D-26 + baris build s/d 17:55), PI §3.6
-- **Repo code:** https://github.com/Setya78/ultrabyte-thunderhacks (private s/d submit) · HEAD 2026-10-15 ~17:56 = v0.15.0-worklist + hotfix (hash ASSUMED, owner `git log -1`); mirror governance `docs/governance/` (D-27)
-- **Live URL:** https://ultrabyte.denysetya.com (v0.15.0-worklist, VERIFIED `/health` 18:00; sign-in wajib; `/v1` konsol Version 1.0; nginx `client_max_body_size 20m` untuk Import)
-- **Jira:** UBP "UltraByte Project" — UBP-1…UBP-36 (5 epic); UBP-22 comments 12451/12452 (mentor, organizer, AGCO); roadmap terbuka di WD-05
+- **Repo code:** https://github.com/Setya78/ultrabyte-thunderhacks (**Public** sejak 2026-10-15 20:00, D-32; HEAD s/d v0.16.2 = ASSUMED, owner `git log -1`) · sebelumnya: · HEAD 2026-10-15 ~17:56 = v0.15.0-worklist + hotfix (hash ASSUMED, owner `git log -1`); mirror governance `docs/governance/` (D-27)
+- **Live URL:** https://ultrabyte.denysetya.com (**v0.16.2-judges**, VERIFIED `/health` 2026-10-15 23:05; demo accounts di `/login` sampai judging selesai (D-30); sebelumnya v0.15.0-worklist 18:00; sign-in wajib; `/v1` konsol Version 1.0; nginx `client_max_body_size 20m` untuk Import)
+- **Jira:** UBP "UltraByte Project" — UBP-1…UBP-36 (5 epic); UBP-22 comments 12451/12452; 2026-10-16 00:45: UBP-19, UBP-20, UBP-30 Done; comments UBP-16 (12458), UBP-17 (12455), UBP-18 (12457), UBP-24 (12456)
 - **n8n:** workflow `IUofMr1jJM47K5Di` "UltraByte - AI case summary (THX)" (published)
 - **Confluence UltraByteP:** Infra Runbook (103219201) · Baseline (104529921, 104562689) — mirror; tidak ada halaman tentang fitur app, jadi tidak diubah di D-24
 
@@ -98,6 +104,8 @@ Single navigation entry-point untuk folder A4-PER-THX-01. Semua artefak project 
 - **OPEN (D-26):** migrasi 006 di VPS + smoke hand-off oleh owner (Kam 21:30).
 - **OPEN (D-27):** salinan Project files DEMO-XLSX STALE → ganti; Demo Guide share ke tim; adegan 8 hand-off.
 - **OPEN (owner):** tautan V2 → `/v1`.
+- **OPEN (D-30):** hapus `DEMO_LOGINS` dari `.env` VPS setelah judging; reset demo data sebelum pitch.
+- **OPEN (D-2026-10-16-01):** Devpost Save, HEAD repo, live `/report` dan login demo = ASSUMED, verify-by Jum 09:00 (WD-07 §3).
 
 ## 9. Version History
 
@@ -110,6 +118,7 @@ Single navigation entry-point untuk folder A4-PER-THX-01. Semua artefak project 
 | v1.1 | 2026-10-14 19:12 | K0 v0.7 (D-07); IN-07; WD-01 rev | Claude for Owner |
 | v1.1 | 2026-10-14 21:45 | D-15 session lock: logo mark (D-14), IN-08, WD-02/03, repo HEAD + Jira pointers, BL §7 superseded; folder lokal disinkronkan | Claude for Owner |
 | v1.1 | 2026-10-15 08:55 | D-21 session lock: DEMO-XLSX, WD-04 (WD-03 superseded), IN-09, LOCK-REGISTER + D-16…D-21, pointers HEAD `f4bf7b9` / v0.11.0 / n8n / Jira UBP-35, open items folder lokal + harm references | Claude for Owner |
+| v1.1 | 2026-10-16 00:45 | D-29…D-32 + D-2026-10-16-01 (shard PART4): PITCH-DECK, VIDEO-SCRIPT, DEVPOST-STORY, GALLERY, THUMBNAIL NEW; WD-02 + WD-06 superseded, WD-07 NEW; LOCK-REGISTER AMEND; pointers repo Public / live 0.16.2-judges / Jira; open items D-30 + verify-by | Claude for Owner |
 | v1.1 | 2026-10-15 18:45 | D-28 (PART3 addendum): hand-off box every player page, dropdown filters + status, status chips; live 0.15.0 verified; LOCK-REGISTER row D-28; WD-06 handoff NEW | Claude for Owner |
 | v1.1 | 2026-10-15 18:05 | D-25 + D-26 + D-27 (shard PART3): DEMO-GUIDE NEW, SKILL-LOOP NEW, DEMO-XLSX Project-files copy STALE, WD-05 demo script superseded, IN-12/13/14, LOCK-REGISTER AMEND, pointers v0.15.0-worklist / docs/governance mirror / UBP-22 comments, open items 006 + hand-off smoke + workbook replace | Claude for Owner |
 | v1.1 | 2026-10-15 10:15 | D-22 + D-24 (shard PART2): DECK-V1V2 NEW, DEMO-XLSX AMEND (nama unik), WD-05 NEW (WD-04 superseded), IN-10/IN-11, LOCK-REGISTER AMEND, K0 note (toggle superseded), pointers HEAD `9a98c30` / v0.13.0-review / Jira UBP-36 / Confluence unchanged, open items V1 routine + tautan V2→/v1 | Claude for Owner |
