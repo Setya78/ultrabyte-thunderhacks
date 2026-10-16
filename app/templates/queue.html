@@ -44,7 +44,7 @@
 
 {% if commented %}{{ inbox(commented, 'comment', 'With comment', "Escalated or monitored cases where the investigator wrote a comment with the decision, newest first. They stay here until compliance responds.", "") }}{% endif %}
 {{ inbox(todo, 'todo', 'To do', "Players the scoring caught that nobody has decided on yet. URGENT and STR candidates on top, then highest score. Open one, read why, record Escalate / Monitor / Dismiss, and it leaves this list.", "Nothing waiting. Every alert has a decision.") }}
-{{ inbox(progress, 'progress', 'Escalated &amp; monitor', "Decided by the investigator and still open: Escalated (waiting for compliance) or Monitor (watching). When compliance picks a case up or resolves it, it leaves the review queue and appears on Overview.", "Nothing waiting for compliance.") }}
+{{ inbox(progress, 'progress', 'Escalated & monitor', "Decided by the investigator and still open: Escalated (waiting for compliance) or Monitor (watching). When compliance picks a case up or resolves it, it leaves the review queue and appears on Overview.", "Nothing waiting for compliance.") }}
 <details class="done-wrap"{% if not closed %} hidden{% endif %}><summary>Dismissed <span class="cnt">{{ closed|length }}</span> <small>no further action</small></summary>
 {{ inbox(closed, 'done', 'Dismissed', "Alerts the investigator dismissed. The audit trail keeps the decision with the score at that moment.", "Nothing dismissed.") }}
 </details>
