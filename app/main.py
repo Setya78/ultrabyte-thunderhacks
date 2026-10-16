@@ -19,7 +19,7 @@ from app.scoring import engine
 from app.scoring import rules as RL
 
 BASE = Path(__file__).resolve().parent
-VERSION = "0.16.1-report"
+VERSION = "0.16.2-judges"
 
 app = FastAPI(title="UltraByte Solutions", version=VERSION)
 app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
@@ -163,6 +163,21 @@ def todo_count() -> int | None:
 
 
 templates.env.globals.update(todo_count=todo_count)
+
+
+def demo_logins() -> list[tuple[str, str]]:
+    """Judge access (owner 2026-10-15 22:50): sign-in hints shown on the login page only while DEMO_LOGINS is set
+    in the server .env ("user:password,user:password"). Unset it after judging and the box disappears; nothing
+    about the accounts themselves changes (they still come from OPERATOR_ACCOUNTS)."""
+    out = []
+    for part in os.environ.get("DEMO_LOGINS", "").split(","):
+        user, _, pw = part.strip().partition(":")
+        if user and pw:
+            out.append((user, pw))
+    return out
+
+
+templates.env.globals.update(demo_logins=demo_logins)
 
 
 @app.get("/health")

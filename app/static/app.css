@@ -520,3 +520,10 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none; }
   .panel { break-inside: auto; } .grid .panel, tr { break-inside: avoid; }
   .t { overflow: visible !important; }
 }
+
+/* Demo sign-in hints for judges (owner 2026-10-15 22:50), shown only while DEMO_LOGINS is set. */
+.demologin { margin-top: 18px; padding: 14px 16px; border: 1px solid #9FC3EE; border-radius: 10px; background: #F2F7FD; text-align: left; display: grid; gap: 8px; }
+.demologin p { margin: 0; font-size: 14px; }
+.democred { display: flex; justify-content: space-between; gap: 10px; width: 100%; padding: 9px 12px; border: 1px solid #C9D6E3; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 15px; cursor: pointer; color: var(--ink); }
+.democred span { color: var(--muted); font-family: ui-monospace, Consolas, monospace; font-size: 14px; }
+.democred:hover { border-color: #1763C6; }

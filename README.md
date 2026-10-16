@@ -150,6 +150,7 @@ No CI and no secrets in the repo. `scripts/deploy.sh` calls a script on the serv
 - Safer Gambling markers (deposit trajectory, late-night play, chasing losses, frequency of play) follow the OLG brief's
   player-protection theme and commonly cited behavioural harm markers; the primary references are listed as a to-do for
   the team (lane d) and marked ASSUMED until verified.
+- Judges: the live login page shows demo accounts while `DEMO_LOGINS` is set on the server. These are demo-only passwords for synthetic data, removed after judging.
 - Sign-in is demo-grade: static accounts and passwords from `OPERATOR_ACCOUNTS`, an HMAC-signed cookie (8 h), no MFA, no
   SSO, no lockout. If `OPERATOR_ACCOUNTS` is unset the app runs without sign-in and says so in the sidebar.
 - Manual entry: a typed deposit also creates a 30-minute session at the same city and time (so the location check can see

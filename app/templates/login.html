@@ -14,9 +14,20 @@
     <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
     <button class="btn act-escalate" type="submit" style="width:100%">Sign in</button>
   </form>
+  {% set demo = demo_logins() %}{% if demo %}
+  <div class="demologin">
+    <p><b>Judges and visitors:</b> use a demo account. Click one to fill the form.</p>
+    {% for u, p in demo %}<button type="button" class="democred" data-u="{{ u }}" data-p="{{ p }}"><b>{{ u }}</b> <span>password: {{ p }}</span></button>{% endfor %}
+    <p class="src">Investigator reviews and decides. Compliance also picks up escalated cases, resolves them and edits score rules. Synthetic data only; please do not enter real personal data.</p>
+  </div>
+  {% else %}
   <p class="src">Demo sign-in: two roles, investigator and compliance. Synthetic data only.</p>
+  {% endif %}
 </main>
 <script>
+document.querySelectorAll('.democred').forEach(function (b) { b.addEventListener('click', function () {
+  document.querySelector('input[name=username]').value = b.dataset.u; document.querySelector('input[name=password]').value = b.dataset.p;
+  document.querySelector('form.form button[type=submit]').focus(); }); });
 document.addEventListener('submit', function (e) { var b = e.target.querySelector('button'); setTimeout(function () { b.disabled = true; b.textContent = 'Signing in…'; }, 0); });
 </script>
 </body></html>
