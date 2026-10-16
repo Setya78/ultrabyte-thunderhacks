@@ -5,7 +5,9 @@
 {% block content %}
 {# Owner 2026-10-15 18:53: explanations sit behind "?" (not under the numbers), and Overview gets the same search as the queue. #}
 <div class="head">
-  <div><h1>Overview {{ help('The same players as the review queue, sorted by the team that handles them: Fraud (URGENT), AML (STR candidates, AML context risk), Safer Gambling. One player can sit in two groups; the player ID is the person. Last 30 days.') }}</h1></div>
+  <div><h1>Overview {{ help('The same players as the review queue, sorted by the team that handles them: Fraud (URGENT), AML (STR candidates, AML context risk), Safer Gambling. One player can sit in two groups; the player ID is the person. Last 30 days.') }}</h1>
+    {# Owner 2026-10-16 11:19: player total on screen, so an import or manual entry is seen to add to it. #}
+    <p class="sub"><b id="total-players">{{ total }}</b> players scored &middot; {{ total - added }} seed &middot; <b>{{ added }}</b> added this session (manual entry or import)</p></div>
   <div class="tools">
     <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="osearch" type="search" placeholder="Search name or ID, e.g. Morgan or P-7730" autocomplete="off" aria-label="Search Overview by name or player ID"></label>
   </div>

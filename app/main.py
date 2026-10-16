@@ -19,7 +19,7 @@ from app.scoring import engine
 from app.scoring import rules as RL
 
 BASE = Path(__file__).resolve().parent
-VERSION = "0.16.2-judges"
+VERSION = "0.16.3-judges"
 
 app = FastAPI(title="UltraByte Solutions", version=VERSION)
 app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
@@ -461,8 +461,10 @@ def dashboard(request: Request):
     for g in groups:
         for r, *_ in g["players"]:
             member.setdefault(r.player_id, []).append(g["short"])
+    # Owner 2026-10-16 11:19: show the player total so an import or manual entry is visibly counted during the demo.
+    added = sum(1 for r in rows if r.source != "seed")
     return templates.TemplateResponse(request, "dashboard.html", {"groups": groups, "decided": decided, "member": member,
-                                                                  "links": shared_links()})
+                                                                  "links": shared_links(), "total": len(rows), "added": added})
 
 
 def shared_links() -> list[dict]:
